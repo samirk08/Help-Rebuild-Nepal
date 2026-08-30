@@ -24,11 +24,7 @@ export type AddedStrings = {
   uploadRejectedType: string;
   uploadRejectedSize: string;
   uploadRejectedCount: string;
-  uploadNotStored: string;
   sectionFilled: string;
-
-  notConnectedTitle: string;
-  notConnectedBody: string;
 
   reliefNav: string;
   reliefTitle: string;
@@ -69,6 +65,9 @@ export type AddedStrings = {
   reliefSubmitOffer: string;
   reliefFilterAll: string;
   reliefConsent: string;
+  submitError: string;
+  submitSuccessVolunteer: string;
+  submitSuccessNeed: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -86,13 +85,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     uploadRejectedType: "not an image or PDF",
     uploadRejectedSize: "larger than 10 MB",
     uploadRejectedCount: "over the 8 file limit",
-    uploadNotStored:
-      "Files are listed with your request. Uploading is not connected yet, so they are not sent.",
     sectionFilled: "has entries",
-
-    notConnectedTitle: "This form is not connected yet",
-    notConnectedBody:
-      "Nothing you enter is recorded, stored or sent. Registration opens once verification partners are in place. Do not rely on this as a submission.",
 
     reliefNav: "Relief items",
     reliefTitle: "Relief items",
@@ -138,11 +131,14 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefToastPledge:
       "Design preview. No pledge was recorded.",
     reliefToastOffer:
-      "Design preview. Nothing was submitted. A live offer would go to verification.",
+      "Your offer has been received. A verifier will match it against a published request before anyone acts on it.",
     reliefSubmitOffer: "Submit offer for review",
     reliefFilterAll: "All items",
     reliefConsent:
       "I confirm these items are new or unused unless stated otherwise, that I have not dispatched them, and that I will wait to be contacted before sending anything.",
+    submitError: "Something went wrong and this was not submitted. Please try again in a moment.",
+    submitSuccessVolunteer: "You're registered. A verifier will review your details before you're matched to anything.",
+    submitSuccessNeed: "Your request has been received and will be reviewed before it appears on the board.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -158,13 +154,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     uploadRejectedType: "तस्बिर वा PDF होइन",
     uploadRejectedSize: "१० MB भन्दा ठूलो",
     uploadRejectedCount: "८ फाइलको सीमा नाघ्यो",
-    uploadNotStored:
-      "फाइल तपाईंको अनुरोधसँग सूचीबद्ध हुन्छन्। अपलोड अझै जोडिएको छैन, त्यसैले ती पठाइँदैनन्।",
     sectionFilled: "मा प्रविष्टि छ",
-
-    notConnectedTitle: "यो फारम अझै जोडिएको छैन",
-    notConnectedBody:
-      "तपाईंले भरेको कुरा अभिलेख हुँदैन, राखिँदैन र पठाइँदैन। प्रमाणीकरण साझेदार तयार भएपछि दर्ता खुल्नेछ। यसलाई पेश गरिएको नठान्नुहोस्।",
 
     reliefNav: "राहत सामग्री",
     reliefTitle: "राहत सामग्री",
@@ -210,11 +200,14 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefToastPledge:
       "डिजाइन नमुना। कुनै प्रतिबद्धता अभिलेख भएन।",
     reliefToastOffer:
-      "डिजाइन नमुना। केही पेश भएको छैन। वास्तविक सहयोग प्रमाणीकरणमा जान्थ्यो।",
+      "तपाईंको सहयोग प्राप्त भयो। कोही कारबाही गर्नुअघि प्रमाणकले यसलाई प्रकाशित अनुरोधसँग मिलाउनेछ।",
     reliefSubmitOffer: "समीक्षाका लागि पेश गर्नुहोस्",
     reliefFilterAll: "सबै सामग्री",
     reliefConsent:
       "म पुष्टि गर्दछु कि अन्यथा उल्लेख नगरिएसम्म यी सामान नयाँ वा प्रयोग नगरिएका हुन्, मैले कतै पठाएको छैन, र पठाउनुअघि सम्पर्क आउने प्रतीक्षा गर्नेछु।",
+    submitError: "केही गडबड भयो, यो पेश भएन। कृपया केही बेरमा फेरि प्रयास गर्नुहोस्।",
+    submitSuccessVolunteer: "तपाईं दर्ता हुनुभयो। मिलान हुनुअघि प्रमाणकले तपाईंको विवरण समीक्षा गर्नेछ।",
+    submitSuccessNeed: "तपाईंको अनुरोध प्राप्त भयो र बोर्डमा देखिनुअघि समीक्षा हुनेछ।",
   },
 };
 

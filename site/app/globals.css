@@ -1775,35 +1775,6 @@ textarea:focus-visible {
   transition: width var(--spring-settle);
 }
 
-/* ---------------------------------------------------- Not-connected notice */
-
-/* Deliberately loud. Someone can spend ten minutes on a nine-section form
-   believing they have registered; a toast after the fact is not enough. */
-.notconnected {
-  border: 1px solid var(--amber-line);
-  border-left: 4px solid var(--amber);
-  background: var(--amber-bg);
-  border-radius: var(--radius);
-  padding: 16px 18px;
-  margin-bottom: 18px;
-}
-
-.notconnected__title {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--amber-ink);
-}
-
-.notconnected__body {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--amber-ink);
-  max-width: 72ch;
-}
-
 .notice--warn {
   border-color: var(--red-line);
   background: var(--red-tint);

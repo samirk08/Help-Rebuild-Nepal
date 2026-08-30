@@ -6,6 +6,10 @@ import { dict, isLang, translator } from "@/lib/i18n";
 import { DEMO_ALLOWED, isDemo, trackerMetrics } from "@/lib/metrics";
 import { DEMAND, EXPERTISE, LOCATIONS } from "@/lib/site-data";
 
+// trackerMetrics() queries Supabase for real counts — must not run at build
+// time or be cached. See app/[lang]/page.tsx for the same note.
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
@@ -32,7 +36,7 @@ export default async function TrackerPage({
   // Awaiting `searchParams` makes this page render on demand, and the demo
   // dataset is off unless the build opts in, so only read the query string
   // when it could change what renders. Everything else here is static.
-  const metrics = trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
+  const metrics = await trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
 
   return (
     <div className="page">

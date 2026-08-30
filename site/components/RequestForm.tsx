@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import FormFieldView from "@/components/FormField";
-import NotConnectedBanner from "@/components/NotConnectedBanner";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
 import type { Dict, Lang } from "@/lib/content";
@@ -11,6 +10,7 @@ import { NEED_SECTIONS, VOLUNTEER_SECTIONS } from "@/lib/form-schema";
 import { submitRequest, type SubmissionKind } from "@/lib/api";
 import { translator } from "@/lib/i18n";
 import { ORGANIZE_OPTIONS, PMDRF_URL } from "@/lib/site-data";
+import { uploadDocuments } from "@/lib/uploads";
 
 type Mode = "volunteer" | "post";
 
@@ -32,6 +32,9 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
   const [filled, setFilled] = useState<Record<string, boolean>>({});
   const [revision, setRevision] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
+  // Files live here, not in component state — a picked File never needs to
+  // trigger a re-render of the form around it, only to be here when submit runs.
+  const pendingFiles = useRef<Record<string, File[]>>({});
 
   const toggle = (n: string) => setOpen((prev) => ({ ...prev, [n]: !prev[n] }));
   const setAll = (value: boolean) =>
@@ -80,12 +83,38 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
     if (submitting) return;
     setSubmitting(true);
 
+    // Captured before any `await`: React's synthetic event can detach
+    // `currentTarget` once the handler yields, so `formRef` is what's safe to
+    // use afterward, not `event.currentTarget`.
+    const formEl = formRef.current;
+    if (!formEl) {
+      setSubmitting(false);
+      return;
+    }
+
     const kind: SubmissionKind = isVolunteer ? "volunteer" : "need";
     try {
-      await submitRequest(kind, new FormData(event.currentTarget));
-      showToast(isVolunteer ? t.toastVolunteer : t.toastNeed);
-    } catch {
-      showToast(isVolunteer ? t.toastVolunteer : t.toastNeed);
+      const result = await submitRequest(kind, lang, new FormData(formEl));
+
+      const files = Object.values(pendingFiles.current).flat();
+      if (result.id && files.length > 0) {
+        await uploadDocuments(result.id, files);
+      }
+
+      // Deliberately not resetting the form here: Combobox/LocationField/
+      // FileUpload each hold their own React state, which a native
+      // formEl.reset() would desync from (their visible value would stay put
+      // while the underlying input silently cleared). Leaving the filled-in
+      // form as-is after a successful submit is the safer default.
+      //
+      // t.toastVolunteer/t.toastNeed (from the generated content.ts) say
+      // "Design preview. Nothing was submitted." — true when this form had
+      // nowhere to send data, false now. added-strings.ts is where copy that
+      // postdates the design lives, same as everywhere else in this codebase.
+      showToast(isVolunteer ? extra.submitSuccessVolunteer : extra.submitSuccessNeed);
+    } catch (err) {
+      console.error("Submission failed", err);
+      showToast(extra.submitError);
     } finally {
       setSubmitting(false);
     }
@@ -100,8 +129,6 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       <p className="lede" style={{ maxWidth: "64ch", fontSize: 16 }}>
         {tr(copy.intro)}
       </p>
-
-      <NotConnectedBanner lang={lang} />
 
       <div className="form-rail">
         <span className="form-rail__label">{t.progressLabel}</span>
@@ -179,6 +206,9 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
                         sectionN={section.n}
                         lang={lang}
                         tr={tr}
+                        onFilesChange={(name, files) => {
+                          pendingFiles.current[name] = files;
+                        }}
                       />
                     ))}
                   </div>

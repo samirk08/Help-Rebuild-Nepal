@@ -1,4 +1,5 @@
 import { NEED_FORM, VOL_FORM, type FormField, type FormSection } from "./content";
+import type { SubmissionKind } from "./api";
 
 /**
  * Upgrades specific fields of the generated form schema to richer controls.
@@ -35,3 +36,32 @@ function enhance(sections: FormSection[]): EnhancedSection[] {
 
 export const VOLUNTEER_SECTIONS: EnhancedSection[] = enhance(VOL_FORM);
 export const NEED_SECTIONS: EnhancedSection[] = enhance(NEED_FORM);
+
+/** Stable, unique control name/id from the section number and label. */
+export function fieldKey(sectionN: string, label: string): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `s${sectionN}-${slug}`;
+}
+
+/**
+ * Every `fieldKey` in a submission kind's schema that renders as a checkbox
+ * group (`isChips`). A chip group's FormData entries collapse to a single
+ * string when only one box is checked and an array when several are — the
+ * browser's FormData/URLSearchParams behaviour, not something this app
+ * chose — so anything that reads these fields back (a jsonb `contains` query,
+ * a CSV column, a detail view) needs them to arrive as arrays consistently.
+ * `relief-offer` has no chip fields, so it isn't included here.
+ */
+export function chipFieldKeys(kind: Extract<SubmissionKind, "volunteer" | "need">): Set<string> {
+  const sections = kind === "volunteer" ? VOLUNTEER_SECTIONS : NEED_SECTIONS;
+  const keys = new Set<string>();
+  for (const section of sections) {
+    for (const field of section.fields) {
+      if (field.isChips) keys.add(fieldKey(section.n, field.label));
+    }
+  }
+  return keys;
+}

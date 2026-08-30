@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { added } from "@/lib/added-strings";
-import { asset } from "@/lib/base-path";
 import type { Dict, Lang } from "@/lib/content";
 import { translator } from "@/lib/i18n";
 import { screenPath, type ScreenKey } from "@/lib/routes";
@@ -16,7 +15,7 @@ export default function Footer({ lang, t }: { lang: Lang; t: Dict }) {
       <div className="footer__inner">
         <div>
           <div className="footer__logo">
-            <Image src={asset("/logo.png")} alt="Help Rebuild Nepal" width={84} height={44} />
+            <Image src="/logo.png" alt="Help Rebuild Nepal" width={84} height={44} />
           </div>
           <p className="footer__tagline">{t.footerTagline}</p>
         </div>

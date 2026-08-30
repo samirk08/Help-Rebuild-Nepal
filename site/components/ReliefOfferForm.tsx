@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import Combobox from "@/components/Combobox";
-import NotConnectedBanner from "@/components/NotConnectedBanner";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
@@ -48,10 +47,13 @@ export default function ReliefOfferForm({ lang }: { lang: Lang }) {
     if (submitting) return;
     setSubmitting(true);
     try {
-      await submitRequest("need", new FormData(event.currentTarget));
+      await submitRequest("relief-offer", lang, new FormData(event.currentTarget));
+      showToast(extra.reliefToastOffer);
+    } catch (err) {
+      console.error("Relief offer submission failed", err);
+      showToast(extra.submitError);
     } finally {
       setSubmitting(false);
-      showToast(extra.reliefToastOffer);
     }
   }
 
@@ -64,8 +66,6 @@ export default function ReliefOfferForm({ lang }: { lang: Lang }) {
       <p className="lede" style={{ maxWidth: "64ch", fontSize: 16 }}>
         {extra.reliefOfferIntro}
       </p>
-
-      <NotConnectedBanner lang={lang} />
 
       <form onSubmit={handleSubmit}>
         <div className="form-sections">

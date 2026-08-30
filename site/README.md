@@ -27,54 +27,18 @@ npm run typecheck  # tsc --noEmit
 
 ## Deploying
 
-The site is published as a static export to GitHub Pages by
-`.github/workflows/deploy.yml`, on every push to `main` and on demand from the
-Actions tab.
-
-**One-time setup:** a repository admin has to open Settings -> Pages -> Build
-and deployment and set Source to **GitHub Actions**. The workflow cannot do
-this for itself — creating a Pages site needs admin rights that the workflow's
-`GITHUB_TOKEN` does not have, so `enablement: true` on `configure-pages` fails
-with "Resource not accessible by integration". Until the source is set, every
-run stops at Configure Pages.
-
-```bash
-npm run build:pages   # the same build the workflow runs; output in out/
-```
-
-Opening `out/index.html` from disk will not work, because every URL on the page
-is prefixed with the repository name. To preview what actually gets published,
-serve `out/` from a matching subpath:
-
-```bash
-mkdir -p /tmp/pages && ln -sfn "$PWD/out" /tmp/pages/Help-Rebuild-Nepal
-(cd /tmp/pages && python3 -m http.server 8000)
-# then open http://localhost:8000/Help-Rebuild-Nepal/
-```
-
-Three things differ from a server build. All three are driven by environment
-variables read in `next.config.ts`, so `npm run dev` and `npm run build` behave
-exactly as they did before:
-
-- **Every route is prerendered.** `NEXT_STATIC_EXPORT=true` turns on
-  `output: "export"`. Anything that renders on demand fails the build, which is
-  why the two pages that support `?demo` test `DEMO_ALLOWED` before they read
-  `searchParams` — with the flag off there is nothing in the query string worth
-  leaving static rendering for.
-- **Every URL carries the repository name.** `NEXT_PUBLIC_BASE_PATH` sets
-  `basePath`. `next/link` and the router apply it themselves, but files served
-  from `public/` and URLs written into a `metadata` export do not get it, so
-  those go through `asset()` in `lib/base-path.ts`.
-- **There is no API route.** A static host has no server to run one on, so the
-  export narrows `pageExtensions` to `.tsx`, which drops the single `.ts` route
-  under `app/` and leaves every page and layout untouched. The route file stays
-  in the repository and still builds under `npm run build`.
+Hosted on **Vercel**, not GitHub Pages — an earlier version of this project
+briefly moved to a static export for Pages, but a static host cannot run the
+database-backed submission API or the admin dashboard below, so that path was
+retired. Vercel builds this repo's `site/` directory as a normal Next.js
+server app: import the repo in the Vercel dashboard, add the environment
+variables from **Backend and database** below, and every push to `main`
+deploys automatically. Adding a custom domain is a Vercel dashboard step
+(Domains tab); it shows the exact DNS records your registrar needs.
 
 ## Routes
 
-Every page lives under a language segment; `/` redirects to `/en`. A server
-build does that in `next.config.ts`; a static export cannot redirect, so
-`public/index.html` stands in for it there.
+Every page lives under a language segment; `/` redirects to `/en`.
 
 | Screen | Route |
 | --- | --- |
@@ -91,9 +55,12 @@ build does that in `next.config.ts`; a static export cannot redirect, so
 | Skill networks | `/[lang]/networks` |
 | Volunteer profile | `/[lang]/profile` |
 | For partners | `/[lang]/partners` |
+| Admin dashboard | `/admin` (login at `/admin/login`) |
 
 `lang` is `en` or `np`. Both are prerendered at build time, and the language
-switch preserves whatever page you are on.
+switch preserves whatever page you are on. `/admin` sits outside the language
+segment on purpose — it's an internal tool for the coordination team, not
+public bilingual copy.
 
 ## Language handling
 
@@ -117,34 +84,103 @@ The generator also guards the transfer: it fails if the two languages fall out
 of key parity, and it reports duplicate keys instead of letting JavaScript's
 last-wins rule quietly drop content.
 
-## What is not wired up yet
+## Backend and database
 
-The design is explicit that this is a register opening from zero, and the build
-keeps that honest rather than showing invented activity:
+Submissions are real: all three forms (volunteer registration, post-a-need,
+relief-item offers) write to a Postgres database on **Supabase**, including
+uploaded damage photos and documents. The coordination team reviews, verifies
+and exports everything from `/admin`.
 
-- **Forms** POST to `app/api/submissions/route.ts`, which validates the payload
-  and acknowledges it but does not store it — it returns `persisted: false`.
-  Every form therefore carries a standing `NotConnectedBanner` above it saying
-  so. **Do not remove that banner until submissions actually persist**: someone
-  can spend ten minutes on a nine-section form believing they have registered,
-  and in a disaster that is the one way this site could do real harm. Wiring a
-  database is a change to that one route file; the fields already arrive named
-  and structured. The GitHub Pages build ships no server, so `submitRequest`
-  skips the request there and returns the same "accepted, not stored" answer
-  rather than posting to a URL that cannot exist.
-- **Counts** are zero everywhere, from `lib/metrics.ts`. Set
-  `NEXT_PUBLIC_ALLOW_DEMO=1` and append `?demo` to the home page or tracker to
-  render the design's sample figures for a stakeholder walkthrough. The env flag
-  exists so that nobody on a public deployment can open `?demo` and screenshot
-  1,284 registered volunteers as though the register were full.
-- **The needs board** has no rows. Its sort and filter controls are wired and
-  the table is ready for the first verified request.
-- **Need detail** resolves only `/needs/example`, the one worked example the
-  design ships. It is marked `noindex`, as is the profile preview.
+**Environment variables** (Vercel project settings; see `.env.local.example`):
+
+| Variable | Used by | Exposed to the browser? |
+| --- | --- | --- |
+| `SUPABASE_URL` | `lib/supabase.ts` | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | `lib/supabase.ts` | **Never** — bypasses every access rule |
+| `NEXT_PUBLIC_SUPABASE_URL` | `lib/supabase-server.ts`, `lib/supabase-browser.ts` | Yes — safe, it's just the endpoint |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | same | Yes — safe by design, rate-limited, no RLS policies grant it anything (see below) |
+| `NEXT_PUBLIC_ALLOW_DEMO` | `lib/metrics.ts` | Yes — set to `1` only for stakeholder walkthroughs |
+
+**Schema:** `supabase/schema.sql`, run once in the Supabase SQL editor. Shape,
+in short: `submissions` (volunteers and needs) holds a handful of indexed
+columns — `status`, `district`, `province`, `urgency`, contact info — plus the
+complete raw form payload in a `fields` jsonb column. That split is
+deliberate: `content.ts` regenerates from the design file and can change
+field names again, so a rigid column-per-field table would break on the next
+regeneration, while `fields` cannot. Relief-item offers are structurally
+different (they target a specific `item_needs` row) and live in their own
+`pledges` table instead — see the schema file's comments for the rest
+(`documents`, `item_needs`, `matches`, `projects`).
+
+**Access control is the login gate, not Row Level Security.** Every table has
+RLS enabled with zero policies — the service role key
+(`lib/supabase.ts`, server-only) bypasses RLS by design and is what every
+read and write actually goes through. RLS here is defense in depth (an anon
+key accidentally used against these tables would see and change nothing),
+not the access boundary. The boundary is `middleware.ts`, which requires a
+signed-in Supabase Auth session for `/admin/**` and `/api/admin/**`, checked
+again inside every mutation in `lib/admin-actions.ts` and the export route —
+a Server Action or route handler can in principle be invoked directly, so the
+identity check has to live there too, not only in middleware.
+
+**File uploads never pass through a Vercel function.** A submission is
+created first to get its id, then each file is uploaded straight from the
+browser to a private Supabase Storage bucket via a short-lived signed URL
+(`app/api/uploads/sign/route.ts` mints it; `lib/uploads.ts` does the upload).
+That's what lets an 8-file, 10MB-each upload — already promised in
+`FileUpload.tsx`'s UI — clear serverless payload-size limits entirely. Viewing
+a document in `/admin` mints a separate short-lived signed *read* URL at view
+time (`lib/admin-documents.ts`); the bucket is never public.
+
+**Admin login is per-person**, via Supabase Auth — invite teammates from the
+Supabase dashboard (Auth -> Users). There is no public sign-up. A verification
+action records the actual signed-in user in `submissions.verified_by`, not a
+shared identity.
+
+**Counts on the public site are real**, from `lib/metrics.ts` — with one
+exception stated plainly rather than guessed: two of the five tracker labels
+("On the ground, need logistics" / "self-supported") describe a split the
+volunteer form has no field for, and stay at zero rather than being estimated
+from a proxy that might misrepresent what someone actually said. Set
+`NEXT_PUBLIC_ALLOW_DEMO=1` and append `?demo` to the home page or tracker to
+render the design's sample figures for a stakeholder walkthrough instead — the
+env flag exists so nobody on the public deployment can open `?demo` and
+screenshot a fake full register.
+
+**Still gaps, stated plainly:**
+
+- **Relief item needs have no public creation form.** Nothing in the site lets
+  a municipality post "we need 200 tarpaulins" directly — the relief board
+  shows demand, but today a staff member creates that row from `/admin/relief`
+  until a public form exists.
+- **Matching and project promotion are manual**, by design — an admin picks a
+  volunteer for a need, or promotes a need to a standing project, from that
+  need's `/admin/needs/[id]` page. There is no automated matching engine.
+- **Need detail on the public site** (`/needs/[id]`) still resolves only the
+  one worked example (`/needs/example`); browsing real published needs is the
+  needs board's job, not that route's, and remains a smaller follow-up.
 
 Money is deliberately out of scope: financial contributions hand off to the
 Prime Minister Disaster Relief Fund at `pmdrf.nchl.com.np`. This site never
 collects or holds donations.
+
+### Account-side setup (do this once)
+
+Code changes alone don't make the backend live — these steps need an actual
+Supabase/Vercel account and can't be scripted from here:
+
+1. Create a Supabase project (the free tier is enough at this scale). Copy the
+   project URL, anon key and service role key from Project Settings -> API.
+2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once.
+3. Create a **private** Storage bucket named `submissions` (Storage -> New
+   bucket -> uncheck "Public bucket").
+4. Invite each teammate in Auth -> Users -> Invite user.
+5. Import this repo into Vercel; add the five environment variables above in
+   the project's Settings -> Environment Variables.
+6. Buy a domain from any registrar; add it in Vercel's Domains tab and update
+   the DNS records it shows you.
+7. If a GitHub Pages source was ever configured for this repo (Settings ->
+   Pages), turn it off — Vercel is the only deploy target now.
 
 ## Additions beyond the design
 
@@ -157,9 +193,8 @@ The design was a prototype, and using it surfaced gaps. These were added on top:
   meant a municipality outside those ten could not state where it was.
 - **Real file upload** for damage photographs, assessments and permits. The
   design asked people to paste a link, which assumes they already have their
-  photos hosted — an unreasonable ask from a ward office mid-disaster. There is
-  no object storage yet, so the submitted payload is the file manifest; the
-  picked files stay client-side ready to hand to an upload call.
+  photos hosted — an unreasonable ask from a ward office mid-disaster. Files
+  upload straight to private Supabase Storage — see **Backend and database**.
 - **Coordinate parsing** (`lib/geo.ts`) for "exact location". Accepts a bare
   pair, a Google Maps link, an OpenStreetMap link or a `geo:` URI, tells the
   person what it understood, and warns when a point falls outside Nepal.
@@ -237,25 +272,38 @@ full-page snapshot. Reverted to plain links. Worth revisiting when React ships
 
 ```
 app/
-  [lang]/            one folder per screen; layout.tsx is the root layout
-  api/submissions/   form intake
-  globals.css        design tokens + every component style
-components/          Header, Footer, forms, dialog, toast, counters
-public/
-  index.html         redirects the bare root to /en on a static host
+  [lang]/              one folder per screen; layout.tsx is the root layout
+  admin/               internal dashboard — outside [lang], its own login
+    (dashboard)/       sidebar chrome; login page is a sibling, so it has none
+  api/
+    submissions/       form intake -> submissions or pledges
+    uploads/sign/       mints a signed Storage upload URL
+    uploads/confirm/    records a document row after upload
+    admin/export/       CSV export, admin-only
+  globals.css          design tokens + every component style
+components/            Header, Footer, forms, dialog, toast, counters
+supabase/
+  schema.sql           run once in the Supabase SQL editor
 lib/
-  base-path.ts       prefixes public/ and metadata URLs for subpath hosting
-  content.ts         GENERATED — strings, form schemas, translation map
-  site-data.ts       presentational tables from the design's render pass
-  districts.ts       all 77 districts by province  ← NEEDS NEPALI REVIEW
-  added-strings.ts   copy for controls the design did not have  ← NEEDS NEPALI REVIEW
-  form-schema.ts     upgrades specific design fields to richer controls
-  geo.ts             coordinate parsing for pasted map links
-  i18n.ts            dictionary + translator + language-aware paths
-  routes.ts          screen -> route map
-  metrics.ts         headline counts (currently zero)
+  content.ts           GENERATED — strings, form schemas, translation map
+  site-data.ts         presentational tables from the design's render pass
+  districts.ts         all 77 districts by province  ← NEEDS NEPALI REVIEW
+  added-strings.ts     copy for controls the design did not have  ← NEEDS NEPALI REVIEW
+  form-schema.ts       upgrades specific design fields to richer controls; fieldKey()
+  geo.ts               coordinate parsing for pasted map links
+  relief.ts            relief item categories and the ItemNeed/pledge shapes
+  i18n.ts              dictionary + translator + language-aware paths
+  routes.ts            screen -> route map
+  metrics.ts           headline counts, backed by real queries
+  supabase.ts          service-role client — server-only, bypasses RLS
+  supabase-server.ts   session-aware client for Server Components (anon key)
+  supabase-browser.ts  the one browser Supabase client — admin login only
+  uploads.ts           browser-side sign -> PUT -> confirm upload flow
+  admin-actions.ts     every admin mutation, as Server Actions
+  admin-render.ts      renders a submission's raw fields against its form schema
+  admin-documents.ts   signed read URLs for uploaded documents
 scripts/
-  gen-content.js     regenerates lib/content.ts from the design file
+  gen-content.js       regenerates lib/content.ts from the design file
 ```
 
 ## Notes on the port

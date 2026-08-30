@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ScrollReveal from "@/components/ScrollReveal";
 import { ToastProvider } from "@/components/ToastProvider";
-import { asset } from "@/lib/base-path";
 import type { Lang } from "@/lib/content";
 import { HTML_LANG, LANGS, dict, isLang } from "@/lib/i18n";
 
@@ -53,8 +52,8 @@ export async function generateMetadata({
     description: t.heroSub,
     applicationName: "Help Rebuild Nepal",
     alternates: {
-      canonical: asset(`/${lang}`),
-      languages: { en: asset("/en"), ne: asset("/np") },
+      canonical: `/${lang}`,
+      languages: { en: "/en", ne: "/np" },
     },
     openGraph: {
       title: "Help Rebuild Nepal",
@@ -62,7 +61,7 @@ export async function generateMetadata({
       locale: HTML_LANG[lang],
       type: "website",
     },
-    icons: { icon: asset("/logo.png") },
+    icons: { icon: "/logo.png" },
   };
 }
 

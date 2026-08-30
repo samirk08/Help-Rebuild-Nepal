@@ -4,27 +4,21 @@ import LocationField from "@/components/LocationField";
 import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
 import { districtOptions } from "@/lib/districts";
-import type { EnhancedField } from "@/lib/form-schema";
-
-/** Stable, unique control name/id from the section number and label. */
-export function fieldKey(sectionN: string, label: string): string {
-  const slug = label
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return `s${sectionN}-${slug}`;
-}
+import { fieldKey, type EnhancedField } from "@/lib/form-schema";
 
 export default function FormFieldView({
   field,
   sectionN,
   lang,
   tr,
+  onFilesChange,
 }: {
   field: EnhancedField;
   sectionN: string;
   lang: Lang;
   tr: (value: string) => string;
+  /** Only consulted for the "files" widget — see FileUpload's own doc comment. */
+  onFilesChange?: (fieldName: string, files: File[]) => void;
 }) {
   const key = fieldKey(sectionN, field.label);
   const label = tr(field.label);
@@ -69,8 +63,8 @@ export default function FormFieldView({
             rejectedType: extra.uploadRejectedType,
             rejectedSize: extra.uploadRejectedSize,
             rejectedCount: extra.uploadRejectedCount,
-            notStored: extra.uploadNotStored,
           }}
+          onFilesChange={onFilesChange ? (files) => onFilesChange(key, files) : undefined}
         />
       ) : null}
 

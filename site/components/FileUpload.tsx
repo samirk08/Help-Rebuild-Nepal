@@ -15,13 +15,15 @@ type Rejected = { name: string; reason: "type" | "size" | "count" };
  * their photos hosted somewhere — an unreasonable ask from a ward office
  * during a disaster. This takes the files directly.
  *
- * There is no object storage behind the form yet, so what is submitted is the
- * file manifest (name, size, type), not the bytes. The picked File objects stay
- * on this component, ready to be handed to an upload call once storage exists.
+ * Files stay in this component's state (never in the form's own FormData —
+ * a File object doesn't serialize meaningfully into the JSON submission
+ * payload) until the enclosing form has a submission id to attach them to.
+ * See `lib/uploads.ts` for the upload itself.
  */
 export default function FileUpload({
   name,
   labels,
+  onFilesChange,
 }: {
   name: string;
   labels: {
@@ -32,8 +34,9 @@ export default function FileUpload({
     rejectedType: string;
     rejectedSize: string;
     rejectedCount: string;
-    notStored: string;
   };
+  /** Reports the current file list up, so the enclosing form can upload them once it has a submission id. */
+  onFilesChange?: (files: File[]) => void;
 }) {
   const [files, setFiles] = useState<File[]>([]);
   const [rejected, setRejected] = useState<Rejected[]>([]);
@@ -58,12 +61,22 @@ export default function FileUpload({
       }
     }
 
-    if (next.length) setFiles((prev) => [...prev, ...next]);
+    if (next.length) {
+      setFiles((prev) => {
+        const merged = [...prev, ...next];
+        onFilesChange?.(merged);
+        return merged;
+      });
+    }
     setRejected(bad);
   };
 
   const remove = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFiles((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      onFilesChange?.(next);
+      return next;
+    });
     setRejected([]);
   };
 
@@ -126,12 +139,6 @@ export default function FileUpload({
               >
                 ×
               </button>
-              {/* Manifest travels with the form until object storage exists. */}
-              <input
-                type="hidden"
-                name={`${name}-manifest`}
-                value={`${file.name}|${file.size}|${file.type}`}
-              />
             </li>
           ))}
         </ul>
@@ -146,8 +153,6 @@ export default function FileUpload({
           ))}
         </ul>
       ) : null}
-
-      {files.length ? <p className="upload__note">{labels.notStored}</p> : null}
     </div>
   );
 }

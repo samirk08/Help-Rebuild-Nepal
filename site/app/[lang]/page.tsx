@@ -9,6 +9,11 @@ import { screenPath } from "@/lib/routes";
 import { HOW_STEPS, MATCH_ON, TRUST_ITEMS } from "@/lib/site-data";
 import { notFound } from "next/navigation";
 
+// trackerMetrics() queries Supabase for real counts — this must never run at
+// build time (no credentials exist yet then) or be cached (the numbers are
+// meant to move as soon as someone registers).
+export const dynamic = "force-dynamic";
+
 export default async function HomePage({
   params,
   searchParams,
@@ -24,7 +29,7 @@ export default async function HomePage({
   // Awaiting `searchParams` makes this page render on demand, and the demo
   // dataset is off unless the build opts in, so only read the query string
   // when it could change what renders. Everything else here is static.
-  const metrics = trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
+  const metrics = await trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
 
   return (
     <>
