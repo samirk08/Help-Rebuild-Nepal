@@ -18,15 +18,15 @@ export const STATUSES: Status[] = [
 
 export const HOW_STEPS = [
   { n: "01", title: "Offer help or post a need" },
-  { n: "02", title: "Requests are reviewed and clearly verified" },
-  { n: "03", title: "People and resources are matched" },
-  { n: "04", title: "Teams coordinate and track the work" },
+  { n: "02", title: "A municipality or partner checks it" },
+  { n: "03", title: "We match people and resources" },
+  { n: "04", title: "Teams coordinate and record the work" },
 ];
 
 export const TRUST_ITEMS = [
   {
     k: "Who verifies a request",
-    v: "Municipality and ward offices, partner NGOs and INGOs, and the platform's own coordination team.",
+    v: "Municipality and ward offices, partner NGOs and INGOs, and our own coordination team.",
   },
   {
     k: "If a request cannot be verified",
@@ -150,7 +150,7 @@ export const DEMAND = [
 export const PROJECT_PHASES = [
   { stage: "Recruiting", body: "Team roster still open, coordinator assigned." },
   { stage: "In progress", body: "Team deployed and reporting weekly." },
-  { stage: "Completed", body: "Work finished, impact recorded and handed over." },
+  { stage: "Completed", body: "Work finished, results recorded and handed over." },
 ];
 
 export const NETWORKS = [
@@ -281,7 +281,7 @@ export const EXPORTS = [
   "Export volunteer database",
   "Export request and project data",
   "Filter by location, skill or availability",
-  "Impact reports and analytics",
+  "Reports on what is needed and where",
   "Share with government and partners",
   "Maintain data security and privacy",
 ];
@@ -294,7 +294,7 @@ export const FOOTER_COLUMNS: Array<{
     title: "Volunteer",
     items: [
       { label: "Register my skills", screen: "volunteer" },
-      { label: "My readiness profile", screen: "profile" },
+      { label: "My profile", screen: "profile" },
       { label: "Skill networks", screen: "networks" },
     ],
   },
@@ -308,9 +308,9 @@ export const FOOTER_COLUMNS: Array<{
     ],
   },
   {
-    title: "Platform",
+    title: "More",
     items: [
-      { label: "Live impact tracker", screen: "tracker" },
+      { label: "Live numbers", screen: "tracker" },
       { label: "For partners", screen: "partners" },
     ],
   },

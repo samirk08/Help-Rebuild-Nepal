@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { dict, isLang, translator } from "@/lib/i18n";
-import { screenPath } from "@/lib/routes";
+import { navItems, screenPath } from "@/lib/routes";
 import { PROFILE_CARDS } from "@/lib/site-data";
 
 export async function generateMetadata({
@@ -14,7 +14,10 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!isLang(lang)) return {};
   const t = dict(lang);
-  return { title: t.profileNote, description: t.profileBody, robots: { index: false } };
+  // Every other page titles itself with a short noun phrase; `profileNote` is a
+  // full sentence, so take the nav label instead.
+  const label = navItems(lang).find((item) => item.id === "profile")?.label;
+  return { title: label, description: t.profileBody, robots: { index: false } };
 }
 
 export default async function ProfilePage({ params }: { params: Promise<{ lang: string }> }) {
