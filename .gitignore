@@ -1,0 +1,7 @@
+.DS_Store
+site/node_modules/
+site/.next/
+site/out/
+site/*.tsbuildinfo
+site/next-env.d.ts
+site/.env*.local

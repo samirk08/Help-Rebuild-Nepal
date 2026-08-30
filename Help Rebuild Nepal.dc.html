@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#f6f7f8; color:#12171c; font-family:'Public Sans','Noto Sans Devanagari',Helvetica,sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:#14663c; text-decoration:none; }
+  a:hover { color:#0e4a2b; text-decoration:underline; }
+  input, select, textarea, button { font-family:'Public Sans','Noto Sans Devanagari',Helvetica,sans-serif; font-size:14px; color:#12171c; }
+  input:focus, select:focus, textarea:focus { outline:2px solid #14663c; outline-offset:-1px; }
+  ::placeholder { color:#98a2ab; }
+  @keyframes hrn-live { 0%, 44% { opacity:1; transform:scale(1); } 50%, 94% { opacity:0.18; transform:scale(0.82); } 100% { opacity:1; transform:scale(1); } }
+  @keyframes hrn-halo { 0% { transform:scale(1); opacity:0.55; } 70%, 100% { transform:scale(2.6); opacity:0; } }
+  @keyframes hrn-rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @keyframes hrn-trail { from { background-position:-40% 0; } to { background-position:140% 0; } }
+  @keyframes hrn-toast { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+  @keyframes hrn-dialog { from { opacity:0; transform:translateY(18px) scale(0.97); } to { opacity:1; transform:none; } }
+  @keyframes hrn-veil { from { opacity:0; } to { opacity:1; } }
+  @keyframes hrn-shimmer { 0% { opacity:0.35; } 50% { opacity:1; } 100% { opacity:0.35; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;flex-direction:column">
+
+  <div style="height:4px;background:#c90026"></div>
+
+  <header style="position:sticky;top:0;z-index:20;background:#ffffff;border-bottom:1px solid #e2e6ea">
+    <div style="max-width:1240px;margin:0 auto;padding:0 24px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;min-height:66px;padding-top:10px;padding-bottom:10px">
+      <div style="display:flex;align-items:center;gap:14px;cursor:pointer" onClick="{{ goHome }}">
+        <img src="assets/logo.png" alt="Help Rebuild Nepal" width="88" height="46" style="height:46px;width:88px;display:block" />
+        <div style="font-size:10.5px;letter-spacing:1.4px;color:#5c666f;text-transform:uppercase;border-left:1px solid #e2e6ea;padding-left:14px;line-height:1.5;max-width:120px">Volunteer. Connect. Rebuild.</div>
+      </div>
+      <nav style="display:flex;flex-wrap:wrap;gap:2px;margin-left:auto" hint-placeholder-count="0">
+        <sc-for list="{{ nav }}" as="item" hint-placeholder-count="6">
+          <div style="{{ item.style }}" onClick="{{ item.go }}">{{ item.label }}</div>
+        </sc-for>
+      </nav>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;border:1px solid #d7dce1;border-radius:3px;overflow:hidden">
+          <div style="{{ enBtn }}" onClick="{{ setEn }}">EN</div>
+          <div style="{{ npBtn }}" onClick="{{ setNp }}">नेपाली</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main style="flex:1">
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <section style="background:#ffffff;border-bottom:1px solid #e2e6ea">
+        <div style="max-width:1240px;margin:0 auto;padding:66px 24px 52px">
+          <div style="max-width:760px">
+            <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(34px,4.4vw,52px);line-height:1.04;letter-spacing:-1.2px;margin:0 0 20px;text-wrap:balance">{{ t.heroTitle }}</h1>
+            <p style="font-size:18px;line-height:1.5;color:#3d474f;margin:0 0 28px;max-width:600px;text-wrap:pretty">{{ t.heroSub }}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#14663c;color:#ffffff;padding:15px 24px;border-radius:3px;font-size:14.5px;font-weight:600;cursor:pointer" style-hover="background:#0e4a2b" onClick="{{ goVolunteer }}">{{ t.iCanHelpBtn }} <span>→</span></div>
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#0a1d4d;color:#ffffff;padding:15px 24px;border-radius:3px;font-size:14.5px;font-weight:600;cursor:pointer" style-hover="background:#061336" onClick="{{ goPost }}">{{ t.requestSupportBtn }} <span>→</span></div>
+            </div>
+            <div style="margin-top:26px;display:flex;flex-wrap:wrap;align-items:baseline;gap:10px">
+              <span style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#98a2ab;font-weight:600">{{ t.openTo }}</span>
+              <span style="{{ loopStyle }}">{{ loopWord }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="background:#0a1d4d;color:#ffffff;position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,rgba(201,0,38,0) 0%,#c90026 35%,#ff6b83 50%,#c90026 65%,rgba(201,0,38,0) 100%);background-size:40% 100%;background-repeat:no-repeat;animation:hrn-trail 4.2s linear infinite"></div>
+        <div style="max-width:1240px;margin:0 auto;padding:34px 24px 38px">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:24px">
+            <span style="position:relative;width:8px;height:8px;flex:none;display:inline-block">
+              <span style="position:absolute;inset:0;border-radius:50%;background:#5fd08a;animation:hrn-live 2.4s ease-in-out infinite"></span>
+              <span style="position:absolute;inset:0;border-radius:50%;background:#5fd08a;animation:hrn-halo 2.4s ease-out infinite"></span>
+            </span>
+            <span style="font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#9fb3d9;font-weight:600">{{ t.trackerTitle }}</span>
+            <div style="margin-left:auto;font-size:13.5px;font-weight:600;color:#ffffff;cursor:pointer;border-bottom:1px solid #3d5a99" style-hover="color:#9fb3d9" onClick="{{ goTracker }}">{{ t.seeTracker }} →</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:#1e3466">
+            <sc-for list="{{ trackerTop }}" as="c" hint-placeholder-count="5">
+              <div style="background:#0a1d4d;padding:22px 20px 20px;animation:hrn-rise .55s ease both">
+                <div style="display:flex;align-items:baseline;gap:8px">
+                  <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:40px;line-height:1;letter-spacing:-1.6px;color:#ffffff;font-variant-numeric:tabular-nums">{{ c.value }}</span>
+                  <span style="font-size:12px;color:#5fd08a">{{ c.delta }}</span>
+                </div>
+                <div style="font-size:12.5px;line-height:1.4;color:#9fb3d9;margin-top:10px">{{ c.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:18px 0 0;font-size:13.5px;line-height:1.55;color:#8ba3cf;max-width:78ch">{{ t.earlyBody }}</p>
+        </div>
+      </section>
+
+      <section style="max-width:1240px;margin:0 auto;padding:56px 24px 8px">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:14px;margin-bottom:18px">
+          <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.6px;margin:0;border-left:4px solid #c90026;padding-left:14px">{{ t.needsNowTitle }}</h2>
+          <div style="font-size:14px;color:#5c666f;max-width:56ch">{{ t.needsNowBody }}</div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:44px 24px;text-align:center">
+          <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:17px;margin-bottom:8px">{{ t.needsNowEmptyTitle }}</div>
+          <div style="font-size:14px;line-height:1.55;color:#5c666f;max-width:52ch;margin:0 auto 20px">{{ t.needsNowEmptyBody }}</div>
+          <div style="display:inline-flex;border:1px solid #d7dce1;border-radius:3px;padding:12px 20px;font-size:13.5px;font-weight:600;cursor:pointer;background:#ffffff" style-hover="border-color:#12171c" onClick="{{ goNeeds }}">{{ t.seeNeedsBoard }}</div>
+        </div>
+      </section>
+
+      <section style="max-width:1240px;margin:0 auto;padding:48px 24px 8px">
+        <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.6px;margin:0 0 20px;text-align:center">{{ t.whatBrings }}</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-top:3px solid #14663c;border-radius:4px;padding:28px 26px;display:flex;flex-direction:column;gap:14px;animation:hrn-rise .5s ease both">
+            <h3 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:24px;letter-spacing:-0.4px;margin:0;color:#0e4a2b">{{ t.canHelpTitle }}</h3>
+            <p style="margin:0;font-size:15.5px;line-height:1.5;color:#3d474f">{{ t.canHelpBody }}</p>
+            <div style="margin-top:auto;padding-top:8px">
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#14663c;color:#ffffff;padding:13px 22px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#0e4a2b" onClick="{{ goVolunteer }}">{{ t.offerHelpBtn }} <span>→</span></div>
+            </div>
+          </div>
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-top:3px solid #0a1d4d;border-radius:4px;padding:28px 26px;display:flex;flex-direction:column;gap:14px;animation:hrn-rise .5s ease .08s both">
+            <h3 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:24px;letter-spacing:-0.4px;margin:0;color:#152f5c">{{ t.needSupportTitle }}</h3>
+            <p style="margin:0;font-size:15.5px;line-height:1.5;color:#3d474f">{{ t.needSupportBody }}</p>
+            <div style="margin-top:auto;padding-top:8px">
+              <div style="display:inline-flex;align-items:center;gap:8px;background:#0a1d4d;color:#ffffff;padding:13px 22px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#061336" onClick="{{ goPost }}">{{ t.requestSupportBtn }} <span>→</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="max-width:1240px;margin:0 auto;padding:48px 24px">
+        <h2 style="font-family:'Archivo',sans-serif;font-weight:600;font-size:13px;letter-spacing:1.8px;text-transform:uppercase;color:#5c666f;margin:0 0 22px;text-align:center">{{ t.howItWorks }}</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px">
+          <sc-for list="{{ howSteps }}" as="h" hint-placeholder-count="4">
+            <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:22px 20px;animation:hrn-rise .5s ease both;animation-delay:{{ h.delay }}">
+              <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;color:#c90026;margin-bottom:10px">{{ h.n }}</div>
+              <div style="font-size:15px;font-weight:600;line-height:1.35">{{ h.title }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:16px;background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:14px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:18px">
+          <span style="font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#5c666f">{{ t.statusFlow }}</span>
+          <sc-for list="{{ statuses }}" as="s" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:7px;font-size:13px">
+              <span style="{{ s.dot }}"></span>
+              <span>{{ s.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="background:#ffffff;border-top:1px solid #e2e6ea;border-bottom:1px solid #e2e6ea">
+        <div style="max-width:1240px;margin:0 auto;padding:48px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:36px;align-items:center">
+          <div>
+            <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.6px;margin:0 0 12px;text-wrap:pretty">{{ t.moreThanTitle }}</h2>
+            <p style="margin:0;font-size:16px;line-height:1.55;color:#3d474f;max-width:52ch">{{ t.moreThanBody }}</p>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            <sc-for list="{{ matchOn }}" as="m" hint-placeholder-count="7">
+              <span style="font-size:12.5px;color:#3d474f;background:#f6f7f8;border:1px solid #e2e6ea;border-radius:2px;padding:7px 11px">{{ m }}</span>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <section style="max-width:1240px;margin:0 auto;padding:48px 24px">
+        <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:28px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
+          <div style="max-width:60ch">
+            <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.4px;margin:0 0 8px">{{ t.projectsPeekTitle }}</h2>
+            <p style="margin:0;font-size:15px;line-height:1.55;color:#5c666f">{{ t.projectsPeekBody }}</p>
+          </div>
+          <div style="display:inline-flex;border:1px solid #d7dce1;border-radius:3px;padding:13px 22px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="border-color:#12171c" onClick="{{ goProjects }}">{{ t.seeProjects }}</div>
+        </div>
+      </section>
+
+      <section style="background:#0a1d4d;color:#ffffff">
+        <div style="max-width:1240px;margin:0 auto;padding:52px 24px">
+          <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.6px;margin:0 0 8px;border-left:4px solid #c90026;padding-left:14px">{{ t.trustTitle }}</h2>
+          <p style="margin:0 0 26px;font-size:15px;line-height:1.55;color:#9fb3d9;max-width:64ch">{{ t.trustIntro }}</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+            <sc-for list="{{ trustItems }}" as="ti" hint-placeholder-count="4">
+              <div style="border:1px solid #1e3466;border-radius:4px;padding:18px 20px;animation:hrn-rise .5s ease both;animation-delay:{{ ti.delay }}">
+                <div style="font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:#e0264a;margin-bottom:10px">{{ ti.k }}</div>
+                <div style="font-size:14px;line-height:1.55">{{ ti.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <section style="background:#b2242b;color:#ffffff">
+        <div style="max-width:1240px;margin:0 auto;padding:52px 24px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between">
+          <div style="max-width:56ch">
+            <h2 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(24px,2.8vw,32px);line-height:1.15;letter-spacing:-0.7px;margin:0 0 10px;text-wrap:pretty">{{ t.ctaTitle }}</h2>
+            <p style="margin:0;font-size:15px;line-height:1.55;color:#f6d6d8">{{ t.ctaBody }}</p>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <div style="background:#ffffff;color:#b2242b;padding:15px 24px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#f6e8e9" onClick="{{ goVolunteer }}">{{ t.iCanHelpBtn }} →</div>
+            <div style="border:1px solid #dd8b90;color:#ffffff;padding:15px 24px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#9c1f25" onClick="{{ goPost }}">{{ t.requestSupportBtn }} →</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isForm }}">
+    <div data-screen-label="Form" style="max-width:960px;margin:0 auto;padding:44px 24px 72px">
+      <div style="font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#5c666f;margin-bottom:12px">{{ formKicker }}</div>
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(28px,3.4vw,38px);line-height:1.1;letter-spacing:-0.9px;margin:0 0 12px;text-wrap:balance">{{ formTitle }}</h1>
+      <p style="font-size:16px;line-height:1.55;color:#3d474f;margin:0 0 22px;max-width:64ch;text-wrap:pretty">{{ formIntro }}</p>
+
+      <div style="{{ railStyle }}">
+        <span style="font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#5c666f;font-weight:600">{{ t.progressLabel }}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ formSections }}" as="p" hint-placeholder-count="6">
+            <div style="{{ p.pip }}" onClick="{{ p.toggle }}">{{ p.n }}</div>
+          </sc-for>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:14px;font-size:12.5px;font-weight:600">
+          <span style="color:#14663c;cursor:pointer" style-hover="color:#0e4a2b" onClick="{{ expandAll }}">{{ t.expandAll }}</span>
+          <span style="color:#78838c;cursor:pointer" style-hover="color:#12171c" onClick="{{ collapseAll }}">{{ t.collapseAll }}</span>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:14px">
+        <sc-for list="{{ formSections }}" as="sec" hint-placeholder-count="6">
+          <section style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;overflow:hidden">
+            <div style="padding:15px 22px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none" style-hover="background:#fbfcfc" onClick="{{ sec.toggle }}">
+              <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#78838c">{{ sec.n }}</span>
+              <span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:15.5px">{{ sec.title }}</span>
+              <span style="font-size:12px;color:#98a2ab;margin-left:auto">{{ sec.hint }}</span>
+              <span style="{{ sec.chevron }}">▾</span>
+            </div>
+            <sc-if value="{{ sec.open }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:4px 22px 22px;display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));border-top:1px solid #eef1f3;animation:hrn-rise .32s ease both">
+              <sc-for list="{{ sec.fields }}" as="fd" hint-placeholder-count="4">
+                <label style="display:flex;flex-direction:column;gap:7px;grid-column:{{ fd.span }}">
+                  <span style="font-size:11px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:#5c666f">{{ fd.label }}</span>
+                  <sc-if value="{{ fd.isText }}" hint-placeholder-val="{{ true }}">
+                    <input placeholder="{{ fd.ph }}" style="padding:11px 12px;border:1px solid #d7dce1;border-radius:3px;background:#ffffff;width:100%" />
+                  </sc-if>
+                  <sc-if value="{{ fd.isSelect }}">
+                    <select style="padding:11px 12px;border:1px solid #d7dce1;border-radius:3px;background:#ffffff;width:100%">
+                      <sc-for list="{{ fd.options }}" as="o" hint-placeholder-count="3">
+                        <option>{{ o }}</option>
+                      </sc-for>
+                    </select>
+                  </sc-if>
+                  <sc-if value="{{ fd.isArea }}">
+                    <textarea rows="4" placeholder="{{ fd.ph }}" style="padding:11px 12px;border:1px solid #d7dce1;border-radius:3px;background:#ffffff;width:100%;resize:vertical;line-height:1.5"></textarea>
+                  </sc-if>
+                  <sc-if value="{{ fd.isChips }}">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                      <sc-for list="{{ fd.options }}" as="o" hint-placeholder-count="8">
+                        <label style="display:flex;align-items:center;gap:7px;border:1px solid #d7dce1;border-radius:3px;padding:8px 11px;font-size:13px;cursor:pointer;background:#ffffff" style-hover="border-color:#14663c">
+                          <input type="checkbox" style="accent-color:#14663c;margin:0" />
+                          <span>{{ o }}</span>
+                        </label>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ fd.isRadio }}">
+                    <div style="display:grid;gap:8px">
+                      <sc-for list="{{ fd.rows }}" as="r" hint-placeholder-count="4">
+                        <label style="display:flex;align-items:center;gap:10px;border:1px solid #d7dce1;border-radius:3px;padding:10px 12px;font-size:13.5px;cursor:pointer;background:#ffffff" style-hover="border-color:#14663c">
+                          <input type="radio" name="{{ r.group }}" style="accent-color:#14663c;margin:0" />
+                          <span style="{{ r.dot }}"></span>
+                          <span style="font-weight:600">{{ r.label }}</span>
+                          <span style="color:#98a2ab">{{ r.note }}</span>
+                        </label>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ fd.note }}">
+                    <span style="font-size:12px;color:#98a2ab">{{ fd.note }}</span>
+                  </sc-if>
+                </label>
+              </sc-for>
+            </div>
+            </sc-if>
+          </section>
+        </sc-for>
+
+        <sc-if value="{{ isVolunteer }}">
+        <section style="background:#ffffff;border:1px solid #e2e6ea;border-left:4px solid #0a1d4d;border-radius:4px;padding:22px">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+            <input type="checkbox" checked="{{ donate }}" onChange="{{ toggleDonate }}" style="accent-color:#0a1d4d;margin-top:3px" />
+            <span>
+              <span style="display:block;font-family:'Archivo',sans-serif;font-weight:600;font-size:15.5px;margin-bottom:4px">{{ t.donateTitle }}</span>
+              <span style="display:block;font-size:14px;line-height:1.55;color:#5c666f;max-width:64ch">{{ t.donateBody }}</span>
+            </span>
+          </label>
+          <sc-if value="{{ donate }}">
+            <div style="margin-top:18px;background:#f4f6fa;border:1px solid #ccd8e8;border-radius:4px;padding:20px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+              <div style="max-width:56ch">
+                <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:15px;margin-bottom:6px">{{ t.pmdrfTitle }}</div>
+                <div style="font-size:13.5px;line-height:1.55;color:#3d474f">{{ t.pmdrfBody }}</div>
+              </div>
+              <a href="https://pmdrf.nchl.com.np/" target="_blank" rel="noopener" style="background:#0a1d4d;color:#ffffff;padding:14px 22px;border-radius:3px;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap" style-hover="background:#061336;color:#ffffff">{{ t.pmdrfCta }} →</a>
+            </div>
+          </sc-if>
+        </section>
+        <section style="background:#f1f7f3;border:1px solid #d7e6dd;border-radius:4px;padding:22px">
+          <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:15.5px;margin-bottom:8px">{{ t.organizeTitle }}</div>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:#3d474f;max-width:66ch">{{ t.organizeBody }}</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ organizeOptions }}" as="o" hint-placeholder-count="4">
+              <label style="display:flex;align-items:center;gap:7px;border:1px solid #d7e6dd;border-radius:3px;padding:8px 11px;font-size:13px;cursor:pointer;background:#ffffff">
+                <input type="checkbox" style="accent-color:#14663c;margin:0" />
+                <span>{{ o }}</span>
+              </label>
+            </sc-for>
+          </div>
+        </section>
+        </sc-if>
+
+        <sc-if value="{{ isPost }}">
+        <section style="background:#f2f5fa;border:1px solid #d8e0ec;border-radius:4px;padding:22px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#1b3f7a;margin-bottom:12px">{{ t.writeLike }}</div>
+          <div style="font-size:16px;line-height:1.55;border-left:3px solid #1b3f7a;padding-left:14px;margin-bottom:12px">{{ t.exampleQuote }}</div>
+          <div style="font-size:13.5px;color:#5c666f">{{ t.writeLikeNote }}</div>
+        </section>
+        </sc-if>
+
+        <section style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:22px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+          <label style="display:flex;gap:10px;align-items:flex-start;max-width:60ch;font-size:13.5px;line-height:1.5;color:#3d474f">
+            <input type="checkbox" style="accent-color:#14663c;margin-top:3px" />
+            <span>{{ formConsent }}</span>
+          </label>
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#12171c;color:#ffffff;padding:14px 24px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#000000" onClick="{{ submit }}">{{ formCta }} <span>→</span></div>
+        </section>
+
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isNeeds }}">
+    <div data-screen-label="Needs dashboard" style="max-width:1240px;margin:0 auto;padding:44px 24px 72px">
+      <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:16px;margin-bottom:6px">
+        <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:34px;letter-spacing:-0.8px;margin:0">{{ t.needsTitle }}</h1>
+      </div>
+      <p style="font-size:15px;color:#5c666f;margin:0 0 24px;max-width:70ch">{{ t.needsIntro }}</p>
+      <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+        <sc-for list="{{ needFilters }}" as="f" hint-placeholder-count="5">
+          <select style="padding:10px 12px;border:1px solid #d7dce1;border-radius:3px;background:#ffffff;font-size:13.5px;min-width:150px">
+            <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3">
+              <option>{{ o }}</option>
+            </sc-for>
+          </select>
+        </sc-for>
+        <div style="margin-left:auto;display:flex;align-items:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#78838c">{{ t.needsCount }}</div>
+      </div>
+      <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1.1fr 1.5fr 0.8fr 1fr 0.8fr 0.8fr;gap:12px;padding:13px 20px;border-bottom:1px solid #e2e6ea;background:#fbfcfc">
+          <sc-for list="{{ needCols }}" as="c" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;cursor:pointer" style-hover="color:#12171c" onClick="{{ c.sort }}">
+              <span>{{ c.label }}</span>
+              <span style="{{ c.arrowStyle }}">{{ c.arrow }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:64px 24px;text-align:center">
+          <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:18px;margin-bottom:8px">{{ t.needsEmptyTitle }}</div>
+          <div style="font-size:14px;line-height:1.55;color:#5c666f;max-width:52ch;margin:0 auto 22px">{{ t.needsEmptyBody }}</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <div style="background:#0a1d4d;color:#ffffff;padding:12px 20px;border-radius:3px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="background:#061336" onClick="{{ goPost }}">{{ t.postCta }}</div>
+            <div style="border:1px solid #d7dce1;padding:12px 20px;border-radius:3px;font-size:13.5px;font-weight:600;cursor:pointer;background:#ffffff" style-hover="border-color:#12171c" onClick="{{ openDialog }}">{{ t.seeExample }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}">
+    <div data-screen-label="Need detail" style="max-width:1040px;margin:0 auto;padding:44px 24px 72px">
+      <div style="font-size:13px;color:#5c666f;cursor:pointer;margin-bottom:18px" style-hover="color:#12171c" onClick="{{ goNeeds }}">{{ t.backToNeeds }}</div>
+      <div style="border:1px solid #e6d5a8;background:#fdf8ea;border-radius:3px;padding:12px 16px;font-size:13px;color:#6b5713;margin-bottom:18px">{{ t.exampleNote }}</div>
+      <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;overflow:hidden">
+        <div style="padding:28px;border-bottom:1px solid #eef1f3">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:7px;background:#f1f7f3;color:#0e4a2b;padding:6px 11px;border-radius:2px;font-size:11.5px;font-weight:600;letter-spacing:0.6px">
+              <span style="width:7px;height:7px;border-radius:50%;background:#14663c"></span>{{ t.verifiedBadge }}
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;background:#fdeceb;color:#b2242b;padding:6px 11px;border-radius:2px;font-size:11.5px;font-weight:600;letter-spacing:0.6px">
+              <span style="width:7px;height:7px;border-radius:50%;background:#d13b30"></span>{{ t.immediateBadge }}
+            </div>
+          </div>
+          <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:34px;line-height:1.14;letter-spacing:-0.8px;margin:0 0 8px">{{ t.detailTitle }}</h1>
+          <div style="font-size:14.5px;color:#5c666f">{{ t.detailMeta }}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+          <div style="padding:28px;border-right:1px solid #eef1f3">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;margin-bottom:14px">{{ t.whatToDo }}</div>
+            <p style="margin:0 0 26px;font-size:15.5px;line-height:1.6;text-wrap:pretty">{{ t.detailBody }}</p>
+            <div style="display:grid;gap:11px">
+              <sc-for list="{{ detailFacts }}" as="d" hint-placeholder-count="8">
+                <div style="display:flex;justify-content:space-between;gap:16px;padding-bottom:10px;border-bottom:1px solid #f1f4f5;font-size:13.5px">
+                  <span style="color:#5c666f">{{ d.k }}</span>
+                  <span style="font-weight:600;text-align:right">{{ d.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:28px;background:#fbfcfc">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;margin-bottom:14px">{{ t.positions }}</div>
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:44px;line-height:1;letter-spacing:-1.5px">0<span style="color:#a9b2ba">/4</span></div>
+            <div style="font-size:13.5px;color:#5c666f;margin:6px 0 14px">{{ t.committed }}</div>
+            <div style="height:7px;background:#e8ecef;border-radius:4px;margin-bottom:24px"></div>
+            <div style="background:#14663c;color:#ffffff;padding:15px 20px;border-radius:3px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;margin-bottom:10px" style-hover="background:#0e4a2b" onClick="{{ submit }}">{{ t.iCanHelp }}</div>
+            <div style="font-size:12px;line-height:1.5;color:#98a2ab;text-align:center">{{ t.interestNote }}</div>
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid #eef1f3">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;margin-bottom:12px">Status</div>
+              <div style="display:grid;gap:9px">
+                <sc-for list="{{ statuses }}" as="s" hint-placeholder-count="6">
+                  <div style="display:flex;align-items:center;gap:9px;font-size:13px">
+                    <span style="{{ s.dot }}"></span>
+                    <span>{{ s.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isTracker }}">
+    <div data-screen-label="{{ t.trackerTitle }}" style="max-width:1240px;margin:0 auto;padding:44px 24px 72px">
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(26px,3.2vw,34px);letter-spacing:-0.8px;margin:0 0 6px">{{ t.trackerTitle }}</h1>
+      <p style="font-size:15px;color:#5c666f;margin:0 0 20px;max-width:70ch">{{ t.trackerIntro }}</p>
+      <div style="border:1px solid #d7e6dd;border-radius:4px;background:#f1f7f3;padding:22px 24px;margin-bottom:22px;max-width:70ch">
+        <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#0e4a2b;font-weight:600;margin-bottom:10px">{{ t.earlyTitle }}</div>
+        <p style="margin:0;font-size:15px;line-height:1.55;color:#1f3d2c">{{ t.earlyBody }}</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px">
+        <sc-for list="{{ trackerTop }}" as="c" hint-placeholder-count="5">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:22px 20px">
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-1.2px;color:#a9b2ba">{{ c.value }}</div>
+            <div style="font-size:12.5px;line-height:1.4;color:#5c666f;margin-top:8px">{{ c.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+        <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:24px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#14663c;margin-bottom:18px">{{ t.expertiseTitle }}</div>
+          <div style="display:grid;gap:13px">
+            <sc-for list="{{ expertise }}" as="e" hint-placeholder-count="7">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px">
+                  <span>{{ e }}</span>
+                  <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#a9b2ba">0%</span>
+                </div>
+                <div style="height:6px;background:#eef1f3;border-radius:4px"></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:24px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#7a4fbf;margin-bottom:18px">{{ t.fromTitle }}</div>
+          <div style="display:grid;gap:13px">
+            <sc-for list="{{ locations }}" as="l" hint-placeholder-count="6">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px">
+                  <span>{{ l }}</span>
+                  <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#a9b2ba">0</span>
+                </div>
+                <div style="height:6px;background:#eef1f3;border-radius:4px"></div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="font-size:12.5px;line-height:1.5;color:#98a2ab;margin:18px 0 0">{{ t.diasporaNote }}</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:24px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#1b3f7a;margin-bottom:18px">{{ t.demandTitle }}</div>
+          <div style="display:grid;gap:12px">
+            <sc-for list="{{ demand }}" as="d" hint-placeholder-count="5">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:11px;border-bottom:1px solid #f1f4f5">
+                <span style="font-size:13.5px;color:#5c666f">{{ d.label }}</span>
+                <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:20px">{{ d.value }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isProjects }}">
+    <div data-screen-label="Projects" style="max-width:1240px;margin:0 auto;padding:44px 24px 72px">
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(26px,3.2vw,34px);letter-spacing:-0.8px;margin:0 0 6px">{{ t.projectsTitle }}</h1>
+      <p style="font-size:15px;color:#5c666f;margin:0 0 26px;max-width:70ch">{{ t.projectsIntro }}</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin-bottom:16px">
+        <sc-for list="{{ projectPhases }}" as="p" hint-placeholder-count="3">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:22px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;margin-bottom:10px">{{ p.stage }}</div>
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:30px;line-height:1;letter-spacing:-1px;margin-bottom:8px">0</div>
+            <div style="font-size:13px;line-height:1.5;color:#5c666f">{{ p.body }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:56px 24px;text-align:center">
+        <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:18px;margin-bottom:8px">{{ t.projectsEmptyTitle }}</div>
+        <div style="font-size:14px;line-height:1.55;color:#5c666f;max-width:56ch;margin:0 auto 22px">{{ t.projectsEmptyBody }}</div>
+        <div style="display:inline-flex;background:#0a1d4d;color:#ffffff;padding:12px 20px;border-radius:3px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="background:#061336" onClick="{{ goPost }}">{{ t.proposeProject }}</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isNetworks }}">
+    <div data-screen-label="{{ t.networksTitle }}" style="max-width:1240px;margin:0 auto;padding:44px 24px 72px">
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(26px,3.2vw,34px);letter-spacing:-0.8px;margin:0 0 6px">{{ t.networksTitle }}</h1>
+      <p style="font-size:15px;color:#5c666f;margin:0 0 26px;max-width:70ch">{{ t.networksIntro }}</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+        <sc-for list="{{ networks }}" as="n" hint-placeholder-count="5">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:22px;display:flex;flex-direction:column;gap:12px">
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px;letter-spacing:-0.3px">{{ n.name }}</div>
+            <div style="font-size:13px;line-height:1.5;color:#5c666f">{{ n.body }}</div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-top:auto">
+              <span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:22px">0</span>
+              <span style="font-size:12.5px;color:#78838c">{{ t.membersLabel }}</span>
+            </div>
+            <div style="border:1px solid #d7dce1;border-radius:3px;padding:10px 14px;text-align:center;font-size:13px;font-weight:600;cursor:pointer" style-hover="border-color:#14663c;color:#14663c" onClick="{{ goVolunteer }}">{{ t.joinNetwork }}</div>
+          </div>
+        </sc-for>
+        <div style="border:1px dashed #d7dce1;border-radius:4px;padding:22px;display:flex;flex-direction:column;justify-content:center;gap:10px;background:#fbfcfc">
+          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px">{{ t.createNetwork }}</div>
+          <div style="font-size:13px;line-height:1.5;color:#5c666f">{{ t.createNetworkBody }}</div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isProfile }}">
+    <div data-screen-label="Volunteer profile" style="max-width:1040px;margin:0 auto;padding:44px 24px 72px">
+      <div style="border:1px solid #e6d5a8;background:#fdf8ea;border-radius:3px;padding:12px 16px;font-size:13px;color:#6b5713;margin-bottom:18px">{{ t.profileNote }}</div>
+      <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:28px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+        <div style="width:66px;height:66px;border-radius:50%;background:#eef1f3;border:1px solid #e2e6ea;flex:none"></div>
+        <div style="flex:1;min-width:220px">
+          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:24px;letter-spacing:-0.5px">{{ t.yourName }}</div>
+          <div style="font-size:14px;color:#5c666f;margin-top:4px">{{ t.profileMeta }}</div>
+        </div>
+        <div style="min-width:180px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#5c666f;margin-bottom:6px"><span>{{ t.completeness }}</span><span>0%</span></div>
+          <div style="height:7px;background:#eef1f3;border-radius:4px"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+        <sc-for list="{{ profileCards }}" as="p" hint-placeholder-count="6">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:22px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;margin-bottom:14px">{{ p.title }}</div>
+            <div style="display:grid;gap:10px">
+              <sc-for list="{{ p.rows }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;justify-content:space-between;gap:14px;font-size:13.5px;padding-bottom:9px;border-bottom:1px solid #f1f4f5">
+                  <span style="color:#5c666f">{{ r.k }}</span>
+                  <span style="font-weight:600;text-align:right">{{ r.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:16px;background:#f1f7f3;border:1px solid #d7e6dd;border-radius:4px;padding:22px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between">
+        <div style="max-width:60ch;font-size:14px;line-height:1.55;color:#3d474f">{{ t.profileBody }}</div>
+        <div style="background:#14663c;color:#ffffff;padding:13px 22px;border-radius:3px;font-size:13.5px;font-weight:600;cursor:pointer" style-hover="background:#0e4a2b" onClick="{{ goVolunteer }}">{{ t.registerArrow }}</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAdmin }}">
+    <div data-screen-label="{{ t.adminTitle }}" style="max-width:1240px;margin:0 auto;padding:44px 24px 72px">
+      <h1 style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(26px,3.2vw,34px);letter-spacing:-0.8px;margin:0 0 6px">{{ t.partnersTitle }}</h1>
+      <p style="font-size:15px;color:#5c666f;margin:0 0 22px;max-width:70ch">{{ t.partnersIntro }}</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px">
+        <sc-for list="{{ partnerStats }}" as="st" hint-placeholder-count="4">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:20px;animation:hrn-rise .5s ease both;animation-delay:{{ st.delay }}">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <span style="{{ st.dot }}"></span>
+              <span style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#5c666f;font-weight:600">{{ st.label }}</span>
+            </div>
+            <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:32px;line-height:1;letter-spacing:-1.1px;font-variant-numeric:tabular-nums">{{ st.value }}</div>
+            <div style="font-size:12.5px;color:#98a2ab;margin-top:8px">{{ st.note }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;margin-bottom:16px;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid #eef1f3;display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+          <span style="position:relative;width:8px;height:8px;flex:none;display:inline-block">
+            <span style="position:absolute;inset:0;border-radius:50%;background:#e0a11b;animation:hrn-live 2.4s ease-in-out infinite"></span>
+            <span style="position:absolute;inset:0;border-radius:50%;background:#e0a11b;animation:hrn-halo 2.4s ease-out infinite"></span>
+          </span>
+          <span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:15.5px">{{ t.queueTitle }}</span>
+          <span style="font-size:12.5px;color:#98a2ab">{{ t.queueNote }}</span>
+          <div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ queueFilters }}" as="q" hint-placeholder-count="4">
+              <div style="{{ q.style }}" onClick="{{ q.pick }}">{{ q.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding:48px 24px;text-align:center">
+          <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:16px;margin-bottom:6px">{{ t.queueEmptyTitle }}</div>
+          <div style="font-size:13.5px;line-height:1.55;color:#5c666f;max-width:52ch;margin:0 auto">{{ t.queueEmptyBody }}</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:16px">
+        <sc-for list="{{ adminModules }}" as="m" hint-placeholder-count="9">
+          <div style="background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:8px;cursor:pointer" style-hover="border-color:#0a1d4d">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+              <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:15px">{{ m.title }}</div>
+              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#a9b2ba">{{ m.count }}</div>
+            </div>
+            <div style="font-size:12.5px;line-height:1.5;color:#5c666f">{{ m.body }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#12171c;color:#c8ced3;border-radius:4px;padding:28px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:#78838c;margin-bottom:14px">{{ t.handoverTitle }}</div>
+        <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:22px;color:#ffffff;margin-bottom:18px;max-width:40ch;line-height:1.25">{{ t.handoverBody }}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+          <sc-for list="{{ exports }}" as="e" hint-placeholder-count="6">
+            <div style="border:1px solid #262c32;border-radius:3px;padding:12px 14px;font-size:13.5px">{{ e }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ toast }}">
+    <div style="position:fixed;left:0;right:0;bottom:26px;z-index:60;display:flex;justify-content:center;pointer-events:none;padding:0 20px">
+      <div style="display:flex;align-items:flex-start;gap:12px;max-width:520px;background:#12171c;color:#ffffff;border-radius:6px;padding:15px 18px;box-shadow:0 12px 34px rgba(0,0,0,0.26);animation:hrn-toast .34s cubic-bezier(.2,.8,.3,1) both;pointer-events:auto">
+        <span style="width:8px;height:8px;border-radius:50%;background:#5fd08a;margin-top:6px;flex:none"></span>
+        <span style="font-size:13.5px;line-height:1.5;flex:1">{{ toast }}</span>
+        <span style="font-size:16px;line-height:1;color:#78838c;cursor:pointer;padding:2px 2px 2px 8px" style-hover="color:#ffffff" onClick="{{ closeToast }}">×</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ dialogOpen }}">
+    <div style="position:fixed;inset:0;z-index:70;background:rgba(9,16,26,0.55);animation:hrn-veil .22s ease both;display:flex;align-items:center;justify-content:center;padding:24px" onClick="{{ closeDialog }}">
+      <div style="width:100%;max-width:680px;max-height:86vh;overflow:auto;background:#ffffff;border-radius:8px;animation:hrn-dialog .3s cubic-bezier(.2,.8,.3,1) both" onClick="{{ stopProp }}">
+        <div style="padding:24px 26px;border-bottom:1px solid #eef1f3">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:7px;background:#f1f7f3;color:#0e4a2b;padding:6px 11px;border-radius:2px;font-size:11.5px;font-weight:600;letter-spacing:0.6px">
+              <span style="width:7px;height:7px;border-radius:50%;background:#14663c"></span>{{ t.verifiedBadge }}
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;background:#fdeceb;color:#b2242b;padding:6px 11px;border-radius:2px;font-size:11.5px;font-weight:600;letter-spacing:0.6px">
+              <span style="width:7px;height:7px;border-radius:50%;background:#d13b30"></span>{{ t.immediateBadge }}
+            </div>
+            <div style="margin-left:auto;font-size:20px;line-height:1;color:#98a2ab;cursor:pointer" style-hover="color:#12171c" onClick="{{ closeDialog }}">×</div>
+          </div>
+          <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:24px;line-height:1.15;letter-spacing:-0.6px;margin-bottom:6px">{{ t.detailTitle }}</div>
+          <div style="font-size:13.5px;color:#5c666f">{{ t.detailMeta }}</div>
+        </div>
+        <div style="padding:24px 26px">
+          <div style="border:1px solid #e6d5a8;background:#fdf8ea;border-radius:3px;padding:11px 14px;font-size:12.5px;color:#6b5713;margin-bottom:18px">{{ t.exampleNote }}</div>
+          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;text-wrap:pretty">{{ t.detailBody }}</p>
+          <div style="display:grid;gap:10px;margin-bottom:22px">
+            <sc-for list="{{ dialogFacts }}" as="d" hint-placeholder-count="4">
+              <div style="display:flex;justify-content:space-between;gap:16px;padding-bottom:9px;border-bottom:1px solid #f1f4f5;font-size:13.5px">
+                <span style="color:#5c666f">{{ d.k }}</span>
+                <span style="font-weight:600;text-align:right">{{ d.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <div style="background:#14663c;color:#ffffff;padding:13px 22px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#0e4a2b" onClick="{{ submit }}">{{ t.iCanHelp }}</div>
+            <div style="border:1px solid #d7dce1;padding:13px 22px;border-radius:3px;font-size:14px;font-weight:600;cursor:pointer" style-hover="border-color:#12171c" onClick="{{ goDetailFromDialog }}">{{ t.openFullPage }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <footer style="background:#12171c;color:#c8ced3;margin-top:auto">
+    <div style="max-width:1240px;margin:0 auto;padding:40px 24px 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:32px">
+      <div>
+        <div style="display:inline-flex;background:#ffffff;border-radius:4px;padding:12px 16px;margin-bottom:14px">
+          <img src="assets/logo.png" alt="Help Rebuild Nepal" width="84" height="44" style="height:44px;width:84px;display:block" />
+        </div>
+        <p style="font-size:13px;line-height:1.55;margin:0;color:#98a2ab;max-width:340px">{{ t.footerTagline }}</p>
+      </div>
+      <sc-for list="{{ footerCols }}" as="col" hint-placeholder-count="3">
+        <div>
+          <div style="font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#78838c;margin-bottom:12px">{{ col.title }}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ col.items }}" as="it" hint-placeholder-count="4">
+              <div style="font-size:13.5px;color:#c8ced3;cursor:pointer" style-hover="color:#ffffff" onClick="{{ it.go }}">{{ it.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="border-top:1px solid #262c32">
+      <div style="max-width:1240px;margin:0 auto;padding:16px 24px;font-size:12px;color:#78838c">{{ t.footerNote }}</div>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;volunteer&quot;,&quot;post&quot;,&quot;needs&quot;,&quot;detail&quot;,&quot;tracker&quot;,&quot;projects&quot;,&quot;networks&quot;,&quot;profile&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Preview&quot;},&quot;startLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;en&quot;,&quot;np&quot;],&quot;default&quot;:&quot;en&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Preview&quot;},&quot;demoCounts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tracker&quot;}}">
+const NAV = [
+  { id: "home", en: "Home", np: "गृहपृष्ठ" },
+  { id: "needs", en: "Needs", np: "आवश्यकता" },
+  { id: "projects", en: "Projects", np: "परियोजना" },
+  { id: "networks", en: "Networks", np: "नेटवर्क" },
+  { id: "tracker", en: "Tracker", np: "ट्र्याकर" },
+  { id: "profile", en: "Profile", np: "प्रोफाइल" },
+  { id: "admin", en: "For partners", np: "साझेदारका लागि" }
+];
+
+const LOOP_WORDS = ["engineers", "nurses", "translators", "drivers", "surveyors", "coordinators", "electricians", "teachers"];
+const LOOP_WORDS_NP = ["इन्जिनियर", "नर्स", "अनुवादक", "चालक", "सर्भेयर", "संयोजक", "इलेक्ट्रिसियन", "शिक्षक"];
+const TRACKER_LABELS = ["Total volunteers registered", "Remote volunteers", "On the ground, need logistics", "On the ground, self-supported", "Time contributors"];
+const DEMO_COUNTS = [1284, 412, 306, 198, 368];
+
+const STR = {
+  en: {
+    heroTag: "Coordinated recovery",
+    heroTitle: "Find the need. Verify it. Find the right people. Connect them.",
+    heroSub: "Our mission is to connect people who want to help with people and communities who need help — for a faster, smarter and more organized recovery.",
+    liveNow: "Live impact tracker",
+    zeroNote: "The network is opening now. Counters start at zero and update as people register and verified needs are posted.",
+    twoWays: "Two ways to make an impact",
+    helpTitle: "I want to help",
+    needTitle: "I need volunteers / help",
+    registerCta: "Register as a volunteer",
+    postCta: "Post a need",
+    flowTitle: "Platform flow overview",
+    statusFlow: "Request status flow",
+    verifiedBy: "Verification and partners",
+    heroTitle: "Rebuilding Nepal takes all of us.",
+    heroSub: "Offer your time, skills, equipment or resources—or tell us what your community needs. Help Rebuild Nepal connects verified needs with people ready to help.",
+    iCanHelpBtn: "I can help",
+    requestSupportBtn: "Request support",
+    offerHelpBtn: "Offer help",
+    earlyTitle: "Help build the network from day one",
+    earlyBody: "Register what you can offer or post a community need. Live totals will appear as requests are verified, volunteers are matched and work is completed.",
+    seeTracker: "See the live tracker",
+    needsNowTitle: "Current verified needs",
+    needsNowBody: "Verified requests appear here first — the quickest way to see where people are needed right now.",
+    needsNowEmptyTitle: "No requests have been verified yet",
+    needsNowEmptyBody: "The first verified request will appear here. Until then, the most useful thing you can do is register what you can offer.",
+    seeNeedsBoard: "Open the needs dashboard",
+    whatBrings: "What brings you here?",
+    canHelpTitle: "I can help",
+    canHelpBody: "Offer your time, professional skills, equipment, transportation or other resources.",
+    needSupportTitle: "I need support",
+    needSupportBody: "Tell us what your community, organization or rebuilding project needs.",
+    howItWorks: "How it works",
+    moreThanTitle: "More than a list of volunteers",
+    moreThanBody: "We connect each verified request with people who have the right skills, availability, location and resources to respond.",
+    projectsPeekTitle: "Active projects",
+    projectsPeekBody: "Some needs take a standing team rather than one deployment — a school rebuild, a shelter, a health camp series. Those run as projects with a coordinator and a public progress record.",
+    seeProjects: "See projects",
+    trustTitle: "Verification and trust",
+    trustIntro: "Nothing is published on the strength of a form alone. Here is who checks a request, and what happens when a request cannot be checked.",
+    donateTitle: "I want to contribute financially",
+    donateBody: "Money is handled by the government, not by this platform. Financial contributions go to the Prime Minister Disaster Relief Fund.",
+    pmdrfTitle: "Prime Minister Disaster Relief Fund",
+    pmdrfBody: "You will be taken to the official fund portal at pmdrf.nchl.com.np to complete your contribution. Help Rebuild Nepal never collects or holds donations.",
+    pmdrfCta: "Continue to the relief fund",
+    openTo: "Open to",
+    liveLabel: "Updating live",
+    sampleChip: "Sample data — not real activity",
+    progressLabel: "Sections",
+    expandAll: "Expand all",
+    collapseAll: "Collapse all",
+    queueTitle: "Verification queue",
+    queueNote: "Requests waiting on a verifier",
+    queueEmptyTitle: "Nothing waiting for review",
+    queueEmptyBody: "Submitted requests land here for a municipality, partner organization or the coordination team to confirm before they are published.",
+    openFullPage: "Open full page",
+    toastVolunteer: "Design preview — nothing was submitted. Connect this form to a database and it becomes a live registration.",
+    toastNeed: "Design preview — nothing was submitted. A live request would now enter the verification queue.",
+    toastInterest: "Design preview — no interest was recorded. On a live request the requester would be notified.",
+    partnersTitle: "For partners",
+    partnersIntro: "Access for municipalities, agencies and partner organizations: verification queues, matching, project oversight and structured handover.",
+    helpBody: "Register your skills, time, resources and availability. You decide how far you can travel, how long you can commit, and what you can bring.",
+    needBody: "Tell us what your community, project or organization needs. Be specific: the clearer the request, the faster it gets matched and filled.",
+    verifyBody: "Every request is reviewed before it is published. Needs reported by individuals are shown separately as community-reported, verification pending.",
+    logoNote: "Partner and agency logos to be supplied — drop image files into these slots.",
+    jA: "A. Journey — I want to help",
+    jEngine: "The matching engine",
+    jB: "B. Journey — I need help",
+    matchIntro: "A verified request is matched against the register on:",
+    ctaTitle: "The register is open. Add yourself, or add your need.",
+    ctaBody: "Every profile makes the next match faster. Every verified need makes the picture of what the country actually requires more accurate.",
+    footerTagline: "A coordination layer between people who want to help and the communities, municipalities and organizations that need help.",
+    footerNote: "Prototype interface. Forms are not yet connected to a live database.",
+    organizeTitle: "You do not need to be a specialist",
+    organizeBody: "Organizers and coordinators are as valuable as engineers. If you can make calls, keep lists, translate, drive or run a schedule, register — coordinators become the people who connect verified needs to available volunteers in their district.",
+    writeLike: "Write it like this",
+    exampleQuote: "“Need 2 structural engineers to inspect approximately 40 houses in Ward 7 and assess whether they are safe for occupation.”",
+    writeLikeNote: "Far more useful than “we need engineers”. Precise requests get filled first.",
+    needsTitle: "Active needs",
+    needsIntro: "Every verified request, filterable by location, skill required and urgency. Community-reported needs awaiting verification are listed separately and labelled.",
+    needsCount: "0 published requests",
+    needsEmptyTitle: "No published requests yet",
+    needsEmptyBody: "Requests appear here as soon as a verifier confirms them. If your community needs people, post the need and it enters review.",
+    seeExample: "See an example request",
+    backToNeeds: "← Back to all needs",
+    exampleNote: "Example layout. No live requests have been published yet.",
+    whatToDo: "What needs to be done",
+    detailBody: "Inspect approximately 40 houses in Ward 7 and assess whether they are safe for occupation. Findings are recorded on the municipality's assessment form and handed to the ward office each evening.",
+    detailTitle: "Structural engineers — Sindhupalchok, Ward 7",
+    detailMeta: "Melamchi Municipality · Bagmati Province · Posted 2 days ago",
+    verifiedBadge: "VERIFIED BY MUNICIPALITY",
+    immediateBadge: "IMMEDIATE — 0–72 HOURS",
+    positions: "Positions",
+    committed: "volunteers committed",
+    iCanHelp: "I can help with this →",
+    interestNote: "Expressing interest is not a commitment. The requester contacts you first.",
+    trackerTitle: "Live impact tracker",
+    trackerIntro: "Anonymous, real-time counts of collective capacity. No personal details are shown here.",
+    expertiseTitle: "Expertise breakdown",
+    fromTitle: "Registered from",
+    diasporaNote: "Diaspora volunteers can contribute remotely — assessment review, design, fundraising, translation and coordination.",
+    demandTitle: "Demand snapshot",
+    projectsTitle: "Projects in progress",
+    projectsIntro: "Where a single need becomes ongoing work — a school rebuild, a temporary shelter, a health camp series — volunteers form a team and work together over weeks or months.",
+    projectsEmptyTitle: "No projects have been opened yet",
+    projectsEmptyBody: "A project opens when a verified need requires a standing team rather than a one-off deployment. Every project carries a coordinator, a roster, a duration and a public progress record.",
+    proposeProject: "Propose a project need",
+    networksTitle: "Skill networks",
+    networksIntro: "Join or create a network of people who share your expertise. Networks let a municipality reach an entire discipline at once instead of chasing individuals.",
+    joinNetwork: "Join network",
+    createNetwork: "Create a network",
+    createNetworkBody: "Your discipline missing? Start it, and volunteers with that skill are pointed to it on registration.",
+    profileNote: "Preview of the profile you get after registering.",
+    yourName: "Your name",
+    profileMeta: "Primary skill · District · Available from —",
+    completeness: "Profile completeness",
+    profileBody: "Once registered you can express interest in verified needs, join or create skill networks, update availability at any time, and receive matched opportunities.",
+    registerArrow: "Register as a volunteer →",
+    adminTitle: "Command centre",
+    adminIntro: "Back-end view for the coordination team: verification queues, matching, project oversight and structured handover to government and partners.",
+    handoverTitle: "Data handover and reporting",
+    handoverBody: "Structured, verified and filterable records shared with the agencies that need them.",
+    membersLabel: "members"
+  },
+  np: {
+    heroTag: "समन्वित पुनर्निर्माण",
+    heroTitle: "आवश्यकता पत्ता लगाउनु। प्रमाणित गर्नु। सही व्यक्ति खोज्नु। जोड्नु।",
+    heroSub: "हाम्रो लक्ष्य सहयोग गर्न चाहने व्यक्तिहरूलाई सहयोग आवश्यक पर्ने समुदायहरूसँग जोड्नु हो — छिटो, स्मार्ट र व्यवस्थित पुनर्निर्माणका लागि।",
+    liveNow: "प्रत्यक्ष प्रभाव ट्र्याकर",
+    zeroNote: "नेटवर्क अहिले खुल्दैछ। सङ्ख्याहरू शून्यबाट सुरु हुन्छन् र दर्ता तथा प्रमाणित आवश्यकता अनुसार अद्यावधिक हुन्छन्।",
+    twoWays: "प्रभाव पार्ने दुई तरिका",
+    helpTitle: "मलाई सहयोग गर्नु छ",
+    needTitle: "मलाई स्वयंसेवक / सहयोग चाहियो",
+    registerCta: "स्वयंसेवक दर्ता",
+    postCta: "आवश्यकता राख्नुहोस्",
+    flowTitle: "प्लेटफर्म प्रक्रिया",
+    statusFlow: "अनुरोधको स्थिति",
+    verifiedBy: "प्रमाणीकरण र साझेदार",
+    heroTitle: "नेपाल पुनर्निर्माणमा हामी सबै चाहिन्छौं।",
+    heroSub: "तपाईंको समय, सीप, उपकरण वा स्रोत दिनुहोस् — वा तपाईंको समुदायलाई के चाहिएको छ भन्नुहोस्। हेल्प रिबिल्ड नेपालले प्रमाणित आवश्यकतालाई सहयोग गर्न तयार मानिससँग जोड्छ।",
+    iCanHelpBtn: "म सहयोग गर्न सक्छु",
+    requestSupportBtn: "सहयोग माग्नुहोस्",
+    offerHelpBtn: "सहयोग दिनुहोस्",
+    earlyTitle: "पहिलो दिनदेखि नेटवर्क निर्माणमा सघाउनुहोस्",
+    earlyBody: "तपाईंले दिन सक्ने कुरा दर्ता गर्नुहोस् वा समुदायको आवश्यकता राख्नुहोस्। अनुरोध प्रमाणित हुँदै, स्वयंसेवक मिल्दै र काम सम्पन्न हुँदै जाँदा प्रत्यक्ष जोडहरू देखिन थाल्नेछन्।",
+    seeTracker: "प्रत्यक्ष ट्र्याकर हेर्नुहोस्",
+    needsNowTitle: "हालका प्रमाणित आवश्यकता",
+    needsNowBody: "प्रमाणित अनुरोध पहिले यहाँ देखिन्छ — अहिले कहाँ मानिस चाहिएको छ भन्ने छिटो थाहा पाउने ठाउँ।",
+    needsNowEmptyTitle: "अझै कुनै अनुरोध प्रमाणित भएको छैन",
+    needsNowEmptyBody: "पहिलो प्रमाणित अनुरोध यहाँ देखिनेछ। त्यससम्म, तपाईंले दिन सक्ने कुरा दर्ता गर्नु सबैभन्दा उपयोगी हुन्छ।",
+    seeNeedsBoard: "आवश्यकता ड्यासबोर्ड खोल्नुहोस्",
+    whatBrings: "तपाईं किन आउनुभयो?",
+    canHelpTitle: "म सहयोग गर्न सक्छु",
+    canHelpBody: "तपाईंको समय, व्यावसायिक सीप, उपकरण, यातायात वा अन्य स्रोत दिनुहोस्।",
+    needSupportTitle: "मलाई सहयोग चाहियो",
+    needSupportBody: "तपाईंको समुदाय, संस्था वा पुनर्निर्माण परियोजनालाई के चाहिएको छ भन्नुहोस्।",
+    howItWorks: "यो कसरी काम गर्छ",
+    moreThanTitle: "स्वयंसेवकको सूची मात्र होइन",
+    moreThanBody: "हामी प्रत्येक प्रमाणित अनुरोधलाई सही सीप, उपलब्धता, स्थान र स्रोत भएका व्यक्तिसँग जोड्छौं।",
+    projectsPeekTitle: "सक्रिय परियोजना",
+    projectsPeekBody: "कुनै आवश्यकतालाई एकपटकको परिचालन नभई स्थायी टोली चाहिन्छ — विद्यालय पुनर्निर्माण, आश्रय, स्वास्थ्य शिविर। त्यस्ता काम संयोजक र सार्वजनिक प्रगति अभिलेखसहित परियोजनाका रूपमा चल्छन्।",
+    seeProjects: "परियोजना हेर्नुहोस्",
+    trustTitle: "प्रमाणीकरण र विश्वास",
+    trustIntro: "फारम भरेको भरमा कुनै पनि कुरा प्रकाशित हुँदैन। अनुरोध कसले जाँच्छ, र जाँच्न नसकिने अवस्थामा के हुन्छ — यहाँ छ।",
+    donateTitle: "म आर्थिक सहयोग गर्न चाहन्छु",
+    donateBody: "रकम यो प्लेटफर्मले नभई सरकारले व्यवस्थापन गर्छ। आर्थिक सहयोग प्रधानमन्त्री विपद् राहत कोषमा जान्छ।",
+    pmdrfTitle: "प्रधानमन्त्री विपद् राहत कोष",
+    pmdrfBody: "सहयोग पूरा गर्न तपाईंलाई pmdrf.nchl.com.np को आधिकारिक पोर्टलमा लगिनेछ। हेल्प रिबिल्ड नेपालले कहिल्यै दान सङ्कलन वा राख्दैन।",
+    pmdrfCta: "राहत कोषमा जानुहोस्",
+    openTo: "यिनका लागि खुला",
+    liveLabel: "प्रत्यक्ष अद्यावधिक",
+    sampleChip: "नमुना तथ्याङ्क — वास्तविक होइन",
+    progressLabel: "खण्डहरू",
+    expandAll: "सबै खोल्नु",
+    collapseAll: "सबै बन्द गर्नु",
+    queueTitle: "प्रमाणीकरण लाइन",
+    queueNote: "प्रमाणकको पर्खाइमा रहेका अनुरोध",
+    queueEmptyTitle: "समीक्षाको पर्खाइमा केही छैन",
+    queueEmptyBody: "पेश भएका अनुरोध प्रकाशित हुनुअघि नगरपालिका, साझेदार संस्था वा समन्वय टोलीले पुष्टि गर्नका लागि यहाँ आउँछन्।",
+    openFullPage: "पूरा पृष्ठ खोल्नु",
+    toastVolunteer: "डिजाइन नमुना — केही पेश भएको छैन। यो फारम डेटाबेससँग जोडिएपछि वास्तविक दर्ता हुनेछ।",
+    toastNeed: "डिजाइन नमुना — केही पेश भएको छैन। वास्तविक अनुरोध अब प्रमाणीकरण लाइनमा जान्थ्यो।",
+    toastInterest: "डिजाइन नमुना — कुनै इच्छा अभिलेख भएन। वास्तविक अनुरोधमा अनुरोधकर्तालाई सूचना जान्थ्यो।",
+    partnersTitle: "साझेदारका लागि",
+    partnersIntro: "नगरपालिका, निकाय र साझेदार संस्थाका लागि पहुँच: प्रमाणीकरण लाइन, म्याचिङ, परियोजना निगरानी र व्यवस्थित हस्तान्तरण।",
+    helpBody: "तपाईंको सीप, समय, स्रोत र उपलब्धता दर्ता गर्नुहोस्। कति दूर यात्रा गर्न सक्नुहुन्छ, कति समय दिन सक्नुहुन्छ र के ल्याउन सक्नुहुन्छ — निर्णय तपाईंको।",
+    needBody: "तपाईंको समुदाय, परियोजना वा संस्थालाई के चाहिएको छ भन्नुहोस्। स्पष्ट हुनुहोस् — अनुरोध जति स्पष्ट, त्यति छिटो पूरा हुन्छ।",
+    verifyBody: "प्रकाशित हुनु अघि प्रत्येक अनुरोधको समीक्षा हुन्छ। व्यक्तिगत रूपमा आएका आवश्यकता 'समुदायद्वारा रिपोर्ट, प्रमाणीकरण बाँकी' भनी छुट्टै देखाइन्छ।",
+    logoNote: "साझेदार र सरकारी निकायका लोगो राख्न बाँकी — यहाँ तस्बिर फाइल राख्नुहोस्।",
+    jA: "क. यात्रा — मलाई सहयोग गर्नु छ",
+    jEngine: "म्याचिङ इन्जिन",
+    jB: "ख. यात्रा — मलाई सहयोग चाहियो",
+    matchIntro: "प्रमाणित अनुरोधलाई निम्न आधारमा दर्तासँग मिलाइन्छ:",
+    ctaTitle: "दर्ता खुला छ। आफूलाई थप्नुहोस्, वा आफ्नो आवश्यकता राख्नुहोस्।",
+    ctaBody: "प्रत्येक प्रोफाइलले अर्को म्याच छिटो बनाउँछ। प्रत्येक प्रमाणित आवश्यकताले देशलाई वास्तवमा के चाहिएको छ भन्ने तस्बिर स्पष्ट बनाउँछ।",
+    footerTagline: "सहयोग गर्न चाहने व्यक्ति र सहयोग आवश्यक पर्ने समुदाय, नगरपालिका तथा संस्थाबीचको समन्वय पर्त।",
+    footerNote: "नमुना इन्टरफेस। फारमहरू अझै प्रत्यक्ष डेटाबेससँग जोडिएका छैनन्।",
+    organizeTitle: "विशेषज्ञ हुनु अनिवार्य छैन",
+    organizeBody: "संयोजक र व्यवस्थापक इन्जिनियर जत्तिकै महत्त्वपूर्ण हुन्छन्। फोन गर्न, सूची राख्न, अनुवाद गर्न, सवारी चलाउन वा तालिका मिलाउन सक्नुहुन्छ भने दर्ता गर्नुहोस् — संयोजकहरूले जिल्लामा प्रमाणित आवश्यकतालाई उपलब्ध स्वयंसेवकसँग जोड्छन्।",
+    writeLike: "यसरी लेख्नुहोस्",
+    exampleQuote: "“वडा ७ का करिब ४० घर निरीक्षण गरी बस्न सुरक्षित छन् वा छैनन् मूल्याङ्कन गर्न २ जना स्ट्रक्चरल इन्जिनियर आवश्यक।”",
+    writeLikeNote: "“हामीलाई इन्जिनियर चाहियो” भन्दा धेरै उपयोगी। स्पष्ट अनुरोध पहिले पूरा हुन्छ।",
+    needsTitle: "सक्रिय आवश्यकता",
+    needsIntro: "प्रत्येक प्रमाणित अनुरोध — स्थान, आवश्यक सीप र अत्यावश्यकता अनुसार छान्न मिल्ने। प्रमाणीकरण बाँकी रहेका समुदायिक आवश्यकता छुट्टै सूचीबद्ध र लेबल गरिन्छ।",
+    needsCount: "० प्रकाशित अनुरोध",
+    needsEmptyTitle: "अझै कुनै अनुरोध प्रकाशित भएको छैन",
+    needsEmptyBody: "प्रमाणक पुष्टि गर्नासाथ अनुरोध यहाँ देखिन्छ। तपाईंको समुदायलाई मानिस चाहिएको छ भने आवश्यकता राख्नुहोस्, समीक्षामा जान्छ।",
+    seeExample: "नमुना अनुरोध हेर्नुहोस्",
+    backToNeeds: "← सबै आवश्यकतामा फर्कनु",
+    exampleNote: "नमुना ढाँचा। अझै कुनै प्रत्यक्ष अनुरोध प्रकाशित भएको छैन।",
+    whatToDo: "के गर्नुपर्ने हो",
+    detailBody: "वडा ७ का करिब ४० घर निरीक्षण गरी बस्न सुरक्षित छन् वा छैनन् मूल्याङ्कन गर्नुपर्ने। निष्कर्ष नगरपालिकाको मूल्याङ्कन फारममा राखी प्रत्येक साँझ वडा कार्यालयमा बुझाउनुपर्छ।",
+    detailTitle: "स्ट्रक्चरल इन्जिनियर — सिन्धुपाल्चोक, वडा ७",
+    detailMeta: "मेलम्ची नगरपालिका · बागमती प्रदेश · २ दिन अघि राखिएको",
+    verifiedBadge: "नगरपालिकाद्वारा प्रमाणित",
+    immediateBadge: "तत्काल — ०–७२ घण्टा",
+    positions: "पदहरू",
+    committed: "स्वयंसेवक प्रतिबद्ध",
+    iCanHelp: "म यसमा सहयोग गर्न सक्छु →",
+    interestNote: "इच्छा जनाउनु प्रतिबद्धता होइन। अनुरोधकर्ताले पहिले तपाईंलाई सम्पर्क गर्छ।",
+    trackerTitle: "प्रत्यक्ष प्रभाव ट्र्याकर",
+    trackerIntro: "सामूहिक क्षमताको गुमनाम, वास्तविक समयको गणना। यहाँ कुनै व्यक्तिगत विवरण देखाइँदैन।",
+    expertiseTitle: "विशेषज्ञता विभाजन",
+    fromTitle: "दर्ता भएका स्थान",
+    diasporaNote: "प्रवासी स्वयंसेवकहरू दूरबाटै सहयोग गर्न सक्छन् — मूल्याङ्कन समीक्षा, डिजाइन, कोष सङ्कलन, अनुवाद र समन्वय।",
+    demandTitle: "माग सारसंक्षेप",
+    projectsTitle: "चलिरहेका परियोजना",
+    projectsIntro: "एउटै आवश्यकता निरन्तर काममा बदलिँदा — विद्यालय पुनर्निर्माण, अस्थायी आश्रय, स्वास्थ्य शिविर — स्वयंसेवकहरू टोली बनाई हप्ता वा महिनासम्म सँगै काम गर्छन्।",
+    projectsEmptyTitle: "अझै कुनै परियोजना खुलेको छैन",
+    projectsEmptyBody: "प्रमाणित आवश्यकतालाई एकपटकको परिचालन नभई स्थायी टोली चाहिँदा परियोजना खुल्छ। प्रत्येक परियोजनामा संयोजक, टोली सूची, अवधि र सार्वजनिक प्रगति अभिलेख हुन्छ।",
+    proposeProject: "परियोजना आवश्यकता प्रस्ताव गर्नुहोस्",
+    networksTitle: "सीप नेटवर्क",
+    networksIntro: "आफ्नै विशेषज्ञता बाँड्ने मानिसहरूको नेटवर्कमा सामेल हुनुहोस् वा नयाँ बनाउनुहोस्। नेटवर्कले नगरपालिकालाई एक-एक व्यक्ति खोज्नुभन्दा पूरै विधासँग एकैचोटि पुग्न दिन्छ।",
+    joinNetwork: "नेटवर्कमा सामेल हुनु",
+    createNetwork: "नेटवर्क बनाउनु",
+    createNetworkBody: "तपाईंको विधा छुटेको छ? सुरु गर्नुहोस् — दर्ता गर्दा त्यो सीप भएका स्वयंसेवकलाई यहाँ पठाइन्छ।",
+    profileNote: "दर्ता पछि पाइने प्रोफाइलको नमुना।",
+    yourName: "तपाईंको नाम",
+    profileMeta: "मुख्य सीप · जिल्ला · उपलब्ध हुने मिति —",
+    completeness: "प्रोफाइल पूर्णता",
+    profileBody: "दर्ता भएपछि तपाईं प्रमाणित आवश्यकतामा इच्छा जनाउन, सीप नेटवर्कमा सामेल हुन वा बनाउन, कुनै पनि बेला उपलब्धता अद्यावधिक गर्न र मिल्दो अवसर प्राप्त गर्न सक्नुहुन्छ।",
+    registerArrow: "स्वयंसेवक दर्ता →",
+    adminTitle: "कमाण्ड सेन्टर",
+    adminIntro: "समन्वय टोलीको लागि ब्याक-एन्ड दृश्य: प्रमाणीकरण लाइन, म्याचिङ, परियोजना निगरानी र सरकार तथा साझेदारसँग व्यवस्थित हस्तान्तरण।",
+    handoverTitle: "डेटा हस्तान्तरण र रिपोर्टिङ",
+    handoverBody: "आवश्यक निकायसँग बाँडिने व्यवस्थित, प्रमाणित र छान्न मिल्ने अभिलेख।",
+    membersLabel: "सदस्य"
+  }
+};
+
+const DISTRICTS = ["Select district", "Kathmandu", "Lalitpur", "Bhaktapur", "Sindhupalchok", "Rasuwa", "Kavre", "Nuwakot", "Dolakha", "Gorkha", "Other / outside Nepal"];
+
+const SKILLS = ["Engineering (structural / civil)", "Architecture", "Health & medical", "Water & sanitation (WASH)", "Project management", "Logistics & transport", "Construction & trades", "Education & child support", "Psychosocial support", "Translation", "IT & data", "Other"];
+
+const VOL_FORM = [
+  { n: "01", title: "Your details", hint: "Required", fields: [
+    { label: "Full name", isText: true, ph: "As on your ID", span: "span 1" },
+    { label: "Email", isText: true, ph: "you@example.com", span: "span 1" },
+    { label: "Phone / WhatsApp", isText: true, ph: "+977", span: "span 1" },
+    { label: "Where you are based", isSelect: true, options: DISTRICTS, span: "span 1" },
+    { label: "Emergency contact", isText: true, ph: "Name and phone number", span: "1 / -1" }
+  ]},
+  { n: "02", title: "Your contribution path", hint: "Choose all that apply", fields: [
+    { label: "How you can contribute", isChips: true, span: "1 / -1", options: ["I can help remotely", "I can travel", "I can contribute time", "I can provide equipment", "I can contribute logistics", "I can support financially"] }
+  ]},
+  { n: "03", title: "Expertise and skills", hint: "Required", fields: [
+    { label: "Primary skill", isSelect: true, options: SKILLS, span: "span 1" },
+    { label: "Years of experience", isSelect: true, options: ["Select", "Under 2", "2–5", "5–10", "10–20", "20+"], span: "span 1" },
+    { label: "Sub-skills", isText: true, ph: "e.g. seismic retrofitting, damage assessment", span: "1 / -1" },
+    { label: "Certifications and licences", isText: true, ph: "Council registration number, certifications", span: "1 / -1", note: "Helps verifiers prioritise you for technical assessments." }
+  ]},
+  { n: "04", title: "Availability", hint: "", fields: [
+    { label: "Available from", isText: true, ph: "DD / MM / YYYY", span: "span 1" },
+    { label: "Duration you can commit", isSelect: true, options: ["Select", "A few days", "1–2 weeks", "1 month", "3 months", "Ongoing"], span: "span 1" },
+    { label: "Hours per week", isSelect: true, options: ["Select", "Up to 5", "5–15", "15–30", "Full time"], span: "span 1" },
+    { label: "Maximum single deployment", isSelect: true, options: ["Select", "3 days", "1 week", "2 weeks", "1 month or more"], span: "span 1" }
+  ]},
+  { n: "05", title: "Deployment preferences", hint: "", fields: [
+    { label: "Where you can work", isSelect: true, options: ["On the ground", "Remote", "Both"], span: "span 1" },
+    { label: "Travel", isSelect: true, options: ["Anywhere in Nepal", "Specific districts only", "Within my district only"], span: "span 1" },
+    { label: "Preferred districts", isText: true, ph: "List districts, if any", span: "1 / -1" }
+  ]},
+  { n: "06", title: "What you can bring", hint: "Optional", fields: [
+    { label: "Resources", isChips: true, span: "1 / -1", options: ["Equipment", "Tools", "Vehicle", "Software / licences", "Professional services", "Warehouse / storage", "Accommodation"] },
+    { label: "Details", isArea: true, ph: "Describe what you can bring, quantities, and any conditions.", span: "1 / -1" }
+  ]},
+  { n: "07", title: "Additional information", hint: "Optional", fields: [
+    { label: "Languages", isChips: true, span: "1 / -1", options: ["Nepali", "English", "Newar", "Maithili", "Tamang", "Hindi", "Other"] },
+    { label: "Past experience in disaster response", isArea: true, ph: "Where, when, and in what role.", span: "1 / -1" },
+    { label: "References", isText: true, ph: "Name and contact of someone who can vouch for your work", span: "1 / -1" }
+  ]}
+];
+
+const NEED_FORM = [
+  { n: "01", title: "Who are you", hint: "Required", fields: [
+    { label: "You are posting as", isSelect: true, options: ["Government agency", "Municipality / ward", "NGO / INGO", "Community group", "Institution (school, hospital)", "Business", "Individual"], span: "span 1", note: "Individual requests are published as community-reported, verification pending." },
+    { label: "Organization name", isText: true, ph: "Full registered name", span: "span 1" },
+    { label: "Contact person", isText: true, ph: "Name and role", span: "span 1" },
+    { label: "Phone / email", isText: true, ph: "How volunteers reach you", span: "span 1" }
+  ]},
+  { n: "02", title: "Location of the need", hint: "Required", fields: [
+    { label: "Province", isSelect: true, options: ["Select province", "Koshi", "Madhesh", "Bagmati", "Gandaki", "Lumbini", "Karnali", "Sudurpashchim"], span: "span 1" },
+    { label: "District", isSelect: true, options: DISTRICTS, span: "span 1" },
+    { label: "Municipality", isText: true, ph: "Municipality or rural municipality", span: "span 1" },
+    { label: "Ward", isText: true, ph: "Ward number", span: "span 1" },
+    { label: "Exact location", isText: true, ph: "Landmark, or paste map coordinates", span: "1 / -1" }
+  ]},
+  { n: "03", title: "What you need", hint: "Choose all that apply", fields: [
+    { label: "Skills required", isChips: true, span: "1 / -1", options: SKILLS },
+    { label: "Resources required", isChips: true, span: "1 / -1", options: ["Equipment", "Vehicles", "Materials", "Medical supplies", "Tents / shelter", "Food and water", "Funding"] }
+  ]},
+  { n: "04", title: "Need details", hint: "Be specific", fields: [
+    { label: "How many people", isText: true, ph: "e.g. 4", span: "span 1" },
+    { label: "Experience level required", isSelect: true, options: ["Any", "Some experience", "Qualified professional", "Senior / licensed"], span: "span 1" },
+    { label: "Exactly what needs to be done", isArea: true, ph: "Inspect approximately 40 houses in Ward 7 and assess whether they are safe for occupation.", span: "1 / -1" },
+    { label: "Objectives / what success looks like", isArea: true, ph: "All houses assessed and results handed to the ward office.", span: "1 / -1" }
+  ]},
+  { n: "05", title: "Timeline and duration", hint: "", fields: [
+    { label: "Start date", isText: true, ph: "DD / MM / YYYY", span: "span 1" },
+    { label: "Duration", isSelect: true, options: ["Select", "1–3 days", "1 week", "2 weeks", "1 month", "Longer / ongoing project"], span: "span 1" },
+    { label: "Deadline", isText: true, ph: "When this must be completed by", span: "span 1" }
+  ]},
+  { n: "06", title: "Support and logistics", hint: "What you can provide", fields: [
+    { label: "Accommodation", isSelect: true, options: ["Provided", "Not provided", "Can arrange if needed"], span: "span 1" },
+    { label: "Food", isSelect: true, options: ["Provided", "Not provided", "Can arrange if needed"], span: "span 1" },
+    { label: "Transport", isSelect: true, options: ["Provided", "Not provided", "Reimbursed"], span: "span 1" },
+    { label: "Equipment available on site", isArea: true, ph: "What volunteers will find there, and what they should bring.", span: "1 / -1" }
+  ]},
+  { n: "07", title: "Type of support", hint: "", fields: [
+    { label: "Where the work happens", isSelect: true, options: ["On the ground", "Remote", "Both"], span: "span 1" },
+    { label: "Paid or unpaid", isSelect: true, options: ["Unpaid / volunteer", "Expenses covered", "Paid engagement"], span: "span 1" }
+  ]},
+  { n: "08", title: "Level of urgency", hint: "Required", fields: [
+    { label: "How urgent is this", isRadio: true, span: "1 / -1", rows: [
+      { group: "urgency", label: "Immediate", note: "0–72 hours", dot: "width:9px;height:9px;border-radius:50%;background:#d13b30;display:inline-block" },
+      { group: "urgency", label: "Urgent", note: "within 1 week", dot: "width:9px;height:9px;border-radius:50%;background:#e0a11b;display:inline-block" },
+      { group: "urgency", label: "Upcoming", note: "within 1 month", dot: "width:9px;height:9px;border-radius:50%;background:#2b7fd4;display:inline-block" },
+      { group: "urgency", label: "Reconstruction", note: "long term", dot: "width:9px;height:9px;border-radius:50%;background:#14663c;display:inline-block" }
+    ]}
+  ]},
+  { n: "09", title: "Additional information", hint: "Optional", fields: [
+    { label: "Anything else volunteers should know", isArea: true, ph: "Access conditions, security, permissions, documents.", span: "1 / -1" },
+    { label: "Documents or photographs", isText: true, ph: "Paste a link to photos, assessments or permits", span: "1 / -1" }
+  ]}
+];
+
+const NP_MAP = {"Find the need":"आवश्यकता पत्ता लगाउनु","Verify the need":"प्रमाणित गर्नु","Find the right people":"सही व्यक्ति खोज्नु","Connect them":"जोड्नु","Track fulfilment":"पूर्णता ट्र्याक गर्नु","People registered to help":"सहयोगका लागि दर्ता भएका","Active verified requests":"सक्रिय प्रमाणित अनुरोध","Volunteers matched":"मिलाइएका स्वयंसेवक","Needs met":"पूरा भएका आवश्यकता","People":"मानिस","Skills":"सीप","Time":"समय","Equipment":"उपकरण","Logistics":"ढुवानी","Money":"आर्थिक","Post a need":"आवश्यकता राख्नुहोस्","Find volunteers":"स्वयंसेवक खोज्नु","Manage requests":"अनुरोध व्यवस्थापन","Track progress":"प्रगति ट्र्याक","Landing":"गृहपृष्ठ","Learn what the platform does and choose a path.":"प्लेटफर्मले के गर्छ बुझ्नु र बाटो छान्नु।","Choose your path":"बाटो छान्नु","I want to help, or I need help.":"मलाई सहयोग गर्नु छ, वा मलाई सहयोग चाहियो।","Register / post":"दर्ता / अनुरोध","Volunteer profile or need request.":"स्वयंसेवक प्रोफाइल वा आवश्यकता अनुरोध।","Verification":"प्रमाणीकरण","Reviewed by the platform team or a verified partner.":"प्लेटफर्म टोली वा प्रमाणित साझेदारद्वारा समीक्षा।","Match & connect":"म्याच र जडान","The matching engine connects people to verified needs.":"म्याचिङ इन्जिनले मानिसलाई प्रमाणित आवश्यकतासँग जोड्छ।","Coordinate":"समन्वय","Teams coordinate, share updates, complete the work.":"टोलीले समन्वय गर्छ, अद्यावधिक बाँड्छ, काम पूरा गर्छ।","Track & impact":"ट्र्याक र प्रभाव","Progress recorded and handed to stakeholders.":"प्रगति अभिलेख गरी सम्बद्ध पक्षलाई बुझाइन्छ।","Submitted":"पेश गरिएको","Under review":"समीक्षामा","Verified":"प्रमाणित","Recruiting":"भर्ती हुँदै","Filled":"भरिएको","Completed":"सम्पन्न","government agency logo":"सरकारी निकायको लोगो","municipality logo":"नगरपालिकाको लोगो","NGO / INGO logo":"एनजीओ / आईएनजीओ लोगो","hospital / health logo":"अस्पताल / स्वास्थ्य लोगो","partner org logo":"साझेदार संस्थाको लोगो","Volunteer":"स्वयंसेवक","Request help":"सहयोग माग","Platform":"प्लेटफर्म","Register my skills":"मेरो सीप दर्ता","My readiness profile":"मेरो तयारी प्रोफाइल","Skill networks":"सीप नेटवर्क","Active needs":"सक्रिय आवश्यकता","Projects":"परियोजना","Live impact tracker":"प्रत्यक्ष प्रभाव ट्र्याकर","For partners":"साझेदारका लागि","Awaiting verification":"प्रमाणीकरण पर्खाइमा","Verified this week":"यो हप्ता प्रमाणित","Volunteers matched":"मिलाइएका स्वयंसेवक","Open projects":"खुला परियोजना",
+"needs review":"समीक्षा आवश्यक","published":"प्रकाशित","across all districts":"सबै जिल्लामा","with an assigned coordinator":"संयोजक तोकिएका",
+"All":"सबै","Immediate":"तत्काल","This week":"यो हप्ता","Flagged":"चिन्ह लगाइएको",
+"Offer help or post a need":"सहयोग दिनुहोस् वा आवश्यकता राख्नुहोस्",
+"Requests are reviewed and clearly verified":"अनुरोधको समीक्षा हुन्छ र स्पष्ट रूपमा प्रमाणित हुन्छ",
+"People and resources are matched":"मानिस र स्रोत मिलाइन्छ",
+"Teams coordinate and track the work":"टोलीले समन्वय गर्छ र कामको ट्र्याक राख्छ",
+"Who verifies a request":"अनुरोध कसले प्रमाणित गर्छ",
+"Municipality and ward offices, partner NGOs and INGOs, and the platform's own coordination team.":"नगरपालिका र वडा कार्यालय, साझेदार एनजीओ तथा आईएनजीओ, र प्लेटफर्मको आफ्नै समन्वय टोली।",
+"If a request cannot be verified":"अनुरोध प्रमाणित हुन नसके",
+"It stays visible and stays labelled community-reported, verification pending — never presented as confirmed.":"त्यो देखिने रहन्छ र 'समुदायद्वारा रिपोर्ट, प्रमाणीकरण बाँकी' भनी लेबल गरिन्छ — कहिल्यै पुष्टि भएको भनी देखाइँदैन।",
+"How misuse is prevented":"दुरुपयोग कसरी रोकिन्छ",
+"Duplicate and unverifiable requests are closed, requesters are named and contactable, and volunteers are never asked to pay to take part.":"दोहोरो र प्रमाणित हुन नसक्ने अनुरोध बन्द गरिन्छ, अनुरोधकर्ताको नाम र सम्पर्क खुल्ला हुन्छ, र स्वयंसेवकसँग सहभागिताको शुल्क कहिल्यै मागिँदैन।",
+"What happens to your data":"तपाईंको डेटाको के हुन्छ",
+"Shared only with verified requesters and partner agencies, on the consent you give at registration, and withdrawable at any time.":"दर्ता गर्दा दिनुभएको सहमतिअनुसार प्रमाणित अनुरोधकर्ता र साझेदार निकायसँग मात्र बाँडिन्छ, र कुनै पनि बेला फिर्ता लिन सकिन्छ।",
+"Sign up":"खाता खोल्नु",
+"Account, contact and where you are based.":"खाता, सम्पर्क र तपाईं बस्ने ठाउँ।",
+"Tell us what you offer":"तपाईंले के दिन सक्नुहुन्छ भन्नुहोस्",
+"Skills, experience, certifications, and what you can bring.":"सीप, अनुभव, प्रमाणपत्र, र तपाईंले ल्याउन सक्ने कुरा।",
+"Say when and where":"कहिले र कहाँ भन्नुहोस्",
+"Availability, duration, on the ground or remote, how far you travel.":"उपलब्धता, अवधि, स्थलगत वा दूरबाट, कति टाढा यात्रा गर्नुहुन्छ।",
+"You are in the register":"तपाईं दर्तामा हुनुहुन्छ",
+"Consent, profile created, and matched opportunities start arriving.":"सहमति, प्रोफाइल तयार, र मिल्दा अवसर आउन थाल्छन्।",
+"Account for your organization, institution or community.":"तपाईंको संस्था, निकाय वा समुदायको खाता।",
+"Where the need is":"आवश्यकता कहाँ छ",
+"Province, district, municipality, ward and exact location.":"प्रदेश, जिल्ला, नगरपालिका, वडा र ठ्याक्कै स्थान।",
+"Skills, how many people, exactly what must be done, and how urgent.":"सीप, कति जना, ठ्याक्कै के गर्नुपर्ने, र कति अत्यावश्यक।",
+"Verified, then published — track it, update it, close it.":"प्रमाणित, अनि प्रकाशित — ट्र्याक गर्नुहोस्, अद्यावधिक गर्नुहोस्, बन्द गर्नुहोस्।",
+"People who fit are notified and express interest.":"मिल्ने व्यक्तिलाई सूचना जान्छ र उनीहरू इच्छा जनाउँछन्।",
+"Several can join one request; coordinators build the team.":"एउटै अनुरोधमा धेरै सामेल हुन सक्छन्; संयोजकले टोली बनाउँछन्।",
+"The team works, shares updates, marks progress.":"टोलीले काम गर्छ, अद्यावधिक बाँड्छ, प्रगति टिप्छ।",
+"Impact recorded and available for reporting.":"प्रभाव अभिलेख गरिन्छ र रिपोर्टिङका लागि उपलब्ध हुन्छ।","Create an account with basic details.":"आधारभूत विवरणसहित खाता बनाउनु।","Choose your contribution path":"योगदानको बाटो छान्नु","Remotely, on the ground, time, equipment, logistics or financially.":"दूरबाट, स्थलगत, समय, उपकरण, ढुवानी वा आर्थिक।","Volunteer profile":"स्वयंसेवक प्रोफाइल","Personal information, location, contact, emergency contact.":"व्यक्तिगत विवरण, स्थान, सम्पर्क, आपत्कालीन सम्पर्क।","Expertise and skills":"विशेषज्ञता र सीप","Primary skill, sub-skills, years of experience, certifications.":"मुख्य सीप, उप-सीप, अनुभवका वर्ष, प्रमाणपत्र।","Availability":"उपलब्धता","Start date, duration, hours per week, maximum deployment.":"सुरु मिति, अवधि, साप्ताहिक घण्टा, अधिकतम परिचालन।","Deployment preferences":"परिचालन प्राथमिकता","On the ground, remote or both; anywhere or specific districts.":"स्थलगत, दूरबाट वा दुवै; कतै पनि वा निश्चित जिल्ला।","What you can bring":"तपाईं के ल्याउन सक्नुहुन्छ","Equipment, tools, vehicle, software, services, other resources.":"उपकरण, औजार, सवारी, सफ्टवेयर, सेवा, अन्य स्रोत।","Additional information":"थप जानकारी","Languages, past disaster experience, references.":"भाषा, विगतको विपद् अनुभव, सन्दर्भ।","Consent and confirmation":"सहमति र पुष्टि","Data usage policy and consent.":"डेटा प्रयोग नीति र सहमति।","Profile created":"प्रोफाइल बन्यो","You are part of the register, and can express interest in verified needs.":"तपाईं दर्तामा समावेश भइसक्नुभयो, र प्रमाणित आवश्यकतामा इच्छा जनाउन सक्नुहुन्छ।","Create an account for your organization or community.":"तपाईंको संस्था वा समुदायको लागि खाता बनाउनु।","Who are you":"तपाईं को हुनुहुन्छ","Government, municipality, NGO, community, institution, business or individual.":"सरकार, नगरपालिका, एनजीओ, समुदाय, संस्था, व्यवसाय वा व्यक्ति।","Location of the need":"आवश्यकताको स्थान","Province, district, municipality, ward and exact location.":"प्रदेश, जिल्ला, नगरपालिका, वडा र ठ्याक्कै स्थान।","What you need":"तपाईंलाई के चाहिन्छ","Required skills, expertise and resources.":"आवश्यक सीप, विशेषज्ञता र स्रोत।","Need details":"आवश्यकताको विवरण","How many people, exactly what needs doing, and the objective.":"कति जना, ठ्याक्कै के गर्नुपर्ने, र उद्देश्य।","Timeline and duration":"समयरेखा र अवधि","Start date, duration, deadline.":"सुरु मिति, अवधि, अन्तिम म्याद।","Support and logistics":"सहयोग र ढुवानी","Accommodation, food, transport, equipment available.":"बास, खाना, यातायात, उपलब्ध उपकरण।","Type of support":"सहयोगको प्रकार","On the ground, remote or both; paid or unpaid.":"स्थलगत, दूरबाट वा दुवै; सशुल्क वा नि:शुल्क।","Level of urgency":"अत्यावश्यकताको स्तर","Immediate, urgent, upcoming or long-term reconstruction.":"तत्काल, अत्यावश्यक, आगामी वा दीर्घकालीन पुनर्निर्माण।","Equipment needed, documents, images, other detail.":"आवश्यक उपकरण, कागजात, तस्बिर, अन्य विवरण।","Submit for review":"समीक्षाका लागि पेश","Verified, then published — you can track, update and close it.":"प्रमाणित भएपछि प्रकाशित — तपाईं ट्र्याक, अद्यावधिक र बन्द गर्न सक्नुहुन्छ।","Skills and expertise":"सीप र विशेषज्ञता","Location and mobility":"स्थान र गतिशीलता","Availability and duration":"उपलब्धता र अवधि","Language":"भाषा","Equipment and resources":"उपकरण र स्रोत","Experience level":"अनुभव स्तर","Match found":"म्याच भेटियो","Volunteers who fit are notified, see the detail and express interest.":"मिल्ने स्वयंसेवकलाई सूचना जान्छ, विवरण देख्छन् र इच्छा जनाउँछन्।","Team formation":"टोली निर्माण","Several volunteers can join the same request. Coordinators build teams.":"एउटै अनुरोधमा धेरै स्वयंसेवक सामेल हुन सक्छन्। संयोजकले टोली बनाउँछन्।","Deploy and execute":"परिचालन र कार्यान्वयन","The team coordinates, shares updates and marks progress.":"टोलीले समन्वय गर्छ, अद्यावधिक बाँड्छ र प्रगति टिप्छ।","Complete and record":"सम्पन्न र अभिलेख","Work completed, feedback shared, impact recorded for reporting.":"काम सम्पन्न, प्रतिक्रिया बाँडिएको, प्रभाव रिपोर्टिङका लागि अभिलेख।","Location":"स्थान","Need":"आवश्यकता","People needed":"आवश्यक जनशक्ति","Urgency":"अत्यावश्यकता","Status":"स्थिति","Action":"कार्य","All provinces":"सबै प्रदेश","All districts":"सबै जिल्ला","All skills":"सबै सीप","Any urgency":"कुनै पनि अत्यावश्यकता","Any status":"कुनै पनि स्थिति","Community-reported":"समुदायद्वारा रिपोर्ट","Immediate (0–72 hrs)":"तत्काल (०–७२ घण्टा)","Urgent (1 week)":"अत्यावश्यक (१ हप्ता)","Upcoming (1 month)":"आगामी (१ महिना)","Reconstruction":"पुनर्निर्माण","Skill required":"आवश्यक सीप","Structural engineering":"स्ट्रक्चरल इन्जिनियरिङ","Licensed professional":"इजाजतप्राप्त व्यावसायिक","Duration":"अवधि","1 week":"१ हप्ता","Start date":"सुरु मिति","As soon as filled":"पद भरिनासाथ","Accommodation":"बास","Provided by municipality":"नगरपालिकाद्वारा उपलब्ध","Food":"खाना","Provided":"उपलब्ध","Transport":"यातायात","Reimbursed":"खर्च फिर्ता","On the ground, unpaid":"स्थलगत, नि:शुल्क","Total volunteers registered":"कुल दर्ता स्वयंसेवक","Remote volunteers":"दूरबाट सहयोग गर्ने","On the ground, need logistics":"स्थलगत, ढुवानी आवश्यक","On the ground, self-supported":"स्थलगत, आत्मनिर्भर","Time contributors":"समय दिने","Engineering":"इन्जिनियरिङ","Architecture":"आर्किटेक्चर","Health & medical":"स्वास्थ्य र चिकित्सा","Project management":"परियोजना व्यवस्थापन","Water & sanitation":"खानेपानी र सरसफाई","Other":"अन्य","Nepal":"नेपाल","India":"भारत","Australia":"अस्ट्रेलिया","United States":"संयुक्त राज्य","UAE":"यूएई","Other (45+ countries)":"अन्य (४५+ देश)","Active requests":"सक्रिय अनुरोध","Projects completed":"सम्पन्न परियोजना","In progress":"चलिरहेको","Team roster still open, coordinator assigned.":"टोली सूची खुला, संयोजक तोकिएको।","Team deployed and reporting weekly.":"टोली परिचालित, साप्ताहिक रिपोर्ट।","Work finished, impact recorded and handed over.":"काम सम्पन्न, प्रभाव अभिलेख र हस्तान्तरण।","Engineering network":"इन्जिनियरिङ नेटवर्क","Architecture network":"आर्किटेक्चर नेटवर्क","Medical network":"चिकित्सा नेटवर्क","WASH network":"वाश नेटवर्क","Logistics network":"ढुवानी नेटवर्क","Structural and civil engineers for damage assessment and retrofitting.":"क्षति मूल्याङ्कन र सुदृढीकरणका लागि स्ट्रक्चरल र सिविल इन्जिनियर।","Designers working on safe, affordable and buildable reconstruction.":"सुरक्षित, किफायती र बनाउन सकिने पुनर्निर्माणमा काम गर्ने डिजाइनर।","Doctors, nurses and paramedics for health camps and emergency cover.":"स्वास्थ्य शिविर र आपत्कालका लागि चिकित्सक, नर्स र प्यारामेडिक।","Water, sanitation and hygiene specialists.":"खानेपानी, सरसफाई र स्वच्छता विशेषज्ञ।","Transport, warehousing and supply-chain coordinators.":"यातायात, भण्डारण र आपूर्ति शृंखला संयोजक।","Identity":"परिचय","Name":"नाम","District":"जिल्ला","Pending":"बाँकी","Expertise":"विशेषज्ञता","Primary skill":"मुख्य सीप","Experience":"अनुभव","Certifications":"प्रमाणपत्र","Available from":"उपलब्ध हुने मिति","Hours per week":"साप्ताहिक घण्टा","Max deployment":"अधिकतम परिचालन","Deployment":"परिचालन","Mode":"तरिका","Travel":"यात्रा","Preferred districts":"रुचाइएका जिल्ला","Resources":"स्रोत","Vehicle":"सवारी","Activity":"गतिविधि","Matched opportunities":"मिलेका अवसर","Needs joined":"सामेल आवश्यकता","Networks":"नेटवर्क","Manage volunteers":"स्वयंसेवक व्यवस्थापन","Register, filter by skill, location and availability.":"दर्ता; सीप, स्थान र उपलब्धता अनुसार छान्नु।","All incoming needs with their full history.":"आउने सबै आवश्यकता र पूरा इतिहास।","Verification & approvals":"प्रमाणीकरण र स्वीकृति","Confirm needs with municipalities and partners.":"नगरपालिका र साझेदारसँग आवश्यकता पुष्टि।","0 in queue":"० लाइनमा","Matching & team formation":"म्याचिङ र टोली निर्माण","Match verified needs to available people, build teams.":"प्रमाणित आवश्यकतालाई उपलब्ध व्यक्तिसँग मिलाउनु, टोली बनाउनु।","Projects & coordination":"परियोजना र समन्वय","Standing teams, rosters, durations and progress.":"स्थायी टोली, सूची, अवधि र प्रगति।","Reports & analytics":"रिपोर्ट र विश्लेषण","Where the demand is, where the gaps are.":"माग कहाँ छ, अन्तर कहाँ छ।","Communications":"सञ्चार","Notify matched volunteers and requesters.":"मिलेका स्वयंसेवक र अनुरोधकर्तालाई सूचना।","0 sent":"० पठाइएको","User management":"प्रयोगकर्ता व्यवस्थापन","Roles, permissions and verifier accounts.":"भूमिका, अनुमति र प्रमाणक खाता।","Data security & privacy":"डेटा सुरक्षा र गोपनीयता","Consent records and controlled data sharing.":"सहमति अभिलेख र नियन्त्रित डेटा साझेदारी।","Active":"सक्रिय","Export volunteer database":"स्वयंसेवक डेटाबेस निर्यात","Export request and project data":"अनुरोध र परियोजना डेटा निर्यात","Filter by location, skill or availability":"स्थान, सीप वा उपलब्धता अनुसार छान्नु","Impact reports and analytics":"प्रभाव रिपोर्ट र विश्लेषण","Share with government and partners":"सरकार र साझेदारसँग साझेदारी","Maintain data security and privacy":"डेटा सुरक्षा र गोपनीयता कायम","Coordinate volunteers":"स्वयंसेवक समन्वय","Keep records and lists":"अभिलेख र सूची राख्नु","Translate":"अनुवाद","Drive / arrange transport":"सवारी चलाउनु / यातायात मिलाउनु","Manage a schedule":"तालिका व्यवस्थापन","Raise funds":"कोष सङ्कलन","I want to help":"मलाई सहयोग गर्नु छ","I need volunteers / help":"मलाई स्वयंसेवक / सहयोग चाहियो","I can help":"म सहयोग गर्न सक्छु","I need support":"मलाई सहयोग चाहियो","Register your skills, time and resources":"तपाईंको सीप, समय र स्रोत दर्ता गर्नुहोस्","Tell us exactly what you need":"तपाईंलाई ठ्याक्कै के चाहिएको छ बताउनुहोस्","Detail is what makes this work. With enough of it, a municipality can be told precisely who is available, where they are, and from when. Only your name, skill and district are required.":"विवरणले नै यसलाई काम गर्ने बनाउँछ। पर्याप्त विवरण भए नगरपालिकालाई को उपलब्ध छ, कहाँ छ र कहिलेदेखि छ ठ्याक्कै बताउन सकिन्छ। नाम, सीप र जिल्ला मात्र अनिवार्य छ।","The more precisely a need is described, the faster it gets filled. Every request is reviewed before it is published, and you can update or close it at any time.":"आवश्यकता जति स्पष्ट लेखिन्छ, त्यति छिटो पूरा हुन्छ। प्रत्येक अनुरोध प्रकाशित हुनु अघि समीक्षा हुन्छ, र तपाईं कुनै पनि बेला अद्यावधिक वा बन्द गर्न सक्नुहुन्छ।","I consent to my details being shared with verified requesters, government agencies and partner organizations for the purpose of coordinating relief and reconstruction.":"राहत र पुनर्निर्माण समन्वयका लागि मेरो विवरण प्रमाणित अनुरोधकर्ता, सरकारी निकाय र साझेदार संस्थासँग बाँड्न मेरो सहमति छ।","I confirm this request is genuine and that I am authorised to make it on behalf of the organization named above.":"यो अनुरोध वास्तविक हो र माथि उल्लेखित संस्थाको तर्फबाट गर्न म अधिकारप्राप्त छु भनी पुष्टि गर्दछु।","Create my profile":"मेरो प्रोफाइल बनाउनु","Submit request for review":"समीक्षाका लागि अनुरोध पेश","Your details":"तपाईंको विवरण","Required":"अनिवार्य","Optional":"वैकल्पिक","Choose all that apply":"लागू हुने सबै छान्नुहोस्","Be specific":"स्पष्ट हुनुहोस्","What you can provide":"तपाईं के दिन सक्नुहुन्छ","Full name":"पूरा नाम","Email":"इमेल","Phone / WhatsApp":"फोन / व्हाट्सएप","Where you are based":"तपाईं बस्ने ठाउँ","Emergency contact":"आपत्कालीन सम्पर्क","Your contribution path":"तपाईंको योगदानको बाटो","How you can contribute":"कसरी योगदान गर्न सक्नुहुन्छ","I can help remotely":"म दूरबाट सहयोग गर्न सक्छु","I can travel":"म यात्रा गर्न सक्छु","I can contribute time":"म समय दिन सक्छु","I can provide equipment":"म उपकरण दिन सक्छु","I can contribute logistics":"म ढुवानीमा सहयोग गर्न सक्छु","I can support financially":"म आर्थिक सहयोग गर्न सक्छु","Years of experience":"अनुभवका वर्ष","Sub-skills":"उप-सीप","Certifications and licences":"प्रमाणपत्र र इजाजत","Duration you can commit":"दिन सक्ने अवधि","Maximum single deployment":"अधिकतम एक परिचालन","Where you can work":"काम गर्न सक्ने ठाउँ","On the ground":"स्थलगत","Remote":"दूरबाट","Both":"दुवै","Anywhere in Nepal":"नेपालभर कतै पनि","Specific districts only":"निश्चित जिल्लामा मात्र","Within my district only":"मेरो जिल्लाभित्र मात्र","Details":"विवरण","Languages":"भाषा","Past experience in disaster response":"विपद् प्रतिकार्यमा विगतको अनुभव","References":"सन्दर्भ","You are posting as":"तपाईं कसको रूपमा राख्दै हुनुहुन्छ","Organization name":"संस्थाको नाम","Contact person":"सम्पर्क व्यक्ति","Phone / email":"फोन / इमेल","Province":"प्रदेश","Municipality":"नगरपालिका","Ward":"वडा","Exact location":"ठ्याक्कै स्थान","Skills required":"आवश्यक सीप","Resources required":"आवश्यक स्रोत","How many people":"कति जना","Experience level required":"आवश्यक अनुभव स्तर","Exactly what needs to be done":"ठ्याक्कै के गर्नुपर्ने हो","Objectives / what success looks like":"उद्देश्य / सफलता कस्तो देखिन्छ","Deadline":"अन्तिम म्याद","Equipment available on site":"स्थलमा उपलब्ध उपकरण","Where the work happens":"काम कहाँ हुन्छ","Paid or unpaid":"सशुल्क वा नि:शुल्क","How urgent is this":"यो कति अत्यावश्यक छ","Immediate":"तत्काल","Urgent":"अत्यावश्यक","Upcoming":"आगामी","Anything else volunteers should know":"स्वयंसेवकले जान्नुपर्ने अन्य कुरा","Documents or photographs":"कागजात वा तस्बिर","Government agency":"सरकारी निकाय","Municipality / ward":"नगरपालिका / वडा","NGO / INGO":"एनजीओ / आईएनजीओ","Community group":"समुदायिक समूह","Institution (school, hospital)":"संस्था (विद्यालय, अस्पताल)","Business":"व्यवसाय","Individual":"व्यक्ति","Select":"छान्नुहोस्","Select district":"जिल्ला छान्नुहोस्","Select province":"प्रदेश छान्नुहोस्","Any":"कुनै पनि","Some experience":"केही अनुभव","Qualified professional":"योग्य व्यावसायिक","Senior / licensed":"वरिष्ठ / इजाजतप्राप्त","Not provided":"उपलब्ध छैन","Can arrange if needed":"आवश्यक भए मिलाउन सकिन्छ","Unpaid / volunteer":"नि:शुल्क / स्वयंसेवा","Expenses covered":"खर्च व्यहोरिने","Paid engagement":"सशुल्क संलग्नता","Engineering (structural / civil)":"इन्जिनियरिङ (स्ट्रक्चरल / सिविल)","Water & sanitation (WASH)":"खानेपानी र सरसफाई (वाश)","Logistics & transport":"ढुवानी र यातायात","Construction & trades":"निर्माण र सीपमूलक काम","Education & child support":"शिक्षा र बालबालिका सहयोग","Psychosocial support":"मनोसामाजिक सहयोग","Translation":"अनुवाद","IT & data":"आईटी र डेटा","Tools":"औजार","Software / licences":"सफ्टवेयर / इजाजत","Professional services":"व्यावसायिक सेवा","Warehouse / storage":"गोदाम / भण्डारण","Vehicles":"सवारी साधन","Materials":"सामग्री","Medical supplies":"औषधि तथा चिकित्सा सामग्री","Tents / shelter":"पाल / आश्रय","Food and water":"खाना र पानी","Funding":"कोष","Nepali":"नेपाली","English":"अंग्रेजी","Newar":"नेवार","Maithili":"मैथिली","Tamang":"तामाङ","Hindi":"हिन्दी","A few days":"केही दिन","1–2 weeks":"१–२ हप्ता","1 month":"१ महिना","3 months":"३ महिना","Ongoing":"निरन्तर","Up to 5":"५ सम्म","5–15":"५–१५","15–30":"१५–३०","Full time":"पूर्ण समय","3 days":"३ दिन","2 weeks":"२ हप्ता","1 month or more":"१ महिना वा बढी","Under 2":"२ भन्दा कम","2–5":"२–५","5–10":"५–१०","10–20":"१०–२०","20+":"२०+","1–3 days":"१–३ दिन","Longer / ongoing project":"लामो / निरन्तर परियोजना","Kathmandu":"काठमाडौं","Lalitpur":"ललितपुर","Bhaktapur":"भक्तपुर","Sindhupalchok":"सिन्धुपाल्चोक","Rasuwa":"रसुवा","Kavre":"काभ्रे","Nuwakot":"नुवाकोट","Dolakha":"दोलखा","Gorkha":"गोरखा","Other / outside Nepal":"अन्य / नेपाल बाहिर","Koshi":"कोशी","Madhesh":"मधेश","Bagmati":"बागमती","Gandaki":"गण्डकी","Lumbini":"लुम्बिनी","Karnali":"कर्णाली","Sudurpashchim":"सुदूरपश्चिम","Helps verifiers prioritise you for technical assessments.":"प्राविधिक मूल्याङ्कनका लागि प्रमाणकहरूले तपाईंलाई प्राथमिकता दिन सजिलो हुन्छ।","Individual requests are published as community-reported, verification pending.":"व्यक्तिगत अनुरोध 'समुदायद्वारा रिपोर्ट, प्रमाणीकरण बाँकी' भनी प्रकाशित हुन्छ।","As on your ID":"परिचयपत्रमा भएअनुसार","Name and phone number":"नाम र फोन नम्बर","DD / MM / YYYY":"दिन / महिना / वर्ष","e.g. seismic retrofitting, damage assessment":"जस्तै भूकम्पीय सुदृढीकरण, क्षति मूल्याङ्कन","Council registration number, certifications":"काउन्सिल दर्ता नम्बर, प्रमाणपत्र","List districts, if any":"जिल्ला उल्लेख गर्नुहोस्, भए","Describe what you can bring, quantities, and any conditions.":"तपाईं के ल्याउन सक्नुहुन्छ, कति परिमाण र कुनै सर्त भए लेख्नुहोस्।","Where, when, and in what role.":"कहाँ, कहिले र कुन भूमिकामा।","Name and contact of someone who can vouch for your work":"तपाईंको कामको पुष्टि गर्न सक्ने व्यक्तिको नाम र सम्पर्क","Full registered name":"पूरा दर्ता नाम","Name and role":"नाम र भूमिका","How volunteers reach you":"स्वयंसेवकले तपाईंलाई कसरी सम्पर्क गर्ने","Municipality or rural municipality":"नगरपालिका वा गाउँपालिका","Ward number":"वडा नम्बर","Landmark, or paste map coordinates":"चिनारी स्थान, वा नक्सा कोअर्डिनेट","e.g. 4":"जस्तै ४","When this must be completed by":"यो कहिलेसम्म सम्पन्न हुनुपर्छ","Inspect approximately 40 houses in Ward 7 and assess whether they are safe for occupation.":"वडा ७ का करिब ४० घर निरीक्षण गरी बस्न सुरक्षित छन् वा छैनन् मूल्याङ्कन गर्नुपर्ने।","All houses assessed and results handed to the ward office.":"सबै घरको मूल्याङ्कन र नतिजा वडा कार्यालयमा बुझाइएको।","What volunteers will find there, and what they should bring.":"स्वयंसेवकले त्यहाँ के पाउनेछन्, र के ल्याउनुपर्छ।","Access conditions, security, permissions, documents.":"पहुँचको अवस्था, सुरक्षा, अनुमति, कागजात।","Paste a link to photos, assessments or permits":"तस्बिर, मूल्याङ्कन वा अनुमतिपत्रको लिंक राख्नुहोस्","you@example.com":"you@example.com","0–72 hours":"०–७२ घण्टा","within 1 week":"१ हप्ताभित्र","within 1 month":"१ महिनाभित्र","long term":"दीर्घकालीन","0 published requests":"० प्रकाशित अनुरोध"};
+function deepTr(v){ if (typeof v === "string") return NP_MAP[v] || v; if (Array.isArray(v)) return v.map(deepTr); if (v && typeof v === "object" && v.constructor === Object) { const o = {}; for (const k in v) o[k] = (k === "t" ? v[k] : deepTr(v[k])); return o; } return v; }
+
+class Component extends DCLogic {
+  state = { screen: null, lang: null, notice: "", donate: false, loopIndex: 0, loopFading: false, counts: [0, 0, 0, 0, 0], openSections: null, toast: "", dialogOpen: false, sortCol: 0, sortAsc: true, queueFilter: "All", headerH: 66 };
+
+  componentDidMount() {
+    const mq = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+    this._reduce = !!(mq && mq.matches);
+    if (!this._reduce) {
+      this._loop = setInterval(() => {
+        this.setState({ loopFading: true });
+        this._swap = setTimeout(() => this.setState((s) => ({ loopIndex: (s.loopIndex + 1) % LOOP_WORDS.length, loopFading: false })), 260);
+      }, 2400);
+    }
+    this.runCounters();
+    this._measure = () => {
+      const h = document.querySelector("header");
+      if (h) {
+        const px = Math.round(h.getBoundingClientRect().height);
+        if (px && px !== this.state.headerH) this.setState({ headerH: px });
+      }
+    };
+    this._measure();
+    requestAnimationFrame(this._measure);
+    this._late = setTimeout(this._measure, 300);
+    this._later = setTimeout(this._measure, 1200);
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) document.fonts.ready.then(this._measure);
+    window.addEventListener("resize", this._measure);
+    window.addEventListener("load", this._measure);
+    if (window.ResizeObserver) {
+      const h = document.querySelector("header");
+      if (h) { this._ro = new ResizeObserver(this._measure); this._ro.observe(h); }
+    }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this._loop);
+    clearTimeout(this._swap);
+    clearTimeout(this._toastT);
+    cancelAnimationFrame(this._raf);
+    clearTimeout(this._late);
+    clearTimeout(this._later);
+    window.removeEventListener("resize", this._measure);
+    window.removeEventListener("load", this._measure);
+    if (this._ro) this._ro.disconnect();
+  }
+
+  targets() {
+    return this.props.demoCounts ? DEMO_COUNTS : [0, 0, 0, 0, 0];
+  }
+
+  runCounters() {
+    cancelAnimationFrame(this._raf);
+    const targets = this.targets();
+    if (this._reduce) { this.setState({ counts: targets }); return; }
+    const t0 = (window.performance || Date).now(), dur = 1200;
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      this.setState({ counts: targets.map((v) => Math.round(v * e)) });
+      if (p < 1) this._raf = requestAnimationFrame(tick);
+    };
+    this.setState({ counts: targets.map(() => 0) });
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  showToast(msg) {
+    clearTimeout(this._toastT);
+    this.setState({ toast: msg });
+    this._toastT = setTimeout(() => this.setState({ toast: "" }), 6000);
+  }
+
+  go(screen) {
+    return () => {
+      this.setState({ screen: screen, notice: "", dialogOpen: false });
+      window.scrollTo(0, 0);
+      if (screen === "home" || screen === "tracker") setTimeout(() => this.runCounters(), 60);
+    };
+  }
+
+  renderVals() {
+    const lang = this.state.lang || this.props.startLang || "en";
+    const s = this.state.screen || this.props.startScreen || "home";
+    const navStyle = (active) => "font-size:13.5px;font-weight:" + (active ? "600" : "500") +
+      ";padding:8px 11px;border-radius:3px;cursor:pointer;color:" + (active ? "#0e4a2b" : "#3d474f") +
+      ";background:" + (active ? "#f1f7f3" : "transparent") +
+      ";font-family:" + (lang === "np" ? "'Noto Sans Devanagari',sans-serif" : "'Public Sans',sans-serif");
+    const langBtn = (active) => "padding:6px 10px;font-size:12px;cursor:pointer;font-weight:600;background:" +
+      (active ? "#12171c" : "#ffffff") + ";color:" + (active ? "#ffffff" : "#5c666f");
+    const dot = (c) => "width:9px;height:9px;border-radius:50%;background:" + c + ";display:inline-block";
+
+    const vals = {
+      t: STR[lang],
+      isHome: s === "home",
+      isVolunteer: s === "volunteer",
+      isPost: s === "post",
+      isNeeds: s === "needs",
+      isDetail: s === "detail",
+      isTracker: s === "tracker",
+      isProjects: s === "projects",
+      isNetworks: s === "networks",
+      isProfile: s === "profile",
+      isAdmin: s === "admin",
+      goHome: this.go("home"),
+      goVolunteer: this.go("volunteer"),
+      goPost: this.go("post"),
+      goNeeds: this.go("needs"),
+      goDetail: this.go("detail"),
+      setEn: () => this.setState({ lang: "en" }),
+      setNp: () => this.setState({ lang: "np" }),
+      enBtn: langBtn(lang === "en"),
+      npBtn: langBtn(lang === "np") + ";font-family:'Noto Sans Devanagari',sans-serif",
+      nav: NAV.map((n) => ({ label: lang === "np" ? n.np : n.en, go: this.go(n.id), style: navStyle(n.id === s) })),
+      notice: this.state.notice,
+      donate: this.state.donate,
+      toggleDonate: () => this.setState((st) => ({ donate: !st.donate })),
+      submit: () => {
+        const key = s === "volunteer" ? "toastVolunteer" : (s === "post" ? "toastNeed" : "toastInterest");
+        this.showToast(STR[lang][key]);
+      },
+      toast: this.state.toast,
+      closeToast: () => { clearTimeout(this._toastT); this.setState({ toast: "" }); },
+      dialogOpen: this.state.dialogOpen,
+      openDialog: () => this.setState({ dialogOpen: true }),
+      closeDialog: () => this.setState({ dialogOpen: false }),
+      stopProp: (ev) => ev.stopPropagation(),
+      goDetailFromDialog: () => { this.setState({ dialogOpen: false, screen: "detail" }); window.scrollTo(0, 0); },
+      loopWord: (lang === "np" ? LOOP_WORDS_NP : LOOP_WORDS)[this.state.loopIndex],
+      loopStyle: "font-family:'Archivo',sans-serif;font-weight:700;font-size:17px;color:#c90026;letter-spacing:-0.2px;transition:opacity .26s ease, transform .26s ease;opacity:" + (this.state.loopFading ? "0" : "1") + ";transform:translateY(" + (this.state.loopFading ? "-5px" : "0") + ")",
+      railStyle: "background:#ffffff;border:1px solid #e2e6ea;border-radius:4px;padding:16px 20px;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;gap:16px;position:sticky;z-index:12;top:" + ((this.state.headerH || 66) + 10) + "px",
+      remeasure: () => { if (this._measure) this._measure(); },
+      expandAll: () => this.setState({ openSections: "all" }),
+      collapseAll: () => this.setState({ openSections: "none" }),
+      isForm: s === "volunteer" || s === "post",
+      formKicker: s === "volunteer" ? "I can help" : "I need support",
+      formTitle: s === "volunteer" ? "Register your skills, time and resources" : "Tell us exactly what you need",
+      formIntro: s === "volunteer"
+        ? "Detail is what makes this work. With enough of it, a municipality can be told precisely who is available, where they are, and from when. Only your name, skill and district are required."
+        : "The more precisely a need is described, the faster it gets filled. Every request is reviewed before it is published, and you can update or close it at any time.",
+      formConsent: s === "volunteer"
+        ? "I consent to my details being shared with verified requesters, government agencies and partner organizations for the purpose of coordinating relief and reconstruction."
+        : "I confirm this request is genuine and that I am authorised to make it on behalf of the organization named above.",
+      formCta: s === "volunteer" ? "Create my profile" : "Submit request for review",
+      formSections: (s === "volunteer" ? VOL_FORM : NEED_FORM).map((sec, i) => {
+        const os = this.state.openSections;
+        const open = os === "all" ? true : (os === "none" ? false : (os && typeof os === "object" ? !!os[sec.n] : i < 2));
+        return Object.assign({}, sec, {
+          open: open,
+          chevron: "margin-left:4px;font-size:13px;color:#98a2ab;transition:transform .22s ease;display:inline-block;transform:rotate(" + (open ? "0deg" : "-90deg") + ")",
+          pip: "min-width:30px;text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:5px 7px;border-radius:3px;cursor:pointer;border:1px solid " + (open ? "#14663c" : "#e2e6ea") + ";background:" + (open ? "#14663c" : "#ffffff") + ";color:" + (open ? "#ffffff" : "#78838c"),
+          toggle: () => this.setState((st) => {
+            const cur = st.openSections;
+            const base = {};
+            (s === "volunteer" ? VOL_FORM : NEED_FORM).forEach((x, ix) => {
+              base[x.n] = cur === "all" ? true : (cur === "none" ? false : (cur && typeof cur === "object" ? !!cur[x.n] : ix < 2));
+            });
+            base[sec.n] = !base[sec.n];
+            return { openSections: base };
+          })
+        });
+      }),
+      organizeOptions: ["Coordinate volunteers", "Keep records and lists", "Translate", "Drive / arrange transport", "Manage a schedule", "Raise funds"],
+      statuses: [
+        { label: "Submitted", dot: dot("#e0a11b") },
+        { label: "Under review", dot: dot("#2b7fd4") },
+        { label: "Verified", dot: dot("#14663c") },
+        { label: "Recruiting", dot: dot("#7a4fbf") },
+        { label: "Filled", dot: dot("#12171c") },
+        { label: "Completed", dot: dot("#c8ced3") }
+      ],
+      howSteps: [
+        { n: "01", title: "Offer help or post a need", delay: "0s" },
+        { n: "02", title: "Requests are reviewed and clearly verified", delay: "0.07s" },
+        { n: "03", title: "People and resources are matched", delay: "0.14s" },
+        { n: "04", title: "Teams coordinate and track the work", delay: "0.21s" }
+      ],
+      trustItems: [
+        { k: "Who verifies a request", v: "Municipality and ward offices, partner NGOs and INGOs, and the platform's own coordination team." },
+        { k: "If a request cannot be verified", v: "It stays visible and stays labelled community-reported, verification pending — never presented as confirmed." },
+        { k: "How misuse is prevented", v: "Duplicate and unverifiable requests are closed, requesters are named and contactable, and volunteers are never asked to pay to take part." },
+        { k: "What happens to your data", v: "Shared only with verified requesters and partner agencies, on the consent you give at registration, and withdrawable at any time." }
+      ].map((x, i) => Object.assign({}, x, { delay: (i * 0.07) + "s" })),
+      partnerStats: [
+        { label: "Awaiting verification", value: "0", note: "needs review", dot: "width:8px;height:8px;border-radius:50%;background:#e0a11b;display:inline-block", delay: "0s" },
+        { label: "Verified this week", value: "0", note: "published", dot: "width:8px;height:8px;border-radius:50%;background:#14663c;display:inline-block", delay: "0.07s" },
+        { label: "Volunteers matched", value: "0", note: "across all districts", dot: "width:8px;height:8px;border-radius:50%;background:#0a1d4d;display:inline-block", delay: "0.14s" },
+        { label: "Open projects", value: "0", note: "with an assigned coordinator", dot: "width:8px;height:8px;border-radius:50%;background:#c90026;display:inline-block", delay: "0.21s" }
+      ],
+      queueFilters: ["All", "Immediate", "This week", "Flagged"].map((q) => ({
+        label: q,
+        style: "font-size:12px;font-weight:600;padding:6px 11px;border-radius:3px;cursor:pointer;border:1px solid " + (this.state.queueFilter === q ? "#0a1d4d" : "#e2e6ea") + ";background:" + (this.state.queueFilter === q ? "#0a1d4d" : "#ffffff") + ";color:" + (this.state.queueFilter === q ? "#ffffff" : "#5c666f"),
+        pick: () => this.setState({ queueFilter: q })
+      })),
+      goTracker: this.go("tracker"),
+      goProjects: this.go("projects"),
+      matchOn: ["Skills and expertise", "Location and mobility", "Availability and duration", "Type of support", "Language", "Equipment and resources", "Experience level"],
+      needFilters: [
+        { options: ["All provinces", "Bagmati", "Gandaki", "Koshi", "Karnali", "Lumbini", "Madhesh", "Sudurpashchim"] },
+        { options: ["All districts"].concat(DISTRICTS.slice(1)) },
+        { options: ["All skills"].concat(SKILLS) },
+        { options: ["Any urgency", "Immediate (0–72 hrs)", "Urgent (1 week)", "Upcoming (1 month)", "Reconstruction"] },
+        { options: ["Any status", "Verified", "Recruiting", "Filled", "Completed", "Community-reported"] }
+      ],
+      needCols: ["Location", "Need", "People needed", "Urgency", "Status", "Action"].map((label, i) => ({
+        label: label,
+        arrow: this.state.sortCol === i ? (this.state.sortAsc ? "↑" : "↓") : "↕",
+        arrowStyle: "font-size:10px;color:" + (this.state.sortCol === i ? "#12171c" : "#c3cad0"),
+        sort: () => this.setState((st) => ({ sortCol: i, sortAsc: st.sortCol === i ? !st.sortAsc : true }))
+      })),
+      dialogFacts: [
+        { k: "Skill required", v: "Structural engineering" },
+        { k: "People needed", v: "4" },
+        { k: "Duration", v: "1 week" },
+        { k: "Support", v: "Accommodation and food provided" }
+      ],
+      detailFacts: [
+        { k: "Skill required", v: "Structural engineering" },
+        { k: "Experience level", v: "Licensed professional" },
+        { k: "Duration", v: "1 week" },
+        { k: "Start date", v: "As soon as filled" },
+        { k: "Accommodation", v: "Provided by municipality" },
+        { k: "Food", v: "Provided" },
+        { k: "Transport", v: "Reimbursed" },
+        { k: "Type of support", v: "On the ground, unpaid" }
+      ],
+      trackerTop: TRACKER_LABELS.map((label, i) => ({
+        value: String(this.state.counts[i] == null ? 0 : this.state.counts[i]),
+        label: label,
+        delta: this.props.demoCounts ? "sample" : ""
+      })),
+      expertise: ["Engineering", "Architecture", "Health & medical", "Project management", "Water & sanitation", "Logistics", "Other"],
+      locations: ["Nepal", "India", "Australia", "United States", "UAE", "Other (45+ countries)"],
+      demand: [
+        { label: "Active requests", value: "0" },
+        { label: "People needed", value: "0" },
+        { label: "Volunteers matched", value: "0" },
+        { label: "Needs met", value: "0" },
+        { label: "Projects completed", value: "0" }
+      ],
+      projectPhases: [
+        { stage: "Recruiting", body: "Team roster still open, coordinator assigned." },
+        { stage: "In progress", body: "Team deployed and reporting weekly." },
+        { stage: "Completed", body: "Work finished, impact recorded and handed over." }
+      ],
+      networks: [
+        { name: "Engineering network", body: "Structural and civil engineers for damage assessment and retrofitting." },
+        { name: "Architecture network", body: "Designers working on safe, affordable and buildable reconstruction." },
+        { name: "Medical network", body: "Doctors, nurses and paramedics for health camps and emergency cover." },
+        { name: "WASH network", body: "Water, sanitation and hygiene specialists." },
+        { name: "Logistics network", body: "Transport, warehousing and supply-chain coordinators." }
+      ],
+      profileCards: [
+        { title: "Identity", rows: [{ k: "Name", v: "—" }, { k: "District", v: "—" }, { k: "Verified", v: "Pending" }] },
+        { title: "Expertise", rows: [{ k: "Primary skill", v: "—" }, { k: "Experience", v: "—" }, { k: "Certifications", v: "—" }] },
+        { title: "Availability", rows: [{ k: "Available from", v: "—" }, { k: "Hours per week", v: "—" }, { k: "Max deployment", v: "—" }] },
+        { title: "Deployment", rows: [{ k: "Mode", v: "—" }, { k: "Travel", v: "—" }, { k: "Preferred districts", v: "—" }] },
+        { title: "Resources", rows: [{ k: "Equipment", v: "—" }, { k: "Vehicle", v: "—" }, { k: "Other", v: "—" }] },
+        { title: "Activity", rows: [{ k: "Matched opportunities", v: "0" }, { k: "Needs joined", v: "0" }, { k: "Networks", v: "0" }] }
+      ],
+      adminModules: [
+        { title: "Manage volunteers", count: "0", body: "Register, filter by skill, location and availability." },
+        { title: "Manage requests", count: "0", body: "All incoming needs with their full history." },
+        { title: "Verification & approvals", count: "0 in queue", body: "Confirm needs with municipalities and partners." },
+        { title: "Matching & team formation", count: "0", body: "Match verified needs to available people, build teams." },
+        { title: "Projects & coordination", count: "0", body: "Standing teams, rosters, durations and progress." },
+        { title: "Reports & analytics", count: "—", body: "Where the demand is, where the gaps are." },
+        { title: "Communications", count: "0 sent", body: "Notify matched volunteers and requesters." },
+        { title: "User management", count: "0", body: "Roles, permissions and verifier accounts." },
+        { title: "Data security & privacy", count: "Active", body: "Consent records and controlled data sharing." }
+      ],
+      exports: ["Export volunteer database", "Export request and project data", "Filter by location, skill or availability", "Impact reports and analytics", "Share with government and partners", "Maintain data security and privacy"],
+      footerCols: [
+        { title: "Volunteer", items: [
+          { label: "Register my skills", go: this.go("volunteer") },
+          { label: "My readiness profile", go: this.go("profile") },
+          { label: "Skill networks", go: this.go("networks") }
+        ]},
+        { title: "Request help", items: [
+          { label: "Post a need", go: this.go("post") },
+          { label: "Active needs", go: this.go("needs") },
+          { label: "Projects", go: this.go("projects") }
+        ]},
+        { title: "Platform", items: [
+          { label: "Live impact tracker", go: this.go("tracker") },
+          { label: "For partners", go: this.go("admin") }
+        ]}
+      ]
+    };
+    return lang === "np" ? deepTr(vals) : vals;
+  }
+}
+
+</script>
+</body>
+</html>
