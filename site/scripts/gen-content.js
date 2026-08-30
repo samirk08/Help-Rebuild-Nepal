@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
-const ROOT = "/Users/samirkadariya/Developer/HRN";
+// The repository root, two levels up from site/scripts/.
+const ROOT = path.join(__dirname, "..", "..");
 
 const src = fs.readFileSync(path.join(ROOT, "Help Rebuild Nepal.dc.html"), "utf8").split("\n");
 const body = src.slice(712, 1106).join("\n");

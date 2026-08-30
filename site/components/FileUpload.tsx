@@ -141,7 +141,7 @@ export default function FileUpload({
         <ul className="upload__rejected" role="status" aria-live="polite">
           {rejected.map((r) => (
             <li key={r.name}>
-              {r.name} — {reasonLabel(r.reason)}
+              {r.name}: {reasonLabel(r.reason)}
             </li>
           ))}
         </ul>

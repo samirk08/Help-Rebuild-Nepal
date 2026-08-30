@@ -98,7 +98,7 @@ export default async function ReliefDetailPage({
             ) : null}
           </div>
           <h1 className="detail__title">
-            {formatQuantity(need, lang)} — {categoryLabel(category, lang)}
+            {formatQuantity(need, lang)}, {categoryLabel(category, lang)}
           </h1>
           <p className="detail__meta">
             {need.municipality} · {tr(need.district)} · {t.reliefNeededBy} {deadline}

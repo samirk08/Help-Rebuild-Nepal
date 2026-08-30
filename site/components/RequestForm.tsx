@@ -118,7 +118,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
             >
               {section.n}
               <span className="visually-hidden">
-                {" — "}
+                {": "}
                 {tr(section.title)}
                 {filled[section.n] ? `, ${extra.sectionFilled}` : ""}
               </span>

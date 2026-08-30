@@ -46,7 +46,7 @@ export default function Header({ lang }: { lang: Lang }) {
   return (
     <header className="header">
       <div className="shell header__inner">
-        <Link href={home} className="header__brand" aria-label="Help Rebuild Nepal — home">
+        <Link href={home} className="header__brand" aria-label="Help Rebuild Nepal home">
           <Image
             src={asset("/logo.png")}
             alt="Help Rebuild Nepal"
