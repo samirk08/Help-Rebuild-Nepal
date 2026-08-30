@@ -30,15 +30,15 @@ export const TRUST_ITEMS = [
   },
   {
     k: "If a request cannot be verified",
-    v: "It stays visible and stays labelled community-reported, verification pending — never presented as confirmed.",
+    v: "It stays visible, labelled community-reported, and is never shown as confirmed.",
   },
   {
     k: "How misuse is prevented",
-    v: "Duplicate and unverifiable requests are closed, requesters are named and contactable, and volunteers are never asked to pay to take part.",
+    v: "Duplicate requests are closed, requesters are named and contactable, and volunteers are never asked to pay.",
   },
   {
     k: "What happens to your data",
-    v: "Shared only with verified requesters and partner agencies, on the consent you give at registration, and withdrawable at any time.",
+    v: "Shared only with verified requesters and partner agencies, on the consent you give at registration. Withdrawable at any time.",
   },
 ];
 

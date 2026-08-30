@@ -47,7 +47,7 @@ export async function generateMetadata({
 
   return {
     title: {
-      default: `Help Rebuild Nepal — ${t.heroTitle}`,
+      default: "Help Rebuild Nepal",
       template: "%s · Help Rebuild Nepal",
     },
     description: t.heroSub,
