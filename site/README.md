@@ -29,8 +29,14 @@ npm run typecheck  # tsc --noEmit
 
 The site is published as a static export to GitHub Pages by
 `.github/workflows/deploy.yml`, on every push to `main` and on demand from the
-Actions tab. Pages needs its source set to **GitHub Actions** under
-Settings -> Pages -> Build and deployment; that is a one-time setting.
+Actions tab.
+
+**One-time setup:** a repository admin has to open Settings -> Pages -> Build
+and deployment and set Source to **GitHub Actions**. The workflow cannot do
+this for itself — creating a Pages site needs admin rights that the workflow's
+`GITHUB_TOKEN` does not have, so `enablement: true` on `configure-pages` fails
+with "Resource not accessible by integration". Until the source is set, every
+run stops at Configure Pages.
 
 ```bash
 npm run build:pages   # the same build the workflow runs; output in out/

@@ -1,8 +1,10 @@
 # Builds the Next.js app in `site/` as a static site and publishes it to
 # GitHub Pages at https://<owner>.github.io/<repository>/
 #
-# Requires Pages to be set to "GitHub Actions" as its source, under
-# Settings -> Pages -> Build and deployment.
+# One-time setup before this can run: a repository admin must open
+# Settings -> Pages -> Build and deployment and set Source to "GitHub
+# Actions". Until then the Configure Pages step below fails with
+# "Get Pages site failed", because there is no Pages site to configure.
 name: Deploy to GitHub Pages
 
 on:
@@ -40,14 +42,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Reads the Pages site's settings, which is also the check that Pages is
+      # switched on. `enablement: true` looks like it would remove the manual
+      # setup step below, but it cannot: creating a Pages site needs admin
+      # rights, and the workflow's GITHUB_TOKEN does not have them.
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
-        with:
-          # Switch the repository's Pages source to GitHub Actions on the
-          # first run, so publishing does not depend on someone having
-          # already set it by hand under Settings -> Pages.
-          enablement: true
 
       - name: Build static site
         env:
