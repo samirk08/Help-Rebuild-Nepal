@@ -1,0 +1,68 @@
+# Builds the Next.js app in `site/` as a static site and publishes it to
+# GitHub Pages at https://<owner>.github.io/<repository>/
+#
+# Requires Pages to be set to "GitHub Actions" as its source, under
+# Settings -> Pages -> Build and deployment.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # So the site can be republished without pushing a commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it, but keep only the
+# newest queued one — an older build is never the one worth publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build static site
+        env:
+          NEXT_STATIC_EXPORT: "true"
+          # The site is served from a repository subpath, so every URL it
+          # emits needs that prefix. Taken from the repository name so a
+          # rename does not silently break every asset on the page.
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

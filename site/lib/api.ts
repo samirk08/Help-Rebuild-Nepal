@@ -1,3 +1,13 @@
+import { BASE_PATH } from "./base-path";
+
+/**
+ * Whether this build has a server behind it.
+ *
+ * A static export — the GitHub Pages build — ships no API route, so there is
+ * nothing to post to. Set in `next.config.ts`.
+ */
+const IS_STATIC_EXPORT = process.env.NEXT_PUBLIC_STATIC_EXPORT === "true";
+
 export type SubmissionKind = "volunteer" | "need";
 
 export type SubmissionResult = {
@@ -17,6 +27,11 @@ export async function submitRequest(
   kind: SubmissionKind,
   form: FormData
 ): Promise<SubmissionResult> {
+  // Nothing to post to on a static host. The answer is the same one the route
+  // gives — accepted, not stored — and the form already says so permanently,
+  // so return it directly rather than fetching a URL known to 404.
+  if (IS_STATIC_EXPORT) return { ok: true, persisted: false };
+
   const payload: Record<string, string | string[]> = {};
 
   for (const [key, value] of form.entries()) {
@@ -27,7 +42,7 @@ export async function submitRequest(
     else payload[key] = [existing, value];
   }
 
-  const response = await fetch("/api/submissions", {
+  const response = await fetch(`${BASE_PATH}/api/submissions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ kind, fields: payload }),

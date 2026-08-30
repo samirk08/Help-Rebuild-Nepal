@@ -25,9 +25,50 @@ npm run start      # serve the production build
 npm run typecheck  # tsc --noEmit
 ```
 
+## Deploying
+
+The site is published as a static export to GitHub Pages by
+`.github/workflows/deploy.yml`, on every push to `main` and on demand from the
+Actions tab. Pages needs its source set to **GitHub Actions** under
+Settings -> Pages -> Build and deployment; that is a one-time setting.
+
+```bash
+npm run build:pages   # the same build the workflow runs; output in out/
+```
+
+Opening `out/index.html` from disk will not work, because every URL on the page
+is prefixed with the repository name. To preview what actually gets published,
+serve `out/` from a matching subpath:
+
+```bash
+mkdir -p /tmp/pages && ln -sfn "$PWD/out" /tmp/pages/Help-Rebuild-Nepal
+(cd /tmp/pages && python3 -m http.server 8000)
+# then open http://localhost:8000/Help-Rebuild-Nepal/
+```
+
+Three things differ from a server build. All three are driven by environment
+variables read in `next.config.ts`, so `npm run dev` and `npm run build` behave
+exactly as they did before:
+
+- **Every route is prerendered.** `NEXT_STATIC_EXPORT=true` turns on
+  `output: "export"`. Anything that renders on demand fails the build, which is
+  why the two pages that support `?demo` test `DEMO_ALLOWED` before they read
+  `searchParams` — with the flag off there is nothing in the query string worth
+  leaving static rendering for.
+- **Every URL carries the repository name.** `NEXT_PUBLIC_BASE_PATH` sets
+  `basePath`. `next/link` and the router apply it themselves, but files served
+  from `public/` and URLs written into a `metadata` export do not get it, so
+  those go through `asset()` in `lib/base-path.ts`.
+- **There is no API route.** A static host has no server to run one on, so the
+  export narrows `pageExtensions` to `.tsx`, which drops the single `.ts` route
+  under `app/` and leaves every page and layout untouched. The route file stays
+  in the repository and still builds under `npm run build`.
+
 ## Routes
 
-Every page lives under a language segment; `/` redirects to `/en`.
+Every page lives under a language segment; `/` redirects to `/en`. A server
+build does that in `next.config.ts`; a static export cannot redirect, so
+`public/index.html` stands in for it there.
 
 | Screen | Route |
 | --- | --- |
@@ -82,7 +123,9 @@ keeps that honest rather than showing invented activity:
   can spend ten minutes on a nine-section form believing they have registered,
   and in a disaster that is the one way this site could do real harm. Wiring a
   database is a change to that one route file; the fields already arrive named
-  and structured.
+  and structured. The GitHub Pages build ships no server, so `submitRequest`
+  skips the request there and returns the same "accepted, not stored" answer
+  rather than posting to a URL that cannot exist.
 - **Counts** are zero everywhere, from `lib/metrics.ts`. Set
   `NEXT_PUBLIC_ALLOW_DEMO=1` and append `?demo` to the home page or tracker to
   render the design's sample figures for a stakeholder walkthrough. The env flag
@@ -192,7 +235,10 @@ app/
   api/submissions/   form intake
   globals.css        design tokens + every component style
 components/          Header, Footer, forms, dialog, toast, counters
+public/
+  index.html         redirects the bare root to /en on a static host
 lib/
+  base-path.ts       prefixes public/ and metadata URLs for subpath hosting
   content.ts         GENERATED — strings, form schemas, translation map
   site-data.ts       presentational tables from the design's render pass
   districts.ts       all 77 districts by province  ← NEEDS NEPALI REVIEW

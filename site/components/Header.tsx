@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+import { asset } from "@/lib/base-path";
 import type { Lang } from "@/lib/content";
 import { localePath, swapLangPath } from "@/lib/i18n";
 import { isActivePath, navItems } from "@/lib/routes";
@@ -47,7 +48,7 @@ export default function Header({ lang }: { lang: Lang }) {
       <div className="shell header__inner">
         <Link href={home} className="header__brand" aria-label="Help Rebuild Nepal — home">
           <Image
-            src="/logo.png"
+            src={asset("/logo.png")}
             alt="Help Rebuild Nepal"
             width={88}
             height={46}

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import CountUp from "@/components/CountUp";
 import { dict, isLang, translator } from "@/lib/i18n";
-import { isDemo, trackerMetrics } from "@/lib/metrics";
+import { DEMO_ALLOWED, isDemo, trackerMetrics } from "@/lib/metrics";
 import { DEMAND, EXPERTISE, LOCATIONS } from "@/lib/site-data";
 
 export async function generateMetadata({
@@ -29,7 +29,10 @@ export default async function TrackerPage({
 
   const t = dict(lang);
   const tr = translator(lang);
-  const metrics = trackerMetrics(isDemo(await searchParams));
+  // Awaiting `searchParams` makes this page render on demand, and the demo
+  // dataset is off unless the build opts in, so only read the query string
+  // when it could change what renders. Everything else here is static.
+  const metrics = trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
 
   return (
     <div className="page">

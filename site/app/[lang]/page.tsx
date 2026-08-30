@@ -4,7 +4,7 @@ import CountUp from "@/components/CountUp";
 import LoopWord from "@/components/LoopWord";
 import StatusTimeline from "@/components/StatusTimeline";
 import { dict, isLang, translator } from "@/lib/i18n";
-import { isDemo, trackerMetrics } from "@/lib/metrics";
+import { DEMO_ALLOWED, isDemo, trackerMetrics } from "@/lib/metrics";
 import { screenPath } from "@/lib/routes";
 import { HOW_STEPS, MATCH_ON, TRUST_ITEMS } from "@/lib/site-data";
 import { notFound } from "next/navigation";
@@ -21,7 +21,10 @@ export default async function HomePage({
 
   const t = dict(lang);
   const tr = translator(lang);
-  const metrics = trackerMetrics(isDemo(await searchParams));
+  // Awaiting `searchParams` makes this page render on demand, and the demo
+  // dataset is off unless the build opts in, so only read the query string
+  // when it could change what renders. Everything else here is static.
+  const metrics = trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
 
   return (
     <>

@@ -18,6 +18,16 @@ export function trackerMetrics(demo: boolean): Metric[] {
 }
 
 /**
+ * Whether this build will honour `?demo` at all.
+ *
+ * Reading the query string opts a page out of static rendering, so pages test
+ * this before they touch `searchParams` and stay prerenderable while the demo
+ * dataset is off — which the static GitHub Pages build requires. Turning the
+ * flag on therefore needs a server build (`npm run build`), not an export.
+ */
+export const DEMO_ALLOWED = process.env.NEXT_PUBLIC_ALLOW_DEMO === "1";
+
+/**
  * True when a page should render the sample dataset.
  *
  * Gated behind an environment flag as well as the query string: on a public
@@ -26,6 +36,6 @@ export function trackerMetrics(demo: boolean): Metric[] {
  * `NEXT_PUBLIC_ALLOW_DEMO=1` for stakeholder walkthroughs.
  */
 export function isDemo(searchParams: Record<string, string | string[] | undefined>): boolean {
-  if (process.env.NEXT_PUBLIC_ALLOW_DEMO !== "1") return false;
+  if (!DEMO_ALLOWED) return false;
   return searchParams.demo !== undefined;
 }
