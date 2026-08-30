@@ -55,7 +55,7 @@ export default function Header({ lang }: { lang: Lang }) {
             className="header__logo"
             priority
           />
-          <span className="header__tagline">Volunteer. Connect. Rebuild.</span>
+          <span className="header__tagline">Verified needs, matched to people who can help</span>
         </Link>
 
         <nav className="header__nav" aria-label="Main">

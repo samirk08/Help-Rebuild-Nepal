@@ -65,10 +65,10 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       kicker: isVolunteer ? "I can help" : "I need support",
       title: isVolunteer ? "Register your skills, time and resources" : "Tell us exactly what you need",
       intro: isVolunteer
-        ? "Detail is what makes this work. With enough of it, a municipality can be told precisely who is available, where they are, and from when. Only your name, skill and district are required."
-        : "The more precisely a need is described, the faster it gets filled. Every request is reviewed before it is published, and you can update or close it at any time.",
+        ? "The more you tell us, the easier it is for a municipality to find you. Only your name, skill and district are required."
+        : "The clearer the request, the faster it gets filled. A verifier checks it before it appears on the board, and you can update or close it at any time.",
       consent: isVolunteer
-        ? "I consent to my details being shared with verified requesters, government agencies and partner organizations for the purpose of coordinating relief and reconstruction."
+        ? "I agree to my details being shared with verified requesters, government agencies and partner organizations so they can coordinate relief and reconstruction."
         : "I confirm this request is genuine and that I am authorised to make it on behalf of the organization named above.",
       cta: isVolunteer ? "Create my profile" : "Submit request for review",
     }),

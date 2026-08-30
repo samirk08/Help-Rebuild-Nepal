@@ -97,16 +97,16 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefNav: "Relief items",
     reliefTitle: "Relief items",
     reliefIntro:
-      "Verified requests for supplies: what is needed, how much, where and by when. Groups pledge against a published request, so what arrives is what was asked for.",
+      "Verified requests for supplies: what is needed, how much, where and by when. Groups pledge against a verified request, so what arrives is what was asked for.",
     reliefEmptyTitle: "No item requests have been verified yet",
     reliefEmptyBody:
-      "Verified requests appear here with a quantity and a deadline. Until one is published, register what you can move and where you operate.",
+      "Verified requests appear here with a quantity and a deadline. Until one does, register what you can move and where you operate.",
     reliefSeeExample: "See an example request",
     reliefBackToBoard: "← Back to all relief items",
     reliefOfferCta: "Offer items",
     reliefOfferTitle: "Offer relief items",
     reliefOfferIntro:
-      "Choose the request you can supply. Matching offers to published requests keeps the right things moving to the right places.",
+      "Choose the request you can supply. Offers tied to a verified request are the ones that get through, and they stop unwanted goods piling up.",
     reliefPledgeCta: "Pledge items for this request →",
     reliefPledged: "pledged so far",
     reliefNeededBy: "Needed by",
@@ -117,12 +117,12 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefStatus: "Status",
     reliefUnrequested: "UNREQUESTED · NOT MATCHED TO A VERIFIED NEED",
     reliefNewOnly: "New or unused only",
-    reliefNoCustodyTitle: "This platform never handles your goods",
+    reliefNoCustodyTitle: "We never handle your goods",
     reliefNoCustodyBody:
       "Help Rebuild Nepal does not collect, store, transport or own any items. It records who needs what and who can supply it. The two parties arrange the handover directly, just as money goes to the Prime Minister Disaster Relief Fund rather than to us.",
     reliefWhyNeedsFirstTitle: "Why requests come first",
     reliefWhyNeedsFirstBody:
-      "Supplies nobody asked for fill warehouses, block roads and absorb volunteers needed elsewhere. Matching every offer to a published request prevents that. Used clothing and expired goods are never accepted.",
+      "Supplies nobody asked for fill warehouses, block roads and absorb volunteers needed elsewhere. Tying every offer to a verified request prevents that. Used clothing and expired goods are never accepted.",
     reliefPickNeed: "Which request are you supplying?",
     reliefPickNeedNone: "I have items that no one has requested yet",
     reliefUnmatchedWarning:
@@ -169,16 +169,16 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefNav: "राहत सामग्री",
     reliefTitle: "राहत सामग्री",
     reliefIntro:
-      "सामग्रीका प्रमाणित अनुरोध: के चाहिन्छ, कति, कहाँ र कहिलेसम्म। समूहले प्रकाशित अनुरोधमै प्रतिबद्धता जनाउँछन्, ताकि पुग्ने सामान माग गरिएकै होस्।",
+      "सामग्रीका प्रमाणित अनुरोध: के चाहिन्छ, कति, कहाँ र कहिलेसम्म। समूहले प्रमाणित अनुरोधमै प्रतिबद्धता जनाउँछन्, ताकि पुग्ने सामान माग गरिएकै होस्।",
     reliefEmptyTitle: "अझै कुनै सामग्री अनुरोध प्रमाणित भएको छैन",
     reliefEmptyBody:
-      "प्रमाणित अनुरोध परिमाण र म्यादसहित यहाँ देखिनेछन्। त्यससम्म तपाईंले ओसार्न सक्ने सामान र काम गर्ने क्षेत्र दर्ता गर्नुहोस्।",
+      "प्रमाणित अनुरोध परिमाण र म्यादसहित यहाँ देखिनेछन्। नदेखिँदासम्म तपाईंले ओसार्न सक्ने सामान र काम गर्ने क्षेत्र दर्ता गर्नुहोस्।",
     reliefSeeExample: "नमुना अनुरोध हेर्नुहोस्",
     reliefBackToBoard: "← सबै राहत सामग्रीमा फर्कनु",
     reliefOfferCta: "सामग्री दिनुहोस्",
     reliefOfferTitle: "राहत सामग्री दिनुहोस्",
     reliefOfferIntro:
-      "तपाईंले पूरा गर्न सक्ने अनुरोध छान्नुहोस्। प्रकाशित अनुरोधसँग जोडिएको सहयोगले सही सामान सही ठाउँमा पुर्‍याउँछ।",
+      "तपाईंले पूरा गर्न सक्ने अनुरोध छान्नुहोस्। प्रमाणित अनुरोधसँग जोडिएको सहयोग नै पुग्छ, र नचाहिने सामान थुप्रिनबाट जोगिन्छ।",
     reliefPledgeCta: "यो अनुरोधका लागि सामग्री दिने प्रतिबद्धता →",
     reliefPledged: "अहिलेसम्म प्रतिबद्ध",
     reliefNeededBy: "कहिलेसम्म चाहिन्छ",
@@ -189,12 +189,12 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefStatus: "स्थिति",
     reliefUnrequested: "अनुरोध नगरिएको · प्रमाणित आवश्यकतासँग नमिलेको",
     reliefNewOnly: "नयाँ वा प्रयोग नगरिएको मात्र",
-    reliefNoCustodyTitle: "यो प्लेटफर्मले तपाईंको सामान लिँदैन",
+    reliefNoCustodyTitle: "हामी तपाईंको सामान लिँदैनौं",
     reliefNoCustodyBody:
       "हेल्प रिबिल्ड नेपालले कुनै पनि सामग्री सङ्कलन, भण्डारण, ढुवानी वा स्वामित्व लिँदैन। कसलाई के चाहिएको छ र कसले दिन सक्छ भन्ने अभिलेख मात्र राख्छ। हस्तान्तरण दुवै पक्षले सिधै मिलाउँछन्, जसरी आर्थिक सहयोग हामीकहाँ नभई प्रधानमन्त्री विपद् राहत कोषमा जान्छ।",
     reliefWhyNeedsFirstTitle: "किन अनुरोध पहिले",
     reliefWhyNeedsFirstBody:
-      "कसैले नमागेको सामानले गोदाम भरिन्छ, बाटो रोक्छ र अन्यत्र चाहिने स्वयंसेवक अल्झाउँछ। हरेक सहयोगलाई प्रकाशित अनुरोधसँग जोड्नुले त्यो रोक्छ। प्रयोग गरिएको लुगा र म्याद सकिएको सामान कहिल्यै लिइँदैन।",
+      "कसैले नमागेको सामानले गोदाम भरिन्छ, बाटो रोक्छ र अन्यत्र चाहिने स्वयंसेवक अल्झाउँछ। हरेक सहयोगलाई प्रमाणित अनुरोधसँग जोड्नुले त्यो रोक्छ। प्रयोग गरिएको लुगा र म्याद सकिएको सामान कहिल्यै लिइँदैन।",
     reliefPickNeed: "तपाईं कुन अनुरोध पूरा गर्दै हुनुहुन्छ?",
     reliefPickNeedNone: "मसँग कसैले नमागेको सामान छ",
     reliefUnmatchedWarning:
