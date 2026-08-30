@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:pages": "NEXT_STATIC_EXPORT=true NEXT_PUBLIC_BASE_PATH=/Help-Rebuild-Nepal next build"
   },
   "dependencies": {
     "next": "^15.5.4",

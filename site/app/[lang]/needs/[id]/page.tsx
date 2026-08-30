@@ -8,6 +8,15 @@ import { dict, isLang, translator } from "@/lib/i18n";
 import { screenPath } from "@/lib/routes";
 import { DETAIL_FACTS, EXAMPLE_NEED_ID } from "@/lib/site-data";
 
+/**
+ * The register holds no published requests yet, so the one worked example is
+ * the only detail page there is to build. A static export needs that list up
+ * front; add ids here as real requests start being published.
+ */
+export function generateStaticParams() {
+  return [{ id: EXAMPLE_NEED_ID }];
+}
+
 export async function generateMetadata({
   params,
 }: {

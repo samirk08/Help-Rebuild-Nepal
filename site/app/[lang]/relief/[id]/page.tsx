@@ -6,8 +6,24 @@ import InterestButton from "@/components/InterestButton";
 import StatusTimeline from "@/components/StatusTimeline";
 import { added } from "@/lib/added-strings";
 import { dict, isLang, translator } from "@/lib/i18n";
-import { categoryById, categoryLabel, formatQuantity, itemNeedById, unitLabel } from "@/lib/relief";
+import {
+  EXAMPLE_ITEM_NEED,
+  categoryById,
+  categoryLabel,
+  formatQuantity,
+  itemNeedById,
+  unitLabel,
+} from "@/lib/relief";
 import { screenPath } from "@/lib/routes";
+
+/**
+ * Nothing is published yet, so the worked example is the only detail page
+ * there is to build. A static export needs that list up front; add ids here
+ * as real item needs start being published.
+ */
+export function generateStaticParams() {
+  return [{ id: EXAMPLE_ITEM_NEED.id }];
+}
 
 export async function generateMetadata({
   params,
