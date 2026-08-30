@@ -33,7 +33,7 @@ export const TRUST_ITEMS = [
     v: "It stays visible, labelled community-reported, and is never shown as confirmed.",
   },
   {
-    k: "How misuse is prevented",
+    k: "Stopping misuse",
     v: "Duplicate requests are closed, requesters are named and contactable, and volunteers are never asked to pay.",
   },
   {
