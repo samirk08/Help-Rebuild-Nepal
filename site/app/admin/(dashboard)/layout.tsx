@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import AdminNavLink from "@/components/AdminNavLink";
 import { signOut } from "@/lib/admin-actions";
 import { supabaseServerClient } from "@/lib/supabase-server";
 
@@ -20,15 +19,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="admin-shell">
       <nav className="admin-nav">
         <p className="admin-nav__brand">Help Rebuild Nepal</p>
+        <p className="admin-nav__brand-sub">Coordination desk</p>
+
+        <p className="admin-nav__group">Review</p>
         {NAV.map((item) => (
-          <Link key={item.href} href={item.href} className="admin-nav__link">
-            {item.label}
-          </Link>
+          <AdminNavLink key={item.href} href={item.href} label={item.label} />
         ))}
+
         <div className="admin-nav__spacer" />
-        {user ? <p className="admin-nav__user">{user.email}</p> : null}
+
+        {user ? (
+          <div className="admin-nav__user">
+            <p className="admin-nav__user-label">Signed in as</p>
+            <p className="admin-nav__email">{user.email}</p>
+          </div>
+        ) : null}
         <form action={signOut}>
-          <button type="submit" className="admin-nav__link reset-button" style={{ width: "100%" }}>
+          <button type="submit" className="admin-nav__link admin-nav__signout reset-button">
             Sign out
           </button>
         </form>

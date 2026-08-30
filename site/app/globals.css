@@ -76,9 +76,16 @@
   --radius-sm: 3px;
   --radius-xs: 2px;
 
-  --font-display: var(--font-archivo), "Archivo", sans-serif;
-  --font-body: var(--font-public-sans), "Public Sans", Helvetica, sans-serif;
-  --font-deva: var(--font-devanagari), "Noto Sans Devanagari", sans-serif;
+  /* The inner fallbacks are load-bearing, not belt-and-braces. The --font-*
+     variables come from next/font (see lib/fonts.ts) and only exist on an
+     <html> that a root layout put them on. A var() that resolves to nothing
+     makes the *whole* font-family declaration invalid at computed-value time —
+     the browser drops it and falls back to its default serif rather than
+     reading the next name in the list. Naming a real family inside var() keeps
+     the chain valid everywhere. */
+  --font-display: var(--font-archivo, "Archivo"), system-ui, sans-serif;
+  --font-body: var(--font-public-sans, "Public Sans"), Helvetica, sans-serif;
+  --font-deva: var(--font-devanagari, "Noto Sans Devanagari"), sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Motion.

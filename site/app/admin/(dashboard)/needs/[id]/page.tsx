@@ -1,14 +1,13 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { createMatch, promoteToProject, updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
 import { documentsFor } from "@/lib/admin-documents";
-import { renderSubmissionFields } from "@/lib/admin-render";
+import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
 import { NEED_SECTIONS } from "@/lib/form-schema";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
-
-const STATUSES = ["submitted", "under_review", "verified", "recruiting", "filled", "completed", "rejected"];
 
 export default async function NeedDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -45,7 +44,23 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div>
-      <h1 className="admin-h1">{row.org_or_name ?? "Need"}</h1>
+      <Link href="/admin/needs" className="admin-back">
+        <span aria-hidden="true">←</span> All needs
+      </Link>
+      <div className="admin-head">
+        <div>
+          <h1 className="admin-h1">{row.org_or_name ?? "Need"}</h1>
+          <p className="admin-head__note">
+            {row.district ?? "District not given"} · posted{" "}
+            {new Date(row.created_at).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="admin-head__actions">
+          <span className={`admin-badge admin-badge--${row.status}`}>
+            {statusLabel(row.status)}
+          </span>
+        </div>
+      </div>
 
       <div className="admin-detail">
         <div className="admin-detail__row">
@@ -54,10 +69,10 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
             <form action={updateSubmissionStatus} className="admin-form-row">
               <input type="hidden" name="id" value={id} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <select name="status" defaultValue={row.status}>
-                {STATUSES.map((s) => (
+              <select name="status" defaultValue={row.status} aria-label="Status">
+                {SUBMISSION_STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {statusLabel(s)}
                   </option>
                 ))}
               </select>
@@ -127,20 +142,22 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
             return (
               <div className="admin-detail__row" key={m.id}>
                 <span className="admin-detail__k">{volunteer?.org_or_name ?? m.volunteer_id}</span>
-                <span className="admin-detail__v">{m.status}</span>
+                <span className="admin-detail__v">
+                  <span className={`admin-badge admin-badge--${m.status}`}>
+                    {statusLabel(m.status)}
+                  </span>
+                </span>
               </div>
             );
           })
         ) : (
-          <p className="admin-empty" style={{ padding: "12px 0" }}>
-            No volunteer matched yet.
-          </p>
+          <p className="admin-empty admin-empty--inline">No volunteer matched yet.</p>
         )}
       </div>
       {verifiedVolunteers && verifiedVolunteers.length > 0 ? (
         <form action={createMatch} className="admin-form-row" style={{ marginBottom: 24 }}>
           <input type="hidden" name="needId" value={id} />
-          <select name="volunteerId" required defaultValue="">
+          <select name="volunteerId" required defaultValue="" aria-label="Volunteer to match">
             <option value="" disabled>
               Choose a volunteer…
             </option>
@@ -170,7 +187,7 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
             </div>
           </>
         ) : (
-          <p className="admin-empty" style={{ padding: "12px 0" }}>
+          <p className="admin-empty admin-empty--inline">
             Not yet promoted to a standing project.
           </p>
         )}

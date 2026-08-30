@@ -38,10 +38,17 @@ export default function AdminLoginPage() {
   return (
     <div className="admin-login">
       <div className="admin-login__card">
-        <h1 className="admin-login__title">Help Rebuild Nepal</h1>
-        <p className="admin-login__sub">Sign in to the coordination dashboard.</p>
+        <p className="admin-login__eyebrow">Help Rebuild Nepal</p>
+        <h1 className="admin-login__title">Coordination desk</h1>
+        <p className="admin-login__sub">
+          Sign in to review registrations, verify needs and coordinate relief.
+        </p>
 
-        {error ? <p className="admin-login__error">{error}</p> : null}
+        {error ? (
+          <p className="admin-login__error" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <form onSubmit={handleSubmit}>
           <div className="admin-login__field">
@@ -68,10 +75,18 @@ export default function AdminLoginPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <button type="submit" className="btn btn--dark btn--block" disabled={submitting}>
+          <button
+            type="submit"
+            className="btn btn--dark btn--block admin-login__submit"
+            disabled={submitting}
+          >
             {submitting ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        <p className="admin-login__foot">
+          Accounts are created by an administrator. Ask the team if you need access.
+        </p>
       </div>
     </div>
   );

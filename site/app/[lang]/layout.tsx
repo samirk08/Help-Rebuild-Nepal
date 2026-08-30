@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Archivo, Noto_Sans_Devanagari, Public_Sans } from "next/font/google";
 import { notFound } from "next/navigation";
 
 import "../globals.css";
@@ -8,28 +7,8 @@ import Header from "@/components/Header";
 import ScrollReveal from "@/components/ScrollReveal";
 import { ToastProvider } from "@/components/ToastProvider";
 import type { Lang } from "@/lib/content";
+import { fontVariables } from "@/lib/fonts";
 import { HTML_LANG, LANGS, dict, isLang } from "@/lib/i18n";
-
-const archivo = Archivo({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-archivo",
-  display: "swap",
-});
-
-const publicSans = Public_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-public-sans",
-  display: "swap",
-});
-
-const devanagari = Noto_Sans_Devanagari({
-  subsets: ["devanagari"],
-  weight: ["400", "600"],
-  variable: "--font-devanagari",
-  display: "swap",
-});
 
 export function generateStaticParams() {
   return LANGS.map((lang) => ({ lang }));
@@ -78,10 +57,7 @@ export default async function LangLayout({
   const t = dict(lang);
 
   return (
-    <html
-      lang={HTML_LANG[lang]}
-      className={`${archivo.variable} ${publicSans.variable} ${devanagari.variable}`}
-    >
+    <html lang={HTML_LANG[lang]} className={fontVariables}>
       <body>
         <ToastProvider>
           <ScrollReveal />

@@ -1,14 +1,13 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
 import { documentsFor } from "@/lib/admin-documents";
-import { renderSubmissionFields } from "@/lib/admin-render";
+import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
 import { VOLUNTEER_SECTIONS } from "@/lib/form-schema";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
-
-const STATUSES = ["submitted", "under_review", "verified", "recruiting", "filled", "completed", "rejected"];
 
 export default async function VolunteerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,7 +27,23 @@ export default async function VolunteerDetailPage({ params }: { params: Promise<
 
   return (
     <div>
-      <h1 className="admin-h1">{row.org_or_name ?? "Volunteer"}</h1>
+      <Link href="/admin/volunteers" className="admin-back">
+        <span aria-hidden="true">←</span> All volunteers
+      </Link>
+      <div className="admin-head">
+        <div>
+          <h1 className="admin-h1">{row.org_or_name ?? "Volunteer"}</h1>
+          <p className="admin-head__note">
+            {row.district ?? "District not given"} · registered{" "}
+            {new Date(row.created_at).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="admin-head__actions">
+          <span className={`admin-badge admin-badge--${row.status}`}>
+            {statusLabel(row.status)}
+          </span>
+        </div>
+      </div>
 
       <div className="admin-detail">
         <div className="admin-detail__row">
@@ -37,10 +52,10 @@ export default async function VolunteerDetailPage({ params }: { params: Promise<
             <form action={updateSubmissionStatus} className="admin-form-row">
               <input type="hidden" name="id" value={id} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <select name="status" defaultValue={row.status}>
-                {STATUSES.map((s) => (
+              <select name="status" defaultValue={row.status} aria-label="Status">
+                {SUBMISSION_STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {statusLabel(s)}
                   </option>
                 ))}
               </select>
@@ -64,7 +79,7 @@ export default async function VolunteerDetailPage({ params }: { params: Promise<
         </div>
         <div className="admin-detail__row">
           <span className="admin-detail__k">Language submitted in</span>
-          <span className="admin-detail__v">{row.lang}</span>
+          <span className="admin-detail__v">{row.lang === "np" ? "Nepali" : "English"}</span>
         </div>
         <div className="admin-detail__row">
           <span className="admin-detail__k">Submitted</span>

@@ -28,22 +28,29 @@ export default async function AdminOverviewPage() {
 
   return (
     <div>
-      <h1 className="admin-h1">Overview</h1>
+      <div className="admin-head">
+        <div>
+          <h1 className="admin-h1">Overview</h1>
+          <p className="admin-head__note">
+            Everything submitted through the public site, waiting to be checked by a person.
+          </p>
+        </div>
+      </div>
 
       <div className="admin-stats">
-        <div className="admin-stat">
+        <div className="admin-stat admin-stat--green">
           <p className="admin-stat__value">{volunteers ?? 0}</p>
           <p className="admin-stat__label">Volunteers registered</p>
         </div>
-        <div className="admin-stat">
+        <div className="admin-stat admin-stat--navy">
           <p className="admin-stat__value">{needs ?? 0}</p>
           <p className="admin-stat__label">Needs posted</p>
         </div>
-        <div className="admin-stat">
+        <div className="admin-stat admin-stat--purple">
           <p className="admin-stat__value">{pledges ?? 0}</p>
           <p className="admin-stat__label">Relief pledges</p>
         </div>
-        <div className="admin-stat">
+        <div className="admin-stat admin-stat--amber">
           <p className="admin-stat__value">{awaitingReview ?? 0}</p>
           <p className="admin-stat__label">Awaiting review</p>
         </div>
@@ -59,25 +66,39 @@ export default async function AdminOverviewPage() {
                 <th>Name / org</th>
                 <th>District</th>
                 <th>Submitted</th>
-                <th></th>
+                <th className="admin-table__go"></th>
               </tr>
             </thead>
             <tbody>
               {recent.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.kind}</td>
-                  <td>{row.org_or_name ?? "—"}</td>
-                  <td>{row.district ?? "—"}</td>
-                  <td>{new Date(row.created_at).toLocaleString()}</td>
+                  <td>{row.kind === "volunteer" ? "Volunteer" : "Need"}</td>
                   <td>
-                    <Link href={`/admin/${routeFor(row.kind)}/${row.id}`}>Review →</Link>
+                    <Link href={`/admin/${routeFor(row.kind)}/${row.id}`}>
+                      {row.org_or_name ?? "—"}
+                    </Link>
+                  </td>
+                  <td>{row.district ?? "—"}</td>
+                  <td className="admin-table__time">
+                    {new Date(row.created_at).toLocaleString()}
+                  </td>
+                  <td className="admin-table__go">
+                    <Link href={`/admin/${routeFor(row.kind)}/${row.id}`}>
+                      Review <span aria-hidden="true">→</span>
+                    </Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="admin-empty">Nothing waiting for review.</p>
+          <div className="admin-empty">
+            <p className="admin-empty__title">Nothing waiting for review</p>
+            <p className="admin-empty__hint">
+              New volunteer registrations and posted needs land here the moment someone
+              submits the form.
+            </p>
+          </div>
         )}
       </div>
     </div>

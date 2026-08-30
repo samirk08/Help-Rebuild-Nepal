@@ -1,10 +1,9 @@
 import { createItemNeed, updatePledgeStatus } from "@/lib/admin-actions";
+import { PLEDGE_STATUSES, statusLabel } from "@/lib/admin-render";
 import { RELIEF_CATEGORIES, categoryById } from "@/lib/relief";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
-
-const STATUSES = ["submitted", "under_review", "verified", "rejected"];
 
 export default async function ReliefAdminPage() {
   const client = supabaseAdmin();
@@ -19,7 +18,15 @@ export default async function ReliefAdminPage() {
 
   return (
     <div>
-      <h1 className="admin-h1">Relief items</h1>
+      <div className="admin-head">
+        <div>
+          <h1 className="admin-h1">Relief items</h1>
+          <p className="admin-head__note">
+            Physical goods that have been asked for, and what has been offered against them.
+            Nothing here takes custody of anything — it only records the match.
+          </p>
+        </div>
+      </div>
 
       <h2 className="admin-section-title">Item needs</h2>
       <div className="admin-table-wrap" style={{ marginBottom: 16 }}>
@@ -46,15 +53,28 @@ export default async function ReliefAdminPage() {
                     <td>
                       {n.municipality} · {n.district}
                     </td>
-                    <td>{new Date(n.needed_by).toLocaleDateString()}</td>
-                    <td>{n.verified ? "Yes" : "No"}</td>
+                    <td className="admin-table__time">
+                      {new Date(n.needed_by).toLocaleDateString()}
+                    </td>
+                    <td>
+                      <span
+                        className={`admin-badge admin-badge--${n.verified ? "verified" : "submitted"}`}
+                      >
+                        {n.verified ? "Verified" : "Unverified"}
+                      </span>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         ) : (
-          <p className="admin-empty">No item needs yet — add one below.</p>
+          <div className="admin-empty">
+            <p className="admin-empty__title">No item needs yet</p>
+            <p className="admin-empty__hint">
+              There is no public form for posting one yet, so add it below.
+            </p>
+          </div>
         )}
       </div>
 
@@ -123,10 +143,10 @@ export default async function ReliefAdminPage() {
                     <td>
                       <form action={updatePledgeStatus} className="admin-form-row">
                         <input type="hidden" name="id" value={p.id} />
-                        <select name="status" defaultValue={p.status}>
-                          {STATUSES.map((s) => (
+                        <select name="status" defaultValue={p.status} aria-label="Pledge status">
+                          {PLEDGE_STATUSES.map((s) => (
                             <option key={s} value={s}>
-                              {s}
+                              {statusLabel(s)}
                             </option>
                           ))}
                         </select>
@@ -141,7 +161,12 @@ export default async function ReliefAdminPage() {
             </tbody>
           </table>
         ) : (
-          <p className="admin-empty">No pledges yet.</p>
+          <div className="admin-empty">
+            <p className="admin-empty__title">No pledges yet</p>
+            <p className="admin-empty__hint">
+              Offers made against an item need on the public relief page will appear here.
+            </p>
+          </div>
         )}
       </div>
     </div>

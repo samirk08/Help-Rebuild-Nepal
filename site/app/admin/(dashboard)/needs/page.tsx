@@ -1,10 +1,10 @@
 import Link from "next/link";
 
+import { SUBMISSION_STATUSES, statusLabel } from "@/lib/admin-render";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-const STATUSES = ["submitted", "under_review", "verified", "recruiting", "filled", "completed", "rejected"];
 const URGENCIES = ["Immediate", "Urgent", "Upcoming", "Reconstruction"];
 
 export default async function NeedsPage({
@@ -31,18 +31,26 @@ export default async function NeedsPage({
 
   return (
     <div>
-      <h1 className="admin-h1">Needs</h1>
+      <div className="admin-head">
+        <div>
+          <h1 className="admin-h1">Needs</h1>
+          <p className="admin-head__note">
+            {rows?.length ?? 0} {rows?.length === 1 ? "request" : "requests"}
+            {status || urgency || district ? " matching this filter" : " so far"}.
+          </p>
+        </div>
+      </div>
 
       <form className="admin-filters" method="get">
-        <select name="status" defaultValue={status}>
+        <select name="status" defaultValue={status} aria-label="Filter by status">
           <option value="">Any status</option>
-          {STATUSES.map((s) => (
+          {SUBMISSION_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {statusLabel(s)}
             </option>
           ))}
         </select>
-        <select name="urgency" defaultValue={urgency}>
+        <select name="urgency" defaultValue={urgency} aria-label="Filter by urgency">
           <option value="">Any urgency</option>
           {URGENCIES.map((u) => (
             <option key={u} value={u}>
@@ -50,11 +58,20 @@ export default async function NeedsPage({
             </option>
           ))}
         </select>
-        <input type="text" name="district" placeholder="District" defaultValue={district} />
+        <input
+          type="text"
+          name="district"
+          placeholder="District"
+          defaultValue={district}
+          aria-label="Filter by district"
+        />
         <button type="submit" className="btn btn--outline btn--sm">
           Filter
         </button>
-        <a href="/api/admin/export?kind=need" className="btn btn--outline btn--sm">
+        <a
+          href="/api/admin/export?kind=need"
+          className="btn btn--outline btn--sm admin-filters__end"
+        >
           Export CSV
         </a>
       </form>
@@ -80,15 +97,26 @@ export default async function NeedsPage({
                   <td>{row.district ?? "—"}</td>
                   <td>{row.urgency ?? "—"}</td>
                   <td>
-                    <span className={`admin-badge admin-badge--${row.status}`}>{row.status}</span>
+                    <span className={`admin-badge admin-badge--${row.status}`}>
+                      {statusLabel(row.status)}
+                    </span>
                   </td>
-                  <td>{new Date(row.created_at).toLocaleDateString()}</td>
+                  <td className="admin-table__time">
+                    {new Date(row.created_at).toLocaleDateString()}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="admin-empty">No needs match this filter.</p>
+          <div className="admin-empty">
+            <p className="admin-empty__title">No needs here yet</p>
+            <p className="admin-empty__hint">
+              {status || urgency || district
+                ? "Nothing matches this filter. Try clearing it."
+                : "Requests posted through the public form will appear here."}
+            </p>
+          </div>
         )}
       </div>
     </div>

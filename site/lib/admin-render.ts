@@ -3,6 +3,38 @@ import { fieldKey, type EnhancedSection } from "./form-schema";
 export type RenderedField = { label: string; value: string };
 export type RenderedSection = { title: string; rows: RenderedField[] };
 
+/** The full status vocabulary, matching `submission_status` in schema.sql. */
+export const SUBMISSION_STATUSES = [
+  "submitted",
+  "under_review",
+  "verified",
+  "recruiting",
+  "filled",
+  "completed",
+  "rejected",
+] as const;
+
+/** Pledges only ever move through the verification subset of the above. */
+export const PLEDGE_STATUSES = ["submitted", "under_review", "verified", "rejected"] as const;
+
+/**
+ * Postgres enum values are snake_case; screens should not be. Falls back to
+ * de-underscoring anything the map hasn't caught up with rather than showing
+ * a blank, so a new status added to the schema still renders legibly.
+ */
+export function statusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    submitted: "Submitted",
+    under_review: "Under review",
+    verified: "Verified",
+    recruiting: "Recruiting",
+    filled: "Filled",
+    completed: "Completed",
+    rejected: "Rejected",
+  };
+  return labels[status] ?? status.replace(/_/g, " ");
+}
+
 /**
  * Turns a submission's raw `fields` jsonb back into labelled rows, in the
  * same order and grouping the public form used — so the admin detail view
