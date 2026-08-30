@@ -43,6 +43,11 @@ jobs:
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          # Switch the repository's Pages source to GitHub Actions on the
+          # first run, so publishing does not depend on someone having
+          # already set it by hand under Settings -> Pages.
+          enablement: true
 
       - name: Build static site
         env:
