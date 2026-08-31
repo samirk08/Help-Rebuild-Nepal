@@ -198,10 +198,10 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefNewOnly: "New or unused only",
     reliefNoCustodyTitle: "We never handle your goods",
     reliefNoCustodyBody:
-      "Help Rebuild Nepal does not collect, store, transport or own any items. It records who needs what and who can supply it. The two parties arrange the handover directly, just as money goes to the Prime Minister Disaster Relief Fund rather than to us.",
+      "We never collect, store or transport anything. We record who needs what and who can supply it — you arrange the handover directly.",
     reliefWhyNeedsFirstTitle: "Why requests come first",
     reliefWhyNeedsFirstBody:
-      "Supplies nobody asked for fill warehouses, block roads and absorb volunteers needed elsewhere. Tying every offer to a verified request prevents that. Used clothing and expired goods are never accepted.",
+      "Unrequested supplies clog warehouses and roads. Every offer must match a verified request. No used clothing or expired goods.",
     reliefPickNeed: "Which request are you supplying?",
     reliefPickNeedNone: "I have items that no one has requested yet",
     reliefUnmatchedWarning:
@@ -388,10 +388,10 @@ const ADDED: Record<Lang, AddedStrings> = {
     reliefNewOnly: "नयाँ वा प्रयोग नगरिएको मात्र",
     reliefNoCustodyTitle: "हामी तपाईंको सामान लिँदैनौं",
     reliefNoCustodyBody:
-      "हेल्प रिबिल्ड नेपालले कुनै पनि सामग्री सङ्कलन, भण्डारण, ढुवानी वा स्वामित्व लिँदैन। कसलाई के चाहिएको छ र कसले दिन सक्छ भन्ने अभिलेख मात्र राख्छ। हस्तान्तरण दुवै पक्षले सिधै मिलाउँछन्, जसरी आर्थिक सहयोग हामीकहाँ नभई प्रधानमन्त्री विपद् राहत कोषमा जान्छ।",
+      "हामी कुनै सामान सङ्कलन, भण्डारण वा ढुवानी गर्दैनौं। कसलाई के चाहिन्छ र कसले दिन सक्छ भन्ने अभिलेख राख्छौं — हस्तान्तरण तपाईंहरू सिधै मिलाउनुहोस्।",
     reliefWhyNeedsFirstTitle: "किन अनुरोध पहिले",
     reliefWhyNeedsFirstBody:
-      "कसैले नमागेको सामानले गोदाम भरिन्छ, बाटो रोक्छ र अन्यत्र चाहिने स्वयंसेवक अल्झाउँछ। हरेक सहयोगलाई प्रमाणित अनुरोधसँग जोड्नुले त्यो रोक्छ। प्रयोग गरिएको लुगा र म्याद सकिएको सामान कहिल्यै लिइँदैन।",
+      "नमागेको सामानले गोदाम र बाटो भरिन्छ। हरेक सहयोग प्रमाणित अनुरोधसँग मिल्नुपर्छ। प्रयोग गरिएको लुगा र म्याद सकिएको सामान लिइँदैन।",
     reliefPickNeed: "तपाईं कुन अनुरोध पूरा गर्दै हुनुहुन्छ?",
     reliefPickNeedNone: "मसँग कसैले नमागेको सामान छ",
     reliefUnmatchedWarning:
