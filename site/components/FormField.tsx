@@ -4,7 +4,7 @@ import LocationField from "@/components/LocationField";
 import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
 import { districtOptions } from "@/lib/districts";
-import { fieldKey, type EnhancedField } from "@/lib/form-schema";
+import { fieldKey, isSelectPlaceholder, type EnhancedField } from "@/lib/form-schema";
 
 export default function FormFieldView({
   field,
@@ -80,9 +80,19 @@ export default function FormFieldView({
       ) : null}
 
       {field.isSelect && !field.widget ? (
-        <select className="select" id={key} name={key} defaultValue="" aria-describedby={describedBy}>
+        // A dropdown that opens with a real answer submits that answer when
+        // it is left alone, exactly as it reads on screen. Only a "Select…"
+        // prompt is blanked, so that "unanswered" stays distinguishable from
+        // the first option — see isSelectPlaceholder().
+        <select
+          className="select"
+          id={key}
+          name={key}
+          defaultValue={isSelectPlaceholder(field.options?.[0]) ? "" : field.options?.[0]}
+          aria-describedby={describedBy}
+        >
           {(field.options ?? []).map((option, i) => (
-            <option key={option} value={i === 0 ? "" : option}>
+            <option key={option} value={i === 0 && isSelectPlaceholder(option) ? "" : option}>
               {tr(option)}
             </option>
           ))}
