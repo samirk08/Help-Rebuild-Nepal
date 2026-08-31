@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import Combobox from "@/components/Combobox";
@@ -8,6 +9,7 @@ import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
 import { districtOptions } from "@/lib/districts";
 import { submitRequest } from "@/lib/api";
+import { confirmationPath } from "@/lib/routes";
 import {
   EXAMPLE_ITEM_NEED,
   RELIEF_CATEGORIES,
@@ -40,6 +42,7 @@ export default function ReliefOfferForm({
   /** `?need=<id>` from the "pledge items for this request" link. */
   preselect?: string;
 }) {
+  const router = useRouter();
   const extra = added(lang);
   const { showToast } = useToast();
   const [category, setCategory] = useState("");
@@ -59,12 +62,13 @@ export default function ReliefOfferForm({
     if (submitting) return;
     setSubmitting(true);
     try {
-      await submitRequest("relief-offer", lang, new FormData(event.currentTarget));
-      showToast(extra.reliefToastOffer);
+      const result = await submitRequest("relief-offer", lang, new FormData(event.currentTarget));
+      // Same reasoning as RequestForm: leave for the confirmation page and keep
+      // the button disabled while the navigation is in flight.
+      router.push(confirmationPath(lang, "relief-offer", result.id));
     } catch (err) {
       console.error("Relief offer submission failed", err);
       showToast(extra.submitError);
-    } finally {
       setSubmitting(false);
     }
   }

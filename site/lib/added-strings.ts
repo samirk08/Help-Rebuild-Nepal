@@ -73,6 +73,19 @@ export type AddedStrings = {
   headerTagline: string;
   loopWords: string[];
 
+  thanksVolunteerTitle: string;
+  thanksVolunteerBody: string;
+  thanksNeedTitle: string;
+  thanksNeedBody: string;
+  thanksOfferTitle: string;
+  thanksOfferBody: string;
+  thanksNextTitle: string;
+  thanksReference: string;
+  thanksReferenceNote: string;
+  thanksBrowseNeeds: string;
+  thanksHome: string;
+  thanksNoDuplicate: string;
+
   needsPeopleNeeded: string;
   needsCountOne: string;
   needsCountMany: string;
@@ -194,6 +207,24 @@ const ADDED: Record<Lang, AddedStrings> = {
       "teachers",
     ],
 
+    thanksVolunteerTitle: "You're registered",
+    thanksVolunteerBody:
+      "Your details are with the coordination team. A verifier reviews every registration before anyone is matched to work, so there is nothing more for you to do right now.",
+    thanksNeedTitle: "Your request has been received",
+    thanksNeedBody:
+      "A verifier will check the details before your request appears on the public board. This is what stops unverified requests pulling volunteers away from real ones.",
+    thanksOfferTitle: "Your offer has been received",
+    thanksOfferBody:
+      "A verifier will match your offer against a published request before anyone acts on it. Please do not dispatch anything until you have been contacted.",
+    thanksNextTitle: "What happens next",
+    thanksReference: "Your reference",
+    thanksReferenceNote:
+      "Quote this if you contact the team about this submission. You do not need to keep it otherwise.",
+    thanksBrowseNeeds: "See what is needed now",
+    thanksHome: "Back to home",
+    thanksNoDuplicate:
+      "There is no need to submit the form again — doing so creates a second record for the team to reconcile.",
+
     needsPeopleNeeded: "people needed",
     needsCountOne: "1 verified request",
     needsCountMany: "verified requests",
@@ -304,6 +335,24 @@ const ADDED: Record<Lang, AddedStrings> = {
       "इलेक्ट्रिसियन",
       "शिक्षक",
     ],
+
+    thanksVolunteerTitle: "तपाईं दर्ता हुनुभयो",
+    thanksVolunteerBody:
+      "तपाईंको विवरण समन्वय टोलीसँग पुग्यो। कसैलाई काममा मिलाउनुअघि प्रमाणकले हरेक दर्ता समीक्षा गर्छ, त्यसैले अहिले तपाईंले अरू केही गर्नुपर्दैन।",
+    thanksNeedTitle: "तपाईंको अनुरोध प्राप्त भयो",
+    thanksNeedBody:
+      "सार्वजनिक बोर्डमा देखिनुअघि प्रमाणकले विवरण जाँच्नेछ। यसैले प्रमाणित नभएका अनुरोधले वास्तविक अनुरोधबाट स्वयंसेवक तान्न पाउँदैनन्।",
+    thanksOfferTitle: "तपाईंको सहयोग प्राप्त भयो",
+    thanksOfferBody:
+      "कोही कारबाही गर्नुअघि प्रमाणकले तपाईंको सहयोगलाई प्रकाशित अनुरोधसँग मिलाउनेछ। सम्पर्क नआएसम्म कृपया कुनै सामान नपठाउनुहोस्।",
+    thanksNextTitle: "अब के हुन्छ",
+    thanksReference: "तपाईंको सन्दर्भ",
+    thanksReferenceNote:
+      "यस विषयमा टोलीलाई सम्पर्क गर्नुभयो भने यो उल्लेख गर्नुहोस्। अन्यथा राख्नु आवश्यक छैन।",
+    thanksBrowseNeeds: "अहिले के चाहिएको छ हेर्नुहोस्",
+    thanksHome: "गृहपृष्ठमा फर्कनुहोस्",
+    thanksNoDuplicate:
+      "फारम फेरि पेश गर्नु आवश्यक छैन — त्यसो गर्दा टोलीले मिलाउनुपर्ने दोस्रो अभिलेख बन्छ।",
 
     needsPeopleNeeded: "जना चाहिन्छ",
     needsCountOne: "१ प्रमाणित अनुरोध",

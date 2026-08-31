@@ -18,12 +18,27 @@ export const ROUTES = {
   networks: "/networks",
   profile: "/profile",
   partners: "/partners",
+  thankYou: "/thank-you",
 } as const;
 
 export type ScreenKey = keyof typeof ROUTES;
 
 export function screenPath(lang: Lang, screen: ScreenKey): string {
   return localePath(lang, ROUTES[screen]);
+}
+
+/**
+ * Where a form sends someone once their submission is saved.
+ *
+ * The reference is the first block of the row's uuid, upper-cased: enough for
+ * the team to find the record if someone quotes it, short enough to read down a
+ * phone line, and not the full id — a confirmation page is screenshotted and
+ * forwarded, so it should carry as little as will do the job.
+ */
+export function confirmationPath(lang: Lang, kind: string, id?: string): string {
+  const params = new URLSearchParams({ kind });
+  if (id) params.set("ref", id.split("-")[0].toUpperCase());
+  return `${screenPath(lang, "thankYou")}?${params.toString()}`;
 }
 
 /**

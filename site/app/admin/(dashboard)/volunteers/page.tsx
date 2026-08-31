@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { SUBMISSION_STATUSES, statusLabel } from "@/lib/admin-render";
+import { SUBMISSION_STATUSES, repeatedContactIds, statusLabel } from "@/lib/admin-render";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function VolunteersPage({
 
   let query = supabaseAdmin()
     .from("submissions")
-    .select("id, org_or_name, district, contact_phone, status, created_at")
+    .select("id, org_or_name, district, contact_phone, contact_email, status, created_at")
     .eq("kind", "volunteer")
     .order("created_at", { ascending: false });
 
@@ -24,6 +24,7 @@ export default async function VolunteersPage({
   if (district) query = query.ilike("district", `%${district}%`);
 
   const { data: rows } = await query;
+  const repeated = repeatedContactIds(rows ?? []);
 
   return (
     <div>
@@ -81,6 +82,15 @@ export default async function VolunteersPage({
                 <tr key={row.id}>
                   <td>
                     <Link href={`/admin/volunteers/${row.id}`}>{row.org_or_name ?? "—"}</Link>
+                    {repeated.has(row.id) ? (
+                      <span
+                        className="admin-badge admin-badge--submitted"
+                        style={{ marginLeft: 8 }}
+                        title="Another registration shares this email or phone number"
+                      >
+                        Repeat contact
+                      </span>
+                    ) : null}
                   </td>
                   <td>{row.district ?? "—"}</td>
                   <td>{row.contact_phone ?? "—"}</td>

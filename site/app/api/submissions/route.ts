@@ -15,6 +15,74 @@ const LANGS = new Set(["en", "np"]);
 const UNMATCHED_SENTINEL = "__unmatched__"; // matches ReliefOfferForm.tsx
 
 /**
+ * How long an identical submission is treated as the same submission.
+ *
+ * Long enough to absorb a double-click, a double-tap on a slow phone
+ * connection, a refresh-to-resubmit, or a second browser tab. Short enough that
+ * someone genuinely registering twice in a day is never blocked.
+ */
+const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+
+/**
+ * Key order is not guaranteed across form serialisations, so compare structure
+ * rather than raw JSON text.
+ */
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
+      a.localeCompare(b)
+    );
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+/** ISO timestamp marking the start of the duplicate window. */
+function windowStart(): string {
+  return new Date(Date.now() - DUPLICATE_WINDOW_MS).toISOString();
+}
+
+/**
+ * The id of an identical submission made moments ago, if there is one.
+ *
+ * Deliberately compares the *whole payload* rather than a contact detail.
+ * Keying on email would silently swallow the common case of someone spotting a
+ * typo and immediately resubmitting a corrected form — their fix would vanish,
+ * and they would have no way of knowing. Identical content, by contrast, is
+ * never an intentional second submission, so collapsing it is always safe.
+ */
+async function duplicateSubmissionId(
+  kind: "volunteer" | "need",
+  fields: Record<string, unknown>
+): Promise<string | null> {
+  const { data } = await supabaseAdmin()
+    .from("submissions")
+    .select("id, fields")
+    .eq("kind", kind)
+    .gte("created_at", windowStart())
+    .limit(25);
+
+  const wanted = stableStringify(fields);
+  return data?.find((row) => stableStringify(row.fields) === wanted)?.id ?? null;
+}
+
+/** Same rule for relief offers, where a double-click would double-count supply. */
+async function duplicatePledgeId(pledge: Record<string, unknown>): Promise<string | null> {
+  const { data } = await supabaseAdmin()
+    .from("pledges")
+    .select("id, item_need_id, category, quantity, district, available_from, delivery_method, contact")
+    .gte("created_at", windowStart())
+    .limit(25);
+
+  const compare = (row: Record<string, unknown>) =>
+    stableStringify(Object.fromEntries(Object.keys(pledge).map((k) => [k, row[k] ?? null])));
+
+  const wanted = compare(pledge);
+  return data?.find((row) => compare(row) === wanted)?.id ?? null;
+}
+
+/**
  * Every field key this route pulls out into an indexed column, by kind.
  *
  * Keyed on the exact strings `fieldKey()` (lib/form-schema.ts) produces from
@@ -142,6 +210,14 @@ export async function POST(request: Request) {
   const normalized = normalizeChipFields(kind, fields);
   const columns = COLUMN_FIELDS[kind];
 
+  // A repeat of something just submitted is the same submission, not a new
+  // one. Reported as success with the original id, because from the sender's
+  // side it did succeed — the record they wanted exists.
+  const existingId = await duplicateSubmissionId(kind, normalized);
+  if (existingId) {
+    return NextResponse.json({ ok: true, persisted: true, id: existingId, duplicate: true });
+  }
+
   const { data, error } = await supabaseAdmin()
     .from("submissions")
     .insert({
@@ -216,17 +292,24 @@ async function handleReliefOffer(fields: Record<string, unknown>) {
     resolvedCategory = need?.category ?? null;
   }
 
+  const pledge = {
+    item_need_id: itemNeedId,
+    category: resolvedCategory,
+    quantity,
+    district: pick(fields, "relief-where"),
+    available_from: pick(fields, "relief-available"),
+    delivery_method: pick(fields, "relief-delivery"),
+    contact: pick(fields, "relief-contact"),
+  };
+
+  const existingId = await duplicatePledgeId(pledge);
+  if (existingId) {
+    return NextResponse.json({ ok: true, persisted: true, id: existingId, duplicate: true });
+  }
+
   const { data, error } = await supabaseAdmin()
     .from("pledges")
-    .insert({
-      item_need_id: itemNeedId,
-      category: resolvedCategory,
-      quantity,
-      district: pick(fields, "relief-where"),
-      available_from: pick(fields, "relief-available"),
-      delivery_method: pick(fields, "relief-delivery"),
-      contact: pick(fields, "relief-contact"),
-    })
+    .insert(pledge)
     .select("id")
     .single();
 

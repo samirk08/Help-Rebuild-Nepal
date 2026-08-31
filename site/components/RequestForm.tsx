@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import FormFieldView from "@/components/FormField";
@@ -9,6 +10,7 @@ import type { Dict, Lang } from "@/lib/content";
 import { NEED_SECTIONS, VOLUNTEER_SECTIONS } from "@/lib/form-schema";
 import { submitRequest, type SubmissionKind } from "@/lib/api";
 import { translator } from "@/lib/i18n";
+import { confirmationPath } from "@/lib/routes";
 import { ORGANIZE_OPTIONS, PMDRF_URL } from "@/lib/site-data";
 import { uploadDocuments } from "@/lib/uploads";
 
@@ -18,6 +20,7 @@ type Mode = "volunteer" | "post";
 const INITIALLY_OPEN = 2;
 
 export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode; t: Dict }) {
+  const router = useRouter();
   const tr = translator(lang);
   const extra = added(lang);
   const { showToast } = useToast();
@@ -101,21 +104,19 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
         await uploadDocuments(result.id, files);
       }
 
-      // Deliberately not resetting the form here: Combobox/LocationField/
-      // FileUpload each hold their own React state, which a native
-      // formEl.reset() would desync from (their visible value would stay put
-      // while the underlying input silently cleared). Leaving the filled-in
-      // form as-is after a successful submit is the safer default.
+      // Leave for the confirmation page rather than resetting and staying put.
+      // Resetting was never safe anyway — Combobox/LocationField/FileUpload
+      // each hold their own React state that a native formEl.reset() would
+      // desync — and a filled form sitting under a success toast is the single
+      // biggest source of duplicate submissions: it reads as "did that work?"
+      // and the obvious response is to press the button again.
       //
-      // t.toastVolunteer/t.toastNeed (from the generated content.ts) say
-      // "Design preview. Nothing was submitted." — true when this form had
-      // nowhere to send data, false now. added-strings.ts is where copy that
-      // postdates the design lives, same as everywhere else in this codebase.
-      showToast(isVolunteer ? extra.submitSuccessVolunteer : extra.submitSuccessNeed);
+      // `submitting` is deliberately left true: the navigation is in flight,
+      // and re-enabling the button first would reopen exactly that window.
+      router.push(confirmationPath(lang, kind, result.id));
     } catch (err) {
       console.error("Submission failed", err);
       showToast(extra.submitError);
-    } finally {
       setSubmitting(false);
     }
   }

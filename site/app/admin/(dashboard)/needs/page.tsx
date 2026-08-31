@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { SUBMISSION_STATUSES, statusLabel } from "@/lib/admin-render";
+import { SUBMISSION_STATUSES, repeatedContactIds, statusLabel } from "@/lib/admin-render";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function NeedsPage({
 
   let query = supabaseAdmin()
     .from("submissions")
-    .select("id, org_or_name, district, urgency, status, created_at")
+    .select("id, org_or_name, district, urgency, status, created_at, contact_phone, contact_email")
     .eq("kind", "need")
     .order("created_at", { ascending: false });
 
@@ -28,6 +28,7 @@ export default async function NeedsPage({
   if (district) query = query.ilike("district", `%${district}%`);
 
   const { data: rows } = await query;
+  const repeated = repeatedContactIds(rows ?? []);
 
   return (
     <div>
@@ -93,6 +94,15 @@ export default async function NeedsPage({
                 <tr key={row.id}>
                   <td>
                     <Link href={`/admin/needs/${row.id}`}>{row.org_or_name ?? "—"}</Link>
+                    {repeated.has(row.id) ? (
+                      <span
+                        className="admin-badge admin-badge--submitted"
+                        style={{ marginLeft: 8 }}
+                        title="Another request shares this email or phone number"
+                      >
+                        Repeat contact
+                      </span>
+                    ) : null}
                   </td>
                   <td>{row.district ?? "—"}</td>
                   <td>{row.urgency ?? "—"}</td>

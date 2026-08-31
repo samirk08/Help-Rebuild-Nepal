@@ -18,6 +18,40 @@ export const SUBMISSION_STATUSES = [
 export const PLEDGE_STATUSES = ["submitted", "under_review", "verified", "rejected"] as const;
 
 /**
+ * Ids of rows sharing a contact detail with another row in the same list.
+ *
+ * The public forms have no login, so two records for one person cannot be
+ * prevented outright — someone can always come back a week later and fill the
+ * form in again. The API collapses identical resubmissions, which handles
+ * accidents; this catches the rest by flagging them for a human, which is the
+ * only thing that can actually decide whether two records are one person.
+ *
+ * Matches loosely on purpose: case and punctuation vary between entries
+ * ("+977 98…" vs "97798…"), and a near-miss shown to a reviewer is far more
+ * useful than a strict match that silently finds nothing.
+ */
+export function repeatedContactIds(
+  rows: Array<{ id: string; contact_email?: string | null; contact_phone?: string | null }>
+): Set<string> {
+  const byContact = new Map<string, string[]>();
+
+  for (const row of rows) {
+    for (const raw of [row.contact_email, row.contact_phone]) {
+      const key = raw?.toLowerCase().replace(/[^a-z0-9@.]/g, "");
+      // Too short to identify anyone — a stray "-" would group unrelated rows.
+      if (!key || key.length < 6) continue;
+      byContact.set(key, [...(byContact.get(key) ?? []), row.id]);
+    }
+  }
+
+  const repeated = new Set<string>();
+  for (const ids of byContact.values()) {
+    if (ids.length > 1) for (const id of ids) repeated.add(id);
+  }
+  return repeated;
+}
+
+/**
  * Postgres enum values are snake_case; screens should not be. Falls back to
  * de-underscoring anything the map hasn't caught up with rather than showing
  * a blank, so a new status added to the schema still renders legibly.
