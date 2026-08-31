@@ -138,15 +138,49 @@ export async function deleteVolunteer(formData: FormData) {
   redirect("/admin/volunteers");
 }
 
-/** Manual match: an admin decided this volunteer fits this need. No suggestion engine involved. */
+/**
+ * A person decided this volunteer fits this need.
+ *
+ * Still a person: lib/matching.ts ranks and explains, it never records. What
+ * changed with it is that the form can now say where the decision came from —
+ * a ranked suggestion, or a name the coordinator went and found themselves —
+ * and that gets written down alongside the match (migration 009). Nothing
+ * reads those columns back to make a decision; they are the only way the
+ * weights ever stop being a guess.
+ *
+ * The score is taken from the form rather than recomputed here on purpose: the
+ * question worth answering later is what the engine believed at the moment a
+ * human agreed with it, and registrations change.
+ */
 export async function createMatch(formData: FormData) {
   await requireAdmin();
   const needId = String(formData.get("needId"));
   const volunteerId = String(formData.get("volunteerId"));
 
-  const { error } = await supabaseAdmin()
-    .from("matches")
-    .insert({ need_id: needId, volunteer_id: volunteerId });
+  const source = formData.get("source") === "suggested" ? "suggested" : "manual";
+  const score = numberOrNull(formData.get("suggestedScore"), 0, 100);
+  const rank = numberOrNull(formData.get("suggestedRank"), 1, 100000);
+
+  const client = supabaseAdmin();
+  const match = { need_id: needId, volunteer_id: volunteerId };
+
+  let { error } = await client.from("matches").insert({
+    ...match,
+    source,
+    suggested_score: source === "suggested" ? score : null,
+    suggested_rank: source === "suggested" ? rank : null,
+  });
+
+  // 42703 = undefined_column: migration 009 has not been run on this project.
+  // Recording a match is the point of this action and the three provenance
+  // columns are only evidence for tuning weights later, so drop them and
+  // record the match rather than failing the thing the coordinator asked for.
+  // Same rule as the tracker's breakdown views in lib/metrics.ts — an
+  // unapplied migration must not take a working feature down.
+  if (error?.code === "42703") {
+    console.warn("matches provenance columns missing — run supabase/009-match-suggestions.sql");
+    ({ error } = await client.from("matches").insert(match));
+  }
 
   // 23505 = unique_violation against matches_need_volunteer_key (migration
   // 002). Matching the same volunteer twice is a double-click, not an error
@@ -155,6 +189,15 @@ export async function createMatch(formData: FormData) {
   if (error && error.code !== "23505") throw new Error(error.message);
 
   revalidatePath(`/admin/needs/${needId}`);
+  revalidatePath("/admin/matching");
+}
+
+/** A bounded integer from a form field, or null for anything else. */
+function numberOrNull(raw: FormDataEntryValue | null, min: number, max: number): number | null {
+  if (raw === null) return null;
+  const value = Number(String(raw));
+  if (!Number.isInteger(value) || value < min || value > max) return null;
+  return value;
 }
 
 /** Manual promotion: this need became standing work rather than a one-off. */

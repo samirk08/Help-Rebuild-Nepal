@@ -90,6 +90,8 @@ function fromError(name: string, error: { message: string; code?: string } | nul
     hint = " — service_role has no table privileges. Run supabase/003-service-role-grants.sql.";
   } else if (error.code === "42501") {
     hint = " — blocked by row level security. Check SUPABASE_SERVICE_ROLE_KEY is the secret key.";
+  } else if (error.code === "42703" && /source|suggested_/.test(error.message)) {
+    hint = " — missing column. Run supabase/009-match-suggestions.sql.";
   } else if (error.code === "42703" || error.code === "42P01") {
     hint = " — missing column or table. Run supabase/002-public-board.sql.";
   }
@@ -124,6 +126,13 @@ export default async function DiagnosticsPage() {
 
   const bugs = await client.from("bug_reports").select("id").limit(1);
   checks.push(fromError("Migration 008 tables (bug reports)", bugs.error));
+
+  // Matching works without these — createMatch falls back to an insert without
+  // them (see lib/admin-actions.ts) — but without them nothing records what the
+  // engine thought of the pairings this team accepted, which is the only
+  // evidence for ever changing DIMENSION_WEIGHTS from a starting guess.
+  const provenance = await client.from("matches").select("source, suggested_score").limit(1);
+  checks.push(fromError("Migration 009 columns (match provenance)", provenance.error));
 
   const allowlist = await adminAllowlistReady();
   checks.push({

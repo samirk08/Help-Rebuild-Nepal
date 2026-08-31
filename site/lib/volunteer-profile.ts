@@ -1,5 +1,7 @@
 import { renderSubmissionFields, type RenderedSection } from "./admin-render";
 import { fieldKey, VOLUNTEER_SECTIONS } from "./form-schema";
+import { suggestNeedsForVolunteer } from "./match-suggestions";
+import type { MatchAssessment } from "./matching";
 import { PUBLISHED_STATUSES } from "./public-needs";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
@@ -32,6 +34,26 @@ export type InterestedNeed = {
 
 export type Completeness = { answered: number; total: number; percent: number };
 
+/**
+ * A published need the matching engine put in front of this volunteer.
+ *
+ * Deliberately carries no more of the need than the public board already
+ * shows. The engine reads a request's contact person and exact location to
+ * score it, and none of that may leave lib/public-needs.ts's withholding rule
+ * just because a different module did the reading — the requester still makes
+ * contact first.
+ */
+export type SuggestedNeed = {
+  id: string;
+  title: string;
+  district: string | null;
+  urgency: string | null;
+  skills: string[];
+  peopleNeeded: number | null;
+  committed: number;
+  assessment: MatchAssessment;
+};
+
 export type VolunteerRegistration = {
   id: string;
   name: string | null;
@@ -44,6 +66,8 @@ export type VolunteerRegistration = {
   sections: RenderedSection[];
   completeness: Completeness;
   interests: InterestedNeed[];
+  /** Ranked open needs — see `suggestedNeeds` below for what is withheld. */
+  suggestions: SuggestedNeed[];
 };
 
 export type VolunteerProfile =
@@ -108,8 +132,49 @@ export async function getVolunteerProfile(): Promise<VolunteerProfile> {
       sections,
       completeness: completenessOf(sections),
       interests: await needsOfInterest(user.id),
+      suggestions: await suggestedNeeds(row.id),
     },
   };
+}
+
+/**
+ * Published needs ranked against this registration.
+ *
+ * `publishedOnly` is the whole security question here and it is not optional:
+ * the same engine on the admin side ranks needs that are still under review,
+ * and surfacing one of those to the person it fits would publish an unreviewed
+ * request through the side door. Everything returned is already on the public
+ * board.
+ *
+ * Failure is empty, not an error. The profile page's job is to show someone
+ * their registration; if the ranking cannot run, the rest of the page is still
+ * worth rendering.
+ */
+async function suggestedNeeds(volunteerId: string): Promise<SuggestedNeed[]> {
+  try {
+    const result = await suggestNeedsForVolunteer(volunteerId, { publishedOnly: true });
+    if (!result) return [];
+
+    return result.eligible
+      // A long shot is not worth showing someone as a suggestion. On the admin
+      // side it is, because a coordinator is choosing between everyone; here
+      // it would just be noise on the page of someone waiting to be useful.
+      .filter(({ assessment }) => assessment.band !== "stretch")
+      .slice(0, 6)
+      .map(({ need, assessment }) => ({
+        id: need.id,
+        title: need.skills.length > 0 ? need.skills.join(", ") : (need.title ?? "—"),
+        district: need.district,
+        urgency: need.urgency,
+        skills: need.skills,
+        peopleNeeded: need.peopleNeeded,
+        committed: need.committed,
+        assessment,
+      }));
+  } catch (error) {
+    console.error("suggested needs failed", error);
+    return [];
+  }
 }
 
 /**

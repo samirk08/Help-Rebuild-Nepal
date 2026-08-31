@@ -1,0 +1,16 @@
+{
+  "//": "Compiles the matching engine and its tests to plain CommonJS so `node --test` can run them without a test framework, a bundler or a single new dependency. Only the pure modules are listed: nothing here touches React, Next or Supabase, which is the property that makes the engine testable in the first place.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["esnext"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "outDir": "../.test-build",
+    "rootDir": ".."
+  },
+  "include": ["./*.ts", "../lib/matching.ts", "../lib/districts.ts", "../lib/content.ts"]
+}

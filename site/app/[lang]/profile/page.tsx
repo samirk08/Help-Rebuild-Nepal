@@ -7,8 +7,11 @@ import { added, type AddedStrings } from "@/lib/added-strings";
 import { statusLabel } from "@/lib/admin-render";
 import type { Lang } from "@/lib/content";
 import { dict, isLang, localePath, translator } from "@/lib/i18n";
+import { bandLabel, signalText } from "@/lib/match-copy";
+import type { Signal, SignalCode } from "@/lib/matching";
 import { navItems, screenPath } from "@/lib/routes";
 import { STATUSES } from "@/lib/site-data";
+import { districtLabel } from "@/lib/districts";
 import { getVolunteerProfile, type VolunteerRegistration } from "@/lib/volunteer-profile";
 
 // Reads live rows for the signed-in user; there is nothing to prerender and no
@@ -197,6 +200,89 @@ function Registered({
         ))}
       </div>
 
+      {/* Ranked by lib/matching.ts against this registration, published needs
+          only. Nothing here contacts anyone: the request's own page carries
+          the "I can help with this" form, and the requester makes contact
+          first, exactly as before suggestions existed. */}
+      <section className="card" style={{ marginTop: 16 }}>
+        <h2 className="card__heading" style={{ color: "var(--muted)", marginBottom: 6 }}>
+          {a.profileMatchesTitle}
+        </h2>
+        <p className="hint" style={{ margin: "0 0 14px" }}>
+          {a.profileMatchesIntro}
+          {reg.status !== "verified" ? ` ${a.profileMatchesNotRegistered}` : ""}
+        </p>
+        {reg.suggestions.length > 0 ? (
+          <ul className="fitlist">
+            {reg.suggestions.map((need) => (
+              <li className="fit" key={need.id} data-band={need.assessment.band}>
+                <div className="fit__head">
+                  <div>
+                    <p className="fit__title">
+                      <Link href={`${screenPath(lang, "needs")}/${need.id}`}>{tr(need.title)}</Link>
+                    </p>
+                    <p className="fit__meta">
+                      {[
+                        need.district ? districtLabel(lang, need.district) : null,
+                        need.urgency ? tr(need.urgency) : null,
+                        need.peopleNeeded === null
+                          ? null
+                          : `${need.committed}/${need.peopleNeeded}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                  <span className={`fit__band fit__band--${need.assessment.band}`}>
+                    {bandLabel(lang, need.assessment.band)}
+                  </span>
+                </div>
+
+                {need.assessment.reasons.length > 0 ? (
+                  <>
+                    <p className="fit__label">{a.profileMatchesWhy}</p>
+                    <ul className="fit__signals">
+                      {need.assessment.reasons.slice(0, 3).map((signal, i) => (
+                        <li key={`${signal.code}-${i}`}>{signalText(lang, signal)}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                {/* Only the cautions that are about the work, not about the
+                    reader. "Registration not verified yet" is on the status
+                    panel above and telling someone their own form is thin is
+                    what the completeness meter is for. */}
+                {readerCautions(need.assessment.cautions).length > 0 ? (
+                  <>
+                    <p className="fit__label">{a.profileMatchesCheck}</p>
+                    <ul className="fit__signals fit__signals--caution">
+                      {readerCautions(need.assessment.cautions).map((signal, i) => (
+                        <li key={`${signal.code}-${i}`}>{signalText(lang, signal)}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                <p style={{ margin: "10px 0 0" }}>
+                  <Link
+                    href={`${screenPath(lang, "needs")}/${need.id}`}
+                    className="btn btn--outline btn--sm"
+                  >
+                    {a.needsViewNeed}
+                  </Link>
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ margin: 0, fontSize: 14, color: "var(--muted)" }}>
+            {a.profileMatchesEmpty}{" "}
+            <Link href={screenPath(lang, "needs")}>{a.thanksBrowseNeeds}</Link>
+          </p>
+        )}
+      </section>
+
       <section className="card" style={{ marginTop: 16 }}>
         <h2 className="card__heading" style={{ color: "var(--muted)", marginBottom: 14 }}>
           {a.profileInterestsTitle}
@@ -226,4 +312,28 @@ function Registered({
       </section>
     </div>
   );
+}
+
+/**
+ * The cautions worth showing the volunteer themselves.
+ *
+ * The engine's caution list is written for a coordinator deciding whether to
+ * send someone, so some of it is about the reader rather than the work:
+ * whether their registration is verified, whether it is thin, whether a date
+ * they typed parsed. Those are already answered elsewhere on this page — the
+ * status panel and the completeness meter — and repeating them under every
+ * suggestion would read as a series of small accusations. What is left is
+ * about the request: what it does not provide, what it asks for that they may
+ * not have.
+ */
+const READER_HIDDEN = new Set<SignalCode>([
+  "not-verified",
+  "low-information",
+  "date-not-understood",
+  "date-maybe-bikram-sambat",
+  "safeguarding-vetting",
+]);
+
+function readerCautions(cautions: Signal[]): Signal[] {
+  return cautions.filter((signal) => !READER_HIDDEN.has(signal.code));
 }

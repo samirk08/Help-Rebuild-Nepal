@@ -2807,3 +2807,126 @@ html[data-reveal="on"] [data-reveal][data-revealed="true"] {
   overflow: hidden;
   min-height: 0;
 }
+
+/* --------------------------------------------------------------- Fit list
+
+   "Needs that fit you" on the volunteer profile. Quieter than the admin
+   dashboard's equivalent: a volunteer is reading a handful of suggestions,
+   not comparing three hundred registrations, so there is no score number and
+   no dimension breakdown — just the request, how well it fits in words, and
+   why. The number would invite a reading it does not deserve ("I am a 68").
+
+   Same tokens as everything above; the band shows as a left rule and a pill
+   so it never depends on colour alone. */
+
+.fitlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.fit {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  padding: 14px 16px;
+  overflow: hidden;
+}
+
+.fit::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--faint-2);
+}
+
+.fit[data-band="strong"]::before {
+  background: var(--green);
+}
+
+.fit[data-band="possible"]::before {
+  background: var(--blue);
+}
+
+.fit__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fit__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.fit__meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 4px 0 0;
+}
+
+.fit__band {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--track);
+  color: var(--muted);
+}
+
+.fit__band--strong {
+  background: var(--green-tint);
+  color: var(--green-dark);
+}
+
+.fit__band--possible {
+  background: var(--panel-blue);
+  color: var(--blue);
+}
+
+.fit__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 12px 0 4px;
+}
+
+.fit__signals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.fit__signals li::before {
+  content: "✓";
+  color: var(--green);
+  font-weight: 700;
+  margin-right: 7px;
+}
+
+.fit__signals--caution {
+  color: var(--amber-ink);
+}
+
+.fit__signals--caution li::before {
+  content: "!";
+  color: var(--amber);
+}

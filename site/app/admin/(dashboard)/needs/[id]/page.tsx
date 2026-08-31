@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import MatchSuggestions from "@/components/MatchSuggestions";
 import { createMatch, promoteToProject, updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
 import { documentsFor } from "@/lib/admin-documents";
 import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
 import { NEED_SECTIONS } from "@/lib/form-schema";
+import { signalText } from "@/lib/match-copy";
+import { suggestVolunteersForNeed, SUGGESTION_PAGE } from "@/lib/match-suggestions";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +32,7 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
     { data: project },
     { data: verifiedVolunteers },
     { data: interests },
+    suggestions,
   ] = await Promise.all([
       Promise.resolve(renderSubmissionFields(row.fields, NEED_SECTIONS)),
       documentsFor(id),
@@ -49,6 +53,11 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
         .select("id, name, contact, message, created_at")
         .eq("need_id", id)
         .order("created_at", { ascending: false }),
+      // Ranked against the whole register — see lib/matching.ts. Runs in
+      // parallel with everything else on the page rather than after it: it is
+      // the slowest read here and blocking the detail view on it would make
+      // reviewing a need feel worse than it did before suggestions existed.
+      suggestVolunteersForNeed(id),
     ]);
 
   const returnTo = `/admin/needs/${id}`;
@@ -195,12 +204,76 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
           <p className="admin-empty admin-empty--inline">No volunteer matched yet.</p>
         )}
       </div>
+      {/* Ranked by lib/matching.ts against the whole register, with the
+          reasoning shown. The engine suggests; this page's buttons are still
+          the only thing that records a match. */}
+      <h2 className="admin-section-title">Suggested volunteers</h2>
+      {suggestions && suggestions.eligible.length > 0 ? (
+        <>
+          <p className="admin-head__note" style={{ margin: "0 0 12px" }}>
+            {suggestions.eligible.length} of {suggestions.poolSize}{" "}
+            {suggestions.poolSize === 1 ? "registration" : "registrations"} could take this on,
+            best fit first. Every score breaks down below it — check the cautions before making
+            contact.
+          </p>
+          <MatchSuggestions needId={id} suggestions={suggestions.eligible.slice(0, SUGGESTION_PAGE)} />
+          {suggestions.eligible.length > SUGGESTION_PAGE ? (
+            <details className="matchblocked">
+              <summary>
+                {suggestions.eligible.length - SUGGESTION_PAGE} more possible{" "}
+                {suggestions.eligible.length - SUGGESTION_PAGE === 1 ? "volunteer" : "volunteers"}
+              </summary>
+              <div style={{ padding: "0 14px 14px" }}>
+                <MatchSuggestions
+                  needId={id}
+                  suggestions={suggestions.eligible.slice(SUGGESTION_PAGE)}
+                  startRank={SUGGESTION_PAGE + 1}
+                />
+              </div>
+            </details>
+          ) : null}
+        </>
+      ) : (
+        <div className="admin-detail">
+          <p className="admin-empty admin-empty--inline">
+            {suggestions && suggestions.poolSize > 0
+              ? "No one in the register can take this on. The ruled-out list below says why — often it is one answer, like a district nobody will travel to."
+              : "No volunteer registrations to rank yet."}
+          </p>
+        </div>
+      )}
+
+      {/* Ruled out, not hidden. "Nobody matched" and "eleven people matched
+          and every one said they cannot travel" are different problems. */}
+      {suggestions && suggestions.blocked.length > 0 ? (
+        <details className="matchblocked">
+          <summary>
+            {suggestions.blocked.length} ruled out
+          </summary>
+          <ul className="matchblocked__list">
+            {suggestions.blocked.map(({ volunteer, assessment }) => (
+              <li key={volunteer.id}>
+                <span className="matchblocked__who">
+                  <Link href={`/admin/volunteers/${volunteer.id}`}>
+                    {volunteer.name ?? volunteer.id}
+                  </Link>
+                </span>
+                <span>{assessment.blockers.map((b) => signalText("en", b)).join(" · ")}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
+      {/* The engine ranks what it can read. Someone who spoke to the ward
+          office knows things no form asked about, so the full list stays. */}
       {verifiedVolunteers && verifiedVolunteers.length > 0 ? (
         <form action={createMatch} className="admin-form-row" style={{ marginBottom: 24 }}>
           <input type="hidden" name="needId" value={id} />
+          <input type="hidden" name="source" value="manual" />
           <select name="volunteerId" required defaultValue="" aria-label="Volunteer to match">
             <option value="" disabled>
-              Choose a volunteer…
+              Match someone else…
             </option>
             {verifiedVolunteers.map((v) => (
               <option key={v.id} value={v.id}>

@@ -125,6 +125,13 @@ export type AddedStrings = {
   profileVerifiedOn: string;
   profileInterestsTitle: string;
   profileInterestsEmpty: string;
+  profileMatchesTitle: string;
+  profileMatchesIntro: string;
+  profileMatchesEmpty: string;
+  profileMatchesNotRegistered: string;
+  profileMatchesWhy: string;
+  profileMatchesCheck: string;
+  profileMatchesFit: string;
   trackerNoOrigins: string;
 
   claimTitle: string;
@@ -315,6 +322,16 @@ const ADDED: Record<Lang, AddedStrings> = {
     profileVerifiedOn: "Verified",
     profileInterestsTitle: "Needs you have offered to help with",
     profileInterestsEmpty: "You have not expressed interest in any needs yet.",
+    profileMatchesTitle: "Needs that fit you",
+    profileMatchesIntro:
+      "Worked out from what you told us — your skill, where you are, when you are free. Nobody is contacted until you offer to help.",
+    profileMatchesEmpty:
+      "No published request fits your registration right now. New ones appear here as they are verified.",
+    profileMatchesNotRegistered:
+      "Your registration is still being checked, so these are what you would fit rather than what you have been offered.",
+    profileMatchesWhy: "Why this fits",
+    profileMatchesCheck: "Worth knowing",
+    profileMatchesFit: "fit",
     trackerNoOrigins: "No one has registered yet, so there is nowhere to show.",
 
     claimTitle: "Manage your registration",
@@ -495,6 +512,16 @@ const ADDED: Record<Lang, AddedStrings> = {
     profileVerifiedOn: "प्रमाणित भएको",
     profileInterestsTitle: "तपाईंले सहयोगका लागि इच्छा जनाएका आवश्यकता",
     profileInterestsEmpty: "तपाईंले अझै कुनै आवश्यकतामा इच्छा जनाउनुभएको छैन।",
+    profileMatchesTitle: "तपाईंलाई मिल्ने आवश्यकता",
+    profileMatchesIntro:
+      "तपाईंले दिनुभएको जानकारीबाट निकालिएको — सीप, ठाउँ र उपलब्ध समय। तपाईंले सहयोगको इच्छा नजनाएसम्म कसैलाई सम्पर्क गरिँदैन।",
+    profileMatchesEmpty:
+      "अहिले तपाईंको दर्तासँग मिल्ने प्रकाशित अनुरोध छैन। प्रमाणित हुँदै जाँदा नयाँ अनुरोध यहाँ देखिनेछन्।",
+    profileMatchesNotRegistered:
+      "तपाईंको दर्ता अझै जाँच हुँदैछ, त्यसैले यी तपाईंलाई मिल्न सक्ने कामहरू हुन्, प्रस्ताव गरिएका होइनन्।",
+    profileMatchesWhy: "किन मिल्छ",
+    profileMatchesCheck: "जान्न लायक",
+    profileMatchesFit: "मेल",
     trackerNoOrigins: "अझै कसैले दर्ता गरेको छैन, त्यसैले देखाउने ठाउँ छैन।",
 
     claimTitle: "आफ्नो दर्ता व्यवस्थापन गर्नुहोस्",
