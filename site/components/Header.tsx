@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
 import { localePath, swapLangPath } from "@/lib/i18n";
 import { isActivePath, navItems } from "@/lib/routes";
@@ -54,7 +55,7 @@ export default function Header({ lang }: { lang: Lang }) {
             className="header__logo"
             priority
           />
-          <span className="header__tagline">Verified needs, matched to people who can help</span>
+          <span className="header__tagline">{added(lang).headerTagline}</span>
         </Link>
 
         <nav className="header__nav" aria-label="Main">

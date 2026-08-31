@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { LOOP_WORDS, LOOP_WORDS_NP, type Lang } from "@/lib/content";
+import { added } from "@/lib/added-strings";
+import type { Lang } from "@/lib/content";
 import { prefersReducedMotion } from "@/lib/motion";
 
 const CYCLE_MS = 2400;
@@ -10,7 +11,9 @@ const FADE_MS = 260;
 
 /** The rotating "Open to: engineers / nurses / translators …" line in the hero. */
 export default function LoopWord({ lang }: { lang: Lang }) {
-  const words = lang === "np" ? LOOP_WORDS_NP : LOOP_WORDS;
+  // Not the generated LOOP_WORDS: that list advertised "surveyors", which the
+  // skills dropdown has no option for. See lib/added-strings.ts.
+  const words = added(lang).loopWords;
   const [index, setIndex] = useState(0);
   const [fading, setFading] = useState(false);
 

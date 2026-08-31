@@ -70,6 +70,8 @@ export type AddedStrings = {
   submitSuccessNeed: string;
 
   footerNote: string;
+  headerTagline: string;
+  loopWords: string[];
 
   needsPeopleNeeded: string;
   needsCountOne: string;
@@ -173,6 +175,25 @@ const ADDED: Record<Lang, AddedStrings> = {
     footerNote:
       "Submissions are stored securely and reviewed by a person before anything is published.",
 
+    // The lockup line from the project's own infographic. Replaced "Verified
+    // needs, matched to people who can help", which wrapped to five lines in
+    // the header's narrow column.
+    headerTagline: "Volunteer. Connect. Rebuild.",
+
+    // Overrides the generated LOOP_WORDS. Every word here must map to a real
+    // "Primary skill" option, or the headline invites people the form has
+    // nowhere to put: "surveyors" did exactly that, so it became "architects".
+    loopWords: [
+      "engineers",
+      "architects",
+      "nurses",
+      "translators",
+      "drivers",
+      "coordinators",
+      "electricians",
+      "teachers",
+    ],
+
     needsPeopleNeeded: "people needed",
     needsCountOne: "1 verified request",
     needsCountMany: "verified requests",
@@ -270,6 +291,19 @@ const ADDED: Record<Lang, AddedStrings> = {
 
     footerNote:
       "पेश गरिएको विवरण सुरक्षित रूपमा राखिन्छ र प्रकाशित हुनुअघि व्यक्तिले समीक्षा गर्छ।",
+
+    headerTagline: "स्वयंसेवा। जोड्नुहोस्। पुनर्निर्माण।",
+
+    loopWords: [
+      "इन्जिनियर",
+      "आर्किटेक्ट",
+      "नर्स",
+      "अनुवादक",
+      "चालक",
+      "संयोजक",
+      "इलेक्ट्रिसियन",
+      "शिक्षक",
+    ],
 
     needsPeopleNeeded: "जना चाहिन्छ",
     needsCountOne: "१ प्रमाणित अनुरोध",
