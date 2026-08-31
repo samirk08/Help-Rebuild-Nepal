@@ -1,6 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { isAdmin } from "@/lib/admin-auth";
+
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**
@@ -35,9 +37,14 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Being signed in is not enough. Volunteers hold accounts in the same
+  // Supabase pool, so this has to ask whether *this* user is on the dashboard
+  // allowlist — see lib/admin-auth.ts.
+  const admin = user ? await isAdmin(user.id) : false;
+
   // /api/admin/** (CSV export, etc.) has no login page of its own to redirect
   // to — it's fetched directly, not navigated to — so it gets a 401 instead.
-  if (!user && request.nextUrl.pathname.startsWith("/api/admin/")) {
+  if (!admin && request.nextUrl.pathname.startsWith("/api/admin/")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -48,7 +55,9 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname === "/admin/login" ||
     request.nextUrl.pathname === "/admin/auth/callback";
 
-  if (!user && !isPublicAuthPage) {
+  // A signed-in volunteer reaching /admin is sent to the login page like anyone
+  // else. Their own account still works; it simply is not one of these.
+  if (!admin && !isPublicAuthPage) {
     const redirect = NextResponse.redirect(new URL("/admin/login", request.url));
     // Send people back to where they were headed once they've signed in.
     redirect.cookies.set("admin-redirect", request.nextUrl.pathname, {
@@ -62,7 +71,7 @@ export async function middleware(request: NextRequest) {
   // Only the login page bounces a signed-in user away. The callback must stay
   // reachable while signed in: a recovery link is normally opened by someone
   // who still has a valid session and wants to change their password.
-  if (user && request.nextUrl.pathname === "/admin/login") {
+  if (admin && request.nextUrl.pathname === "/admin/login") {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 

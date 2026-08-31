@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { isAdmin } from "./admin-auth";
 import { DOCUMENTS_BUCKET } from "./storage-constants";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
@@ -22,7 +23,10 @@ async function requireAdmin(): Promise<{ id: string; email: string }> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/admin/login");
+  // Existence is not enough now that volunteers hold accounts in the same
+  // Supabase pool — a volunteer session would otherwise pass every one of
+  // these mutations. See lib/admin-auth.ts.
+  if (!user || !(await isAdmin(user.id))) redirect("/admin/login");
   return { id: user.id, email: user.email ?? "" };
 }
 

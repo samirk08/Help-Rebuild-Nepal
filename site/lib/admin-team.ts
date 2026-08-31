@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { isAdmin } from "./admin-auth";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
 
@@ -30,7 +31,7 @@ async function requireAdmin(): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/admin/login");
+  if (!user || !(await isAdmin(user.id))) redirect("/admin/login");
 }
 
 export type TeamMember = {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isAdmin } from "@/lib/admin-auth";
 import { chipFieldKeys, fieldKey, NEED_SECTIONS, VOLUNTEER_SECTIONS } from "@/lib/form-schema";
 import { supabaseAdmin } from "@/lib/supabase";
 import { supabaseServerClient } from "@/lib/supabase-server";
@@ -16,7 +17,12 @@ export async function GET(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // This route hands over the entire register as a file, so the allowlist
+  // check matters here more than anywhere: a volunteer session must not be
+  // able to export everyone else's contact details.
+  if (!user || !(await isAdmin(user.id))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const url = new URL(request.url);
   const kind = url.searchParams.get("kind");

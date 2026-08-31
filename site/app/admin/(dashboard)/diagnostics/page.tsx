@@ -1,3 +1,4 @@
+import { adminAllowlistReady } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -110,6 +111,13 @@ export default async function DiagnosticsPage() {
 
   const interests = await client.from("interests").select("id").limit(1);
   checks.push(fromError("Migration 002 table (interests)", interests.error));
+
+  const allowlist = await adminAllowlistReady();
+  checks.push({
+    name: "Admin allowlist (migration 004)",
+    ok: allowlist.ready,
+    detail: allowlist.detail,
+  });
 
   // The exact path the public volunteer form takes. Written and removed again,
   // so this reproduces the real failure without leaving a row behind.
