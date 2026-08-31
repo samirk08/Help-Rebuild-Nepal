@@ -137,14 +137,31 @@ Supabase dashboard (Auth -> Users). There is no public sign-up. A verification
 action records the actual signed-in user in `submissions.verified_by`, not a
 shared identity.
 
-**Counts on the public site are real**, from `lib/metrics.ts` — with one
-exception stated plainly rather than guessed: two of the five tracker labels
-("On the ground, need logistics" / "self-supported") describe a split the
-volunteer form has no field for, and stay at zero rather than being estimated
-from a proxy that might misrepresent what someone actually said. Set
-`NEXT_PUBLIC_ALLOW_DEMO=1` and append `?demo` to the home page or tracker to
-render the design's sample figures for a stakeholder walkthrough instead — the
-env flag exists so nobody on the public deployment can open `?demo` and
+**Counts on the public site are real**, from `lib/metrics.ts` — every figure
+on `/[lang]/tracker`, both the five headline tiles and the three cards under
+them ("Skills registered", "Registered from", "What is needed"). The two
+breakdown cards need a `GROUP BY`, which PostgREST cannot express, so they read
+three views created by `supabase/005-tracker-breakdowns.sql` rather than
+counting every volunteer row in JavaScript. If those views are missing the
+cards fall back to zeros and the page still renders — an unapplied migration
+must not take the tracker down.
+
+Two exceptions are stated plainly rather than guessed:
+
+- Two of the five tracker labels ("On the ground, need logistics" /
+  "self-supported") describe a split the volunteer form has no field for, and
+  stay at zero rather than being estimated from a proxy that might
+  misrepresent what someone actually said.
+- "Registered from" lists districts, not countries as the design drew it. The
+  form asks where a volunteer is based and offers the 77 districts plus one
+  "Outside Nepal" entry — it never asks which country — so this reports the
+  places people actually gave. Percentages on both breakdown cards are of the
+  people who answered that question, so a skipped answer is never counted as
+  an answer.
+
+Set `NEXT_PUBLIC_ALLOW_DEMO=1` and append `?demo` to the home page or tracker
+to render the design's sample figures for a stakeholder walkthrough instead —
+the env flag exists so nobody on the public deployment can open `?demo` and
 screenshot a fake full register.
 
 **Still gaps, stated plainly:**
@@ -171,7 +188,10 @@ Supabase/Vercel account and can't be scripted from here:
 
 1. Create a Supabase project (the free tier is enough at this scale). Copy the
    project URL, anon key and service role key from Project Settings -> API.
-2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once.
+2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once,
+   then each numbered migration beside it in order (`002-public-board.sql`
+   through `006-recover-blanked-selects.sql`). Every migration is safe to
+   re-run, so running the whole set again on an existing project is fine.
 3. Create a **private** Storage bucket named `submissions` (Storage -> New
    bucket -> uncheck "Public bucket").
 4. Invite each teammate in Auth -> Users -> Invite user.
@@ -284,6 +304,7 @@ app/
 components/            Header, Footer, forms, dialog, toast, counters
 supabase/
   schema.sql           run once in the Supabase SQL editor
+  00*.sql              numbered migrations, run in order after it
 lib/
   content.ts           GENERATED — strings, form schemas, translation map
   site-data.ts         presentational tables from the design's render pass
@@ -294,7 +315,7 @@ lib/
   relief.ts            relief item categories and the ItemNeed/pledge shapes
   i18n.ts              dictionary + translator + language-aware paths
   routes.ts            screen -> route map
-  metrics.ts           headline counts, backed by real queries
+  metrics.ts           every tracker figure, backed by real queries
   supabase.ts          service-role client — server-only, bypasses RLS
   supabase-server.ts   session-aware client for Server Components (anon key)
   supabase-browser.ts  the one browser Supabase client — admin login only

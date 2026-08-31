@@ -153,3 +153,18 @@ export function districtOptions(lang: Lang): Option[] {
 
   return options;
 }
+
+/**
+ * The Nepali name for a stored district value, for anywhere a district is read
+ * back out of the database rather than picked from `districtOptions`.
+ *
+ * Submissions store the English name (that is the option's value), so the
+ * translation has to happen on the way out. Anything unrecognised — a district
+ * renamed upstream, a value written by hand — falls back to what is stored
+ * rather than rendering blank.
+ */
+export function districtLabel(lang: Lang, name: string): string {
+  if (lang !== "np") return name;
+  if (name === OUTSIDE_NEPAL.name) return OUTSIDE_NEPAL.nameNp;
+  return DISTRICTS_FULL.find((d) => d.name === name)?.nameNp ?? name;
+}

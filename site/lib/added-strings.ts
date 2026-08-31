@@ -109,6 +109,7 @@ export type AddedStrings = {
   networksEmpty: string;
   projectsCoordinator: string;
   projectsNoCoordinator: string;
+  trackerNoOrigins: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -250,6 +251,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     networksEmpty: "No one has registered with this skill yet.",
     projectsCoordinator: "Coordinator",
     projectsNoCoordinator: "Not yet assigned",
+    trackerNoOrigins: "No one has registered yet, so there is nowhere to show.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -379,6 +381,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     networksEmpty: "यो सीपमा अझै कसैले दर्ता गरेको छैन।",
     projectsCoordinator: "संयोजक",
     projectsNoCoordinator: "अझै तोकिएको छैन",
+    trackerNoOrigins: "अझै कसैले दर्ता गरेको छैन, त्यसैले देखाउने ठाउँ छैन।",
   },
 };
 
