@@ -122,6 +122,9 @@ export default async function DiagnosticsPage() {
   const interestOwner = await client.from("interests").select("user_id").limit(1);
   checks.push(fromError("Migration 007 column (interests.user_id)", interestOwner.error));
 
+  const bugs = await client.from("bug_reports").select("id").limit(1);
+  checks.push(fromError("Migration 008 tables (bug reports)", bugs.error));
+
   const allowlist = await adminAllowlistReady();
   checks.push({
     name: "Admin allowlist (migration 004)",
