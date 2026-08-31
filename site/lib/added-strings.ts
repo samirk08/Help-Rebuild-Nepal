@@ -109,6 +109,34 @@ export type AddedStrings = {
   networksEmpty: string;
   projectsCoordinator: string;
   projectsNoCoordinator: string;
+
+  claimTitle: string;
+  claimIntro: string;
+  claimEmail: string;
+  claimEmailHint: string;
+  claimPassword: string;
+  claimPasswordHint: string;
+  claimConfirmPassword: string;
+  claimSubmit: string;
+  claimSubmitting: string;
+  claimPasswordTooShort: string;
+  claimPasswordMismatch: string;
+  claimEmailMismatch: string;
+  claimUnavailable: string;
+  claimAlreadyUsed: string;
+  claimAccountExists: string;
+  claimError: string;
+  claimCreatedSignInFailed: string;
+  claimLoginLink: string;
+  loginTitle: string;
+  loginIntro: string;
+  loginEmail: string;
+  loginPassword: string;
+  loginSubmit: string;
+  loginSubmitting: string;
+  loginError: string;
+  loginNoAccount: string;
+  loginRegister: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -250,6 +278,36 @@ const ADDED: Record<Lang, AddedStrings> = {
     networksEmpty: "No one has registered with this skill yet.",
     projectsCoordinator: "Coordinator",
     projectsNoCoordinator: "Not yet assigned",
+
+    claimTitle: "Manage your registration",
+    claimIntro:
+      "Set a password now to return to this registration later. Your registration is already saved, and creating an account is optional.",
+    claimEmail: "Email",
+    claimEmailHint: "Use the same email address you entered in the volunteer form.",
+    claimPassword: "Password",
+    claimPasswordHint: "Use at least 10 characters.",
+    claimConfirmPassword: "Repeat password",
+    claimSubmit: "Set password and continue",
+    claimSubmitting: "Creating account…",
+    claimPasswordTooShort: "Use at least 10 characters for your password.",
+    claimPasswordMismatch: "The two passwords do not match.",
+    claimEmailMismatch: "That email does not match this volunteer registration.",
+    claimUnavailable: "This registration can no longer be used to create an account.",
+    claimAlreadyUsed: "An account has already been created for this registration.",
+    claimAccountExists: "That email already has an account. Sign in instead.",
+    claimError: "The account could not be created. Please try again in a moment.",
+    claimCreatedSignInFailed:
+      "Your account was created, but we could not sign you in automatically. Sign in with the password you just chose.",
+    claimLoginLink: "Sign in",
+    loginTitle: "Volunteer sign in",
+    loginIntro: "Sign in to see the registration you linked to your account.",
+    loginEmail: "Email",
+    loginPassword: "Password",
+    loginSubmit: "Sign in",
+    loginSubmitting: "Signing in…",
+    loginError: "Incorrect email or password.",
+    loginNoAccount: "Not registered yet?",
+    loginRegister: "Register as a volunteer",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -379,6 +437,36 @@ const ADDED: Record<Lang, AddedStrings> = {
     networksEmpty: "यो सीपमा अझै कसैले दर्ता गरेको छैन।",
     projectsCoordinator: "संयोजक",
     projectsNoCoordinator: "अझै तोकिएको छैन",
+
+    claimTitle: "आफ्नो दर्ता व्यवस्थापन गर्नुहोस्",
+    claimIntro:
+      "पछि यो दर्ता फेरि हेर्न अहिले पासवर्ड राख्नुहोस्। तपाईंको दर्ता पहिल्यै सुरक्षित भइसकेको छ, र खाता बनाउनु वैकल्पिक हो।",
+    claimEmail: "इमेल",
+    claimEmailHint: "स्वयंसेवक फारममा लेख्नुभएको उही इमेल ठेगाना प्रयोग गर्नुहोस्।",
+    claimPassword: "पासवर्ड",
+    claimPasswordHint: "कम्तीमा १० अक्षर प्रयोग गर्नुहोस्।",
+    claimConfirmPassword: "पासवर्ड फेरि लेख्नुहोस्",
+    claimSubmit: "पासवर्ड राखेर अगाडि बढ्नुहोस्",
+    claimSubmitting: "खाता बनाउँदै…",
+    claimPasswordTooShort: "पासवर्डमा कम्तीमा १० अक्षर प्रयोग गर्नुहोस्।",
+    claimPasswordMismatch: "दुवै पासवर्ड मिलेनन्।",
+    claimEmailMismatch: "यो इमेल स्वयंसेवक दर्तासँग मिलेन।",
+    claimUnavailable: "यो दर्ताबाट अब खाता बनाउन मिल्दैन।",
+    claimAlreadyUsed: "यो दर्ताका लागि खाता पहिल्यै बनिसकेको छ।",
+    claimAccountExists: "यो इमेलको खाता पहिल्यै छ। त्यसैबाट साइन इन गर्नुहोस्।",
+    claimError: "खाता बनाउन सकिएन। कृपया केही बेरमा फेरि प्रयास गर्नुहोस्।",
+    claimCreatedSignInFailed:
+      "तपाईंको खाता बन्यो, तर स्वचालित रूपमा साइन इन गर्न सकिएन। भर्खर राखेको पासवर्डले साइन इन गर्नुहोस्।",
+    claimLoginLink: "साइन इन गर्नुहोस्",
+    loginTitle: "स्वयंसेवक साइन इन",
+    loginIntro: "आफ्नो खातासँग जोडिएको दर्ता हेर्न साइन इन गर्नुहोस्।",
+    loginEmail: "इमेल",
+    loginPassword: "पासवर्ड",
+    loginSubmit: "साइन इन गर्नुहोस्",
+    loginSubmitting: "साइन इन हुँदै…",
+    loginError: "इमेल वा पासवर्ड मिलेन।",
+    loginNoAccount: "अझै दर्ता गर्नुभएको छैन?",
+    loginRegister: "स्वयंसेवकका रूपमा दर्ता गर्नुहोस्",
   },
 };
 
