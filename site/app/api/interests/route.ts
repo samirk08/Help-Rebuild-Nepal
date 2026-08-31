@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { PUBLISHED_STATUSES } from "@/lib/public-needs";
 import { supabaseAdmin } from "@/lib/supabase";
+import { currentVolunteer } from "@/lib/volunteer-auth";
 
 const MAX = { name: 120, contact: 200, message: 2000 };
 
@@ -52,11 +53,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No published need with that id" }, { status: 404 });
   }
 
+  // Attribute this to an account when one is signed in, so it can appear on
+  // that person's profile later. Taken from the session cookie, never from the
+  // request body — a caller must not be able to file an interest under someone
+  // else's id. Signing in is not required to express interest, so a null here
+  // is the normal anonymous case, not a failure.
+  const volunteer = await currentVolunteer();
+
   const { error } = await client.from("interests").insert({
     need_id: needId,
     name: cleanName,
     contact: cleanContact,
     message: clean(message, MAX.message) || null,
+    user_id: volunteer?.id ?? null,
   });
 
   if (error) {

@@ -59,8 +59,6 @@ type SubmissionRow = {
   district: string | null;
   status: string;
   fields: Record<string, unknown>;
-  contact_email: string | null;
-  contact_phone: string | null;
   created_at: string;
   verified_at: string | null;
 };
@@ -77,7 +75,7 @@ export async function getVolunteerProfile(): Promise<VolunteerProfile> {
   const { data, error } = await supabaseAdmin()
     .from("submissions")
     .select(
-      "id, org_or_name, district, status, fields, contact_email, contact_phone, created_at, verified_at"
+      "id, org_or_name, district, status, fields, created_at, verified_at"
     )
     .eq("kind", "volunteer")
     .eq("user_id", user.id)
@@ -109,7 +107,7 @@ export async function getVolunteerProfile(): Promise<VolunteerProfile> {
       verifiedAt: row.verified_at,
       sections,
       completeness: completenessOf(sections),
-      interests: await needsOfInterest(row.contact_email, row.contact_phone),
+      interests: await needsOfInterest(user.id),
     },
   };
 }
@@ -130,34 +128,29 @@ function completenessOf(sections: RenderedSection[]): Completeness {
 /**
  * Needs this person has expressed interest in.
  *
- * `interests` predates accounts, so it has no user id — only the free-text
- * contact the person typed into the interest form. Matching is therefore by
- * normalised contact detail against the registration's email and phone, using
- * the same loose rule as `repeatedContactIds` in admin-render.ts, and it is
- * done here rather than in SQL because "+977 98…" vs "97798…" cannot be
- * collapsed by an ilike. The table is small; reading it whole is fine.
+ * Matched on `interests.user_id` and nothing else. This used to compare a
+ * normalised version of the contact someone typed against the registration's
+ * email and phone, which meant two people sharing a phone number — ordinary
+ * where a household has one — each saw the other's interests on their own
+ * profile. Need ids are public and no contact details were rendered, so little
+ * was exposed, but "the needs you offered to help with" has to be true of the
+ * person reading it.
  *
- * An interest typed with a different contact than the registration simply
- * won't surface — a miss, never a leak: nothing here widens who can see what.
+ * The cost is that an interest expressed while signed out is not attributed to
+ * anyone, and so appears on no profile. That is the honest outcome: at the time
+ * it was recorded there was no account to attach it to, and inferring one after
+ * the fact is exactly the guess being removed here.
  */
-async function needsOfInterest(
-  email: string | null,
-  phone: string | null
-): Promise<InterestedNeed[]> {
-  const keys = new Set(
-    [contactKey(email), contactKey(phone)].filter((k): k is string => k !== null)
-  );
-  if (keys.size === 0) return [];
-
+async function needsOfInterest(userId: string): Promise<InterestedNeed[]> {
   const { data: interestRows } = await supabaseAdmin()
     .from("interests")
-    .select("need_id, contact, created_at")
+    .select("need_id, created_at")
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   const needIds: string[] = [];
   for (const row of interestRows ?? []) {
-    const key = contactKey(row.contact);
-    if (key && keys.has(key) && !needIds.includes(row.need_id)) needIds.push(row.need_id);
+    if (!needIds.includes(row.need_id)) needIds.push(row.need_id);
   }
   if (needIds.length === 0) return [];
 
@@ -192,10 +185,6 @@ async function needsOfInterest(
   });
 }
 
-function contactKey(raw: string | null | undefined): string | null {
-  const key = raw?.toLowerCase().replace(/[^a-z0-9@.]/g, "");
-  return key && key.length >= 6 ? key : null;
-}
 
 function firstString(value: unknown): string | null {
   if (typeof value === "string" && value.trim() !== "") return value.trim();
