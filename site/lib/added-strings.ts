@@ -109,6 +109,22 @@ export type AddedStrings = {
   networksEmpty: string;
   projectsCoordinator: string;
   projectsNoCoordinator: string;
+
+  profileSignedOutTitle: string;
+  profileSignedOutBody: string;
+  profileSignIn: string;
+  profileNotRegistered: string;
+  profileNoRegTitle: string;
+  profileNoRegBody: string;
+  profileSignedInAs: string;
+  profileStatusTitle: string;
+  profileStatusNote: string;
+  profileStatusRejected: string;
+  profileRejectedNote: string;
+  profileRegisteredOn: string;
+  profileVerifiedOn: string;
+  profileInterestsTitle: string;
+  profileInterestsEmpty: string;
   trackerNoOrigins: string;
 
   claimTitle: string;
@@ -279,6 +295,26 @@ const ADDED: Record<Lang, AddedStrings> = {
     networksEmpty: "No one has registered with this skill yet.",
     projectsCoordinator: "Coordinator",
     projectsNoCoordinator: "Not yet assigned",
+
+    profileSignedOutTitle: "Your volunteer profile",
+    profileSignedOutBody:
+      "Sign in to follow your registration through review, see the details you submitted, and keep track of the needs you have offered to help with.",
+    profileSignIn: "Sign in",
+    profileNotRegistered: "Not registered yet?",
+    profileNoRegTitle: "No registration is linked to this account",
+    profileNoRegBody:
+      "You are signed in, but no volunteer registration is linked to this account yet. If you registered before accounts existed, your registration is still safe with the coordination team. To start a new one, use the volunteer form.",
+    profileSignedInAs: "Signed in as",
+    profileStatusTitle: "Verification status",
+    profileStatusNote:
+      "Every registration is reviewed by a person. Once yours is verified you can be matched to work, and the team contacts you when that happens.",
+    profileStatusRejected: "Rejected",
+    profileRejectedNote:
+      "This registration was not approved. If you believe that is a mistake, you can register again with more detail.",
+    profileRegisteredOn: "Registered",
+    profileVerifiedOn: "Verified",
+    profileInterestsTitle: "Needs you have offered to help with",
+    profileInterestsEmpty: "You have not expressed interest in any needs yet.",
     trackerNoOrigins: "No one has registered yet, so there is nowhere to show.",
 
     claimTitle: "Manage your registration",
@@ -439,6 +475,26 @@ const ADDED: Record<Lang, AddedStrings> = {
     networksEmpty: "यो सीपमा अझै कसैले दर्ता गरेको छैन।",
     projectsCoordinator: "संयोजक",
     projectsNoCoordinator: "अझै तोकिएको छैन",
+
+    profileSignedOutTitle: "तपाईंको स्वयंसेवक प्रोफाइल",
+    profileSignedOutBody:
+      "साइन इन गरेर आफ्नो दर्ता समीक्षाका क्रममा कहाँ पुग्यो हेर्नुहोस्, पेश गरेको विवरण हेर्नुहोस्, र आफूले सहयोग गर्न इच्छा जनाएका आवश्यकताको जानकारी राख्नुहोस्।",
+    profileSignIn: "साइन इन गर्नुहोस्",
+    profileNotRegistered: "अझै दर्ता गर्नुभएको छैन?",
+    profileNoRegTitle: "यो खातासँग कुनै दर्ता जोडिएको छैन",
+    profileNoRegBody:
+      "तपाईं साइन इन हुनुहुन्छ, तर यो खातासँग अझै कुनै स्वयंसेवक दर्ता जोडिएको छैन। खाता बन्नुअघि दर्ता गर्नुभएको भए तपाईंको दर्ता समन्वय टोलीसँग सुरक्षित छ। नयाँ दर्ता सुरु गर्न स्वयंसेवक फारम प्रयोग गर्नुहोस्।",
+    profileSignedInAs: "साइन इन गरिएको खाता:",
+    profileStatusTitle: "प्रमाणीकरण स्थिति",
+    profileStatusNote:
+      "हरेक दर्ता व्यक्तिले समीक्षा गर्छ। तपाईंको दर्ता प्रमाणित भएपछि काममा मिलाउन सकिन्छ, र त्यसो हुँदा टोलीले तपाईंलाई सम्पर्क गर्छ।",
+    profileStatusRejected: "अस्वीकृत",
+    profileRejectedNote:
+      "यो दर्ता स्वीकृत भएन। भूल भएको लाग्छ भने थप विवरणसहित फेरि दर्ता गर्न सक्नुहुन्छ।",
+    profileRegisteredOn: "दर्ता भएको",
+    profileVerifiedOn: "प्रमाणित भएको",
+    profileInterestsTitle: "तपाईंले सहयोगका लागि इच्छा जनाएका आवश्यकता",
+    profileInterestsEmpty: "तपाईंले अझै कुनै आवश्यकतामा इच्छा जनाउनुभएको छैन।",
     trackerNoOrigins: "अझै कसैले दर्ता गरेको छैन, त्यसैले देखाउने ठाउँ छैन।",
 
     claimTitle: "आफ्नो दर्ता व्यवस्थापन गर्नुहोस्",
