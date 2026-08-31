@@ -13,8 +13,7 @@ export default async function TeamPage() {
           <h1 className="admin-h1">Team</h1>
           <p className="admin-head__note">
             Everyone who can sign in to this dashboard. Adding someone creates their account and
-            gives you a link to send them — this does not rely on Supabase sending email, which
-            will not deliver to addresses outside your Supabase organization.
+            gives you a link to send them.
           </p>
         </div>
       </div>
@@ -64,32 +63,6 @@ export default async function TeamPage() {
         )}
       </div>
 
-      <h2 className="admin-section-title">Why links instead of email</h2>
-      <div className="admin-detail">
-        <div className="admin-detail__row">
-          <span className="admin-detail__k">Supabase built-in email</span>
-          <span className="admin-detail__v">
-            Capped at 2 messages an hour, and since September 2024 it only delivers to members of
-            your Supabase organization. Inviting anyone else fails silently — the API reports
-            success and nothing is ever sent.
-          </span>
-        </div>
-        <div className="admin-detail__row">
-          <span className="admin-detail__k">To send real email</span>
-          <span className="admin-detail__v">
-            Configure custom SMTP in Supabase (Authentication → Emails). Until then, links created
-            here work for anyone.
-          </span>
-        </div>
-        <div className="admin-detail__row">
-          <span className="admin-detail__k">Who can do this</span>
-          <span className="admin-detail__v">
-            Any admin can create a link for any address, including another admin&rsquo;s. Everyone
-            here already has full access to every record, so this grants nothing new — but treat
-            these links like passwords.
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
