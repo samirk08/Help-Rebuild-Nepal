@@ -16,6 +16,7 @@ export const ROUTES = {
   tracker: "/tracker",
   projects: "/projects",
   networks: "/networks",
+  accountLogin: "/account/login",
   profile: "/profile",
   partners: "/partners",
   thankYou: "/thank-you",

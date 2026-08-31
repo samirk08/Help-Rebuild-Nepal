@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import ClaimAccountForm from "@/components/ClaimAccountForm";
 import StatusTimeline from "@/components/StatusTimeline";
 import { added } from "@/lib/added-strings";
 import { isLang, translator } from "@/lib/i18n";
 import { screenPath } from "@/lib/routes";
+import { supabaseAdmin } from "@/lib/supabase";
 
 type Kind = "volunteer" | "need" | "relief-offer";
 
@@ -22,6 +24,39 @@ type Kind = "volunteer" | "need" | "relief-offer";
  * — so it is safe to land on, reload, or share a screenshot of.
  */
 export const metadata: Metadata = { robots: { index: false } };
+export const dynamic = "force-dynamic";
+
+const CLAIM_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** Resolve the short public reference without ever putting the UUID in a URL. */
+async function claimableSubmissionId(reference: string): Promise<string | null> {
+  if (!/^[A-F0-9]{8}$/.test(reference)) return null;
+
+  const prefix = reference.toLowerCase();
+  const lowerId = `${prefix}-0000-0000-0000-000000000000`;
+  const upperId = `${prefix}-ffff-ffff-ffff-ffffffffffff`;
+  const cutoff = new Date(Date.now() - CLAIM_WINDOW_MS).toISOString();
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from("submissions")
+      .select("id")
+      .eq("kind", "volunteer")
+      .is("user_id", null)
+      .gte("created_at", cutoff)
+      .gte("id", lowerId)
+      .lte("id", upperId)
+      .limit(2);
+
+    if (error) throw error;
+
+    // A collision is extremely unlikely, but ambiguity must never let one
+    // short reference select another person's registration.
+    return data?.length === 1 ? data[0].id : null;
+  } catch (error) {
+    console.error("claimable volunteer lookup failed", error);
+    return null;
+  }
+}
 
 function isKind(value: string): value is Kind {
   return value === "volunteer" || value === "need" || value === "relief-offer";
@@ -45,6 +80,8 @@ export default async function ThankYouPage({
   // because it is rendered straight from the query string.
   const rawRef = typeof query.ref === "string" ? query.ref : "";
   const reference = rawRef.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
+  const submissionId =
+    kind === "volunteer" && reference ? await claimableSubmissionId(reference) : null;
 
   const tr = translator(lang);
   const a = added(lang);
@@ -81,6 +118,8 @@ export default async function ThankYouPage({
             </p>
           </div>
         ) : null}
+
+        {submissionId ? <ClaimAccountForm lang={lang} submissionId={submissionId} /> : null}
 
         <h2 className="eyebrow--label" style={{ marginBottom: 14 }}>
           {a.thanksNextTitle}
