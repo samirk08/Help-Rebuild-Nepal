@@ -43,10 +43,30 @@ export default function AuthCallbackPage() {
       const accessToken = hash.get("access_token");
       const refreshToken = hash.get("refresh_token");
       const code = query.get("code");
+      const tokenHash = query.get("token_hash");
 
       let signedIn = false;
 
-      if (accessToken && refreshToken) {
+      // A link minted by an admin on /admin/team. Verified here directly, so
+      // it never passes through Supabase's redirect — which means it works
+      // regardless of the project's Site URL or redirect allowlist, and does
+      // not depend on Supabase's built-in email being able to deliver at all.
+      if (tokenHash) {
+        const otpType = (query.get("type") ?? "recovery") as "invite" | "recovery" | "email";
+        const { error: otpError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: otpType,
+        });
+        if (otpError) {
+          setError(otpError.message);
+          return;
+        }
+        signedIn = true;
+      }
+
+      if (signedIn) {
+        // already handled above
+      } else if (accessToken && refreshToken) {
         const { error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,

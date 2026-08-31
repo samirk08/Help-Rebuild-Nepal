@@ -75,9 +75,16 @@ export default function AdminLoginPage() {
           </p>
         ) : null}
 
+        {/* Deliberately hedged. resetPasswordForEmail never reports failure —
+            not for an unknown address (Supabase refuses to confirm whether an
+            account exists) and not for mail it declined to send. Supabase's
+            built-in provider only delivers to members of the project's own
+            organization, so "check your email" was frequently a lie. */}
         {sentReset ? (
           <p className="notice" role="status" style={{ marginBottom: 16 }}>
-            Check your email for a link to set a new password.
+            If that address has an account, a reset link is on its way. It can take a few minutes
+            and may land in spam. No email? Ask a teammate to send you a sign-in link from the
+            Team page — that always works.
           </p>
         ) : null}
 
