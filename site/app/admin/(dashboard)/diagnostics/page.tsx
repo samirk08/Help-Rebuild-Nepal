@@ -71,11 +71,29 @@ function describeKey(key: string | undefined): Check {
   }
 }
 
-/** Reports the Postgres error code, which is what actually identifies a fault. */
+/**
+ * Reports the Postgres error code, which is what actually identifies a fault,
+ * plus the fix where the code and message together name one unambiguously.
+ *
+ * 42501 is worth spelling out because it covers two unrelated faults that are
+ * easy to confuse: "permission denied for table" is the GRANT layer (migration
+ * 003), while "violates row-level security policy" is RLS above it.
+ */
 function fromError(name: string, error: { message: string; code?: string } | null): Check {
   if (!error) return { name, ok: true, detail: "OK" };
+
   const code = error.code ? `[${error.code}] ` : "";
-  return { name, ok: false, detail: `${code}${error.message}` };
+  let hint = "";
+
+  if (error.code === "42501" && /permission denied/i.test(error.message)) {
+    hint = " — service_role has no table privileges. Run supabase/003-service-role-grants.sql.";
+  } else if (error.code === "42501") {
+    hint = " — blocked by row level security. Check SUPABASE_SERVICE_ROLE_KEY is the secret key.";
+  } else if (error.code === "42703" || error.code === "42P01") {
+    hint = " — missing column or table. Run supabase/002-public-board.sql.";
+  }
+
+  return { name, ok: false, detail: `${code}${error.message}${hint}` };
 }
 
 export default async function DiagnosticsPage() {
