@@ -125,6 +125,7 @@ export type AddedStrings = {
   profileVerifiedOn: string;
   profileInterestsTitle: string;
   profileInterestsEmpty: string;
+  trackerNoOrigins: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -286,6 +287,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     profileVerifiedOn: "Verified",
     profileInterestsTitle: "Needs you have offered to help with",
     profileInterestsEmpty: "You have not expressed interest in any needs yet.",
+    trackerNoOrigins: "No one has registered yet, so there is nowhere to show.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -435,6 +437,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     profileVerifiedOn: "प्रमाणित भएको",
     profileInterestsTitle: "तपाईंले सहयोगका लागि इच्छा जनाएका आवश्यकता",
     profileInterestsEmpty: "तपाईंले अझै कुनै आवश्यकतामा इच्छा जनाउनुभएको छैन।",
+    trackerNoOrigins: "अझै कसैले दर्ता गरेको छैन, त्यसैले देखाउने ठाउँ छैन।",
   },
 };
 
