@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import StatusTimeline from "@/components/StatusTimeline";
 import { added } from "@/lib/added-strings";
-import { dict, isLang, translator } from "@/lib/i18n";
+import { isLang, translator } from "@/lib/i18n";
 import { screenPath } from "@/lib/routes";
 
 type Kind = "volunteer" | "need" | "relief-offer";
@@ -46,7 +46,6 @@ export default async function ThankYouPage({
   const rawRef = typeof query.ref === "string" ? query.ref : "";
   const reference = rawRef.replace(/[^A-Za-z0-9]/g, "").slice(0, 12).toUpperCase();
 
-  const t = dict(lang);
   const tr = translator(lang);
   const a = added(lang);
 
@@ -103,10 +102,6 @@ export default async function ThankYouPage({
           </Link>
         </div>
       </div>
-
-      <p className="hint" style={{ marginTop: 18, textAlign: "center" }}>
-        {t.interestNote}
-      </p>
     </div>
   );
 }
