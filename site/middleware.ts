@@ -41,9 +41,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const isLoginPage = request.nextUrl.pathname === "/admin/login";
+  // The callback is how a session gets created in the first place (invite and
+  // password-reset links land there), so it cannot require one — bouncing it to
+  // the login page would discard the very tokens it exists to consume.
+  const isPublicAuthPage =
+    request.nextUrl.pathname === "/admin/login" ||
+    request.nextUrl.pathname === "/admin/auth/callback";
 
-  if (!user && !isLoginPage) {
+  if (!user && !isPublicAuthPage) {
     const redirect = NextResponse.redirect(new URL("/admin/login", request.url));
     // Send people back to where they were headed once they've signed in.
     redirect.cookies.set("admin-redirect", request.nextUrl.pathname, {
@@ -54,7 +59,10 @@ export async function middleware(request: NextRequest) {
     return redirect;
   }
 
-  if (user && isLoginPage) {
+  // Only the login page bounces a signed-in user away. The callback must stay
+  // reachable while signed in: a recovery link is normally opened by someone
+  // who still has a valid session and wants to change their password.
+  if (user && request.nextUrl.pathname === "/admin/login") {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 

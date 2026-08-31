@@ -7,6 +7,7 @@ const NAV = [
   { href: "/admin/volunteers", label: "Volunteers" },
   { href: "/admin/needs", label: "Needs" },
   { href: "/admin/relief", label: "Relief items" },
+  { href: "/admin/diagnostics", label: "Diagnostics" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

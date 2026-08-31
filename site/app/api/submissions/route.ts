@@ -163,8 +163,16 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
+    // Include the Postgres error code. It is what distinguishes an unapplied
+    // migration (42703) from a key that cannot bypass RLS (42501), and without
+    // it a failing form is indistinguishable from any other outage to anyone
+    // without Vercel log access. The code names a fault, never any data, and
+    // the schema it describes is already published in supabase/schema.sql.
     console.error("submissions insert failed", error);
-    return NextResponse.json({ error: "Could not save submission" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Could not save submission", code: error.code ?? null },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ ok: true, persisted: true, id: data.id });
