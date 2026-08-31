@@ -22,8 +22,14 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
 
   if (!row) notFound();
 
-  const [sections, documents, { data: matches }, { data: project }, { data: verifiedVolunteers }] =
-    await Promise.all([
+  const [
+    sections,
+    documents,
+    { data: matches },
+    { data: project },
+    { data: verifiedVolunteers },
+    { data: interests },
+  ] = await Promise.all([
       Promise.resolve(renderSubmissionFields(row.fields, NEED_SECTIONS)),
       documentsFor(id),
       client
@@ -38,6 +44,11 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
         .in("status", ["verified", "recruiting"])
         .order("org_or_name")
         .limit(300),
+      client
+        .from("interests")
+        .select("id, name, contact, message, created_at")
+        .eq("need_id", id)
+        .order("created_at", { ascending: false }),
     ]);
 
   const returnTo = `/admin/needs/${id}`;
@@ -131,6 +142,36 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
           </ul>
         </>
       ) : null}
+
+      {/* People who clicked "I can help with this" on the public board. Their
+          contact details are only ever shown here, never on the public page. */}
+      <h2 className="admin-section-title">Expressed interest</h2>
+      <div className="admin-detail">
+        {interests && interests.length > 0 ? (
+          interests.map((person) => (
+            <div className="admin-detail__row" key={person.id}>
+              <span className="admin-detail__k">
+                {person.name}
+                <br />
+                <span style={{ color: "var(--faint)", fontSize: 12 }}>
+                  {new Date(person.created_at).toLocaleString()}
+                </span>
+              </span>
+              <span className="admin-detail__v">
+                {person.contact}
+                {person.message ? (
+                  <>
+                    <br />
+                    <span style={{ color: "var(--muted)" }}>{person.message}</span>
+                  </>
+                ) : null}
+              </span>
+            </div>
+          ))
+        ) : (
+          <p className="admin-empty admin-empty--inline">No one has expressed interest yet.</p>
+        )}
+      </div>
 
       <h2 className="admin-section-title">Matched volunteers</h2>
       <div className="admin-detail">

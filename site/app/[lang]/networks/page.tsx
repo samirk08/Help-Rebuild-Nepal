@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { networkCounts } from "@/lib/community";
 import { dict, isLang, translator } from "@/lib/i18n";
 import { screenPath } from "@/lib/routes";
 import { NETWORKS } from "@/lib/site-data";
+
+// Member counts come from live rows.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -23,6 +27,7 @@ export default async function NetworksPage({ params }: { params: Promise<{ lang:
 
   const t = dict(lang);
   const tr = translator(lang);
+  const counts = await networkCounts();
 
   return (
     <div className="page">
@@ -37,7 +42,7 @@ export default async function NetworksPage({ params }: { params: Promise<{ lang:
             <h2 className="network__name">{tr(network.name)}</h2>
             <p className="network__body">{tr(network.body)}</p>
             <p className="network__count">
-              <strong>0</strong>
+              <strong>{counts.get(network.name) ?? 0}</strong>
               <span>{t.membersLabel}</span>
             </p>
             <Link

@@ -42,6 +42,11 @@ const COLUMN_FIELDS: Record<
   },
 };
 
+// Need-only fields promoted to real columns so the public board can filter and
+// count on them. Same naming rule as COLUMN_FIELDS above.
+const SKILLS_FIELD = "s03-skills-required";
+const PEOPLE_NEEDED_FIELD = "s04-how-many-people";
+
 /**
  * A checkbox group with exactly one box checked arrives as a bare string
  * (FormData's own behaviour, flattened in lib/api.ts), not an array. Anything
@@ -68,6 +73,28 @@ function pick(fields: Record<string, unknown>, key: string | undefined): string 
   if (typeof value === "string" && value.trim() !== "") return value.trim();
   if (Array.isArray(value) && typeof value[0] === "string") return value[0];
   return null;
+}
+
+/** Every value of a chip group, as an array. Null when nothing was ticked. */
+function pickAll(fields: Record<string, unknown>, key: string): string[] | null {
+  const value = fields[key];
+  const list = Array.isArray(value) ? value : typeof value === "string" ? [value] : [];
+  const cleaned = list.filter((v): v is string => typeof v === "string" && v.trim() !== "");
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/**
+ * "How many people" is an open question, so answers like "2-3" or "as many as
+ * can come" are valid. Take the leading integer where there is one; null means
+ * "not specified", which the board renders as "—" rather than a misleading 0.
+ * Mirrors the backfill in supabase/002-public-board.sql.
+ */
+function pickCount(fields: Record<string, unknown>, key: string): number | null {
+  const raw = pick(fields, key);
+  const digits = raw?.match(/\d+/)?.[0];
+  if (!digits) return null;
+  const n = Number(digits);
+  return Number.isSafeInteger(n) && n > 0 ? n : null;
 }
 
 /**
@@ -127,6 +154,10 @@ export async function POST(request: Request) {
       district: pick(normalized, columns.district),
       province: pick(normalized, columns.province),
       urgency: pick(normalized, columns.urgency),
+      // Need-only, and only because the public board filters on skills and
+      // counts against people_needed. Volunteers have neither column.
+      skills: kind === "need" ? pickAll(normalized, SKILLS_FIELD) : null,
+      people_needed: kind === "need" ? pickCount(normalized, PEOPLE_NEEDED_FIELD) : null,
     })
     .select("id")
     .single();

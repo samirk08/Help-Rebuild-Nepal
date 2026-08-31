@@ -84,7 +84,12 @@ export async function createMatch(formData: FormData) {
   const { error } = await supabaseAdmin()
     .from("matches")
     .insert({ need_id: needId, volunteer_id: volunteerId });
-  if (error) throw new Error(error.message);
+
+  // 23505 = unique_violation against matches_need_volunteer_key (migration
+  // 002). Matching the same volunteer twice is a double-click, not an error
+  // worth showing: the desired state already holds, and the row must not be
+  // duplicated or it would double-count against the need's fill bar.
+  if (error && error.code !== "23505") throw new Error(error.message);
 
   revalidatePath(`/admin/needs/${needId}`);
 }

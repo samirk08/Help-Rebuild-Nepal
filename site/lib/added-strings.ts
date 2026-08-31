@@ -68,6 +68,32 @@ export type AddedStrings = {
   submitError: string;
   submitSuccessVolunteer: string;
   submitSuccessNeed: string;
+
+  footerNote: string;
+
+  needsPeopleNeeded: string;
+  needsCountOne: string;
+  needsCountMany: string;
+  needsClearFilters: string;
+  needsCommunityReported: string;
+  needsViewNeed: string;
+  interestTitle: string;
+  interestIntro: string;
+  interestName: string;
+  interestContact: string;
+  interestContactHint: string;
+  interestMessage: string;
+  interestMessageHint: string;
+  interestSubmit: string;
+  interestSending: string;
+  interestSuccess: string;
+  interestError: string;
+  interestCount: string;
+  interestCountOne: string;
+  networksMembers: string;
+  networksEmpty: string;
+  projectsCoordinator: string;
+  projectsNoCoordinator: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -139,6 +165,39 @@ const ADDED: Record<Lang, AddedStrings> = {
     submitError: "Something went wrong and this was not submitted. Please try again in a moment.",
     submitSuccessVolunteer: "You're registered. A verifier will review your details before you're matched to anything.",
     submitSuccessNeed: "Your request has been received and will be reviewed before it appears on the board.",
+
+    // Overrides the generated footerNote, which still said the forms were not
+    // connected. They have persisted to the database since the backend
+    // shipped, and telling people otherwise both loses registrations and
+    // misleads them about what is being stored.
+    footerNote:
+      "Submissions are stored securely and reviewed by a person before anything is published.",
+
+    needsPeopleNeeded: "people needed",
+    needsCountOne: "1 verified request",
+    needsCountMany: "verified requests",
+    needsClearFilters: "Clear filters",
+    needsCommunityReported: "Community-reported",
+    needsViewNeed: "View request",
+    interestTitle: "Express interest",
+    interestIntro:
+      "The requester contacts you. Nothing is shared with anyone else, and this is not a commitment.",
+    interestName: "Your name",
+    interestContact: "Phone or email",
+    interestContactHint: "Only the requester and the verification team see this.",
+    interestMessage: "Anything they should know (optional)",
+    interestMessageHint: "Relevant experience, when you could start, what you can bring.",
+    interestSubmit: "Send to the requester",
+    interestSending: "Sending…",
+    interestSuccess:
+      "Your interest has been recorded. The requester will be in touch — you do not need to do anything else.",
+    interestError: "That did not send. Please try again in a moment.",
+    interestCount: "people have expressed interest",
+    interestCountOne: "1 person has expressed interest",
+    networksMembers: "members",
+    networksEmpty: "No one has registered with this skill yet.",
+    projectsCoordinator: "Coordinator",
+    projectsNoCoordinator: "Not yet assigned",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -208,6 +267,35 @@ const ADDED: Record<Lang, AddedStrings> = {
     submitError: "केही गडबड भयो, यो पेश भएन। कृपया केही बेरमा फेरि प्रयास गर्नुहोस्।",
     submitSuccessVolunteer: "तपाईं दर्ता हुनुभयो। मिलान हुनुअघि प्रमाणकले तपाईंको विवरण समीक्षा गर्नेछ।",
     submitSuccessNeed: "तपाईंको अनुरोध प्राप्त भयो र बोर्डमा देखिनुअघि समीक्षा हुनेछ।",
+
+    footerNote:
+      "पेश गरिएको विवरण सुरक्षित रूपमा राखिन्छ र प्रकाशित हुनुअघि व्यक्तिले समीक्षा गर्छ।",
+
+    needsPeopleNeeded: "जना चाहिन्छ",
+    needsCountOne: "१ प्रमाणित अनुरोध",
+    needsCountMany: "प्रमाणित अनुरोध",
+    needsClearFilters: "फिल्टर हटाउनुहोस्",
+    needsCommunityReported: "समुदायबाट रिपोर्ट गरिएको",
+    needsViewNeed: "अनुरोध हेर्नुहोस्",
+    interestTitle: "इच्छा जनाउनुहोस्",
+    interestIntro:
+      "अनुरोधकर्ताले तपाईंलाई सम्पर्क गर्नेछ। अरू कसैलाई देखाइँदैन, र यो प्रतिबद्धता होइन।",
+    interestName: "तपाईंको नाम",
+    interestContact: "फोन वा इमेल",
+    interestContactHint: "अनुरोधकर्ता र प्रमाणीकरण टोलीले मात्र देख्छन्।",
+    interestMessage: "थाहा दिनुपर्ने कुरा (वैकल्पिक)",
+    interestMessageHint: "सम्बन्धित अनुभव, कहिलेदेखि सुरु गर्न सक्नुहुन्छ, के ल्याउन सक्नुहुन्छ।",
+    interestSubmit: "अनुरोधकर्तालाई पठाउनुहोस्",
+    interestSending: "पठाउँदै…",
+    interestSuccess:
+      "तपाईंको इच्छा अभिलेख भयो। अनुरोधकर्ताले सम्पर्क गर्नेछ — तपाईंले अरू केही गर्नुपर्दैन।",
+    interestError: "पठाउन सकिएन। कृपया केही बेरमा फेरि प्रयास गर्नुहोस्।",
+    interestCount: "जनाले इच्छा जनाएका छन्",
+    interestCountOne: "१ जनाले इच्छा जनाएका छन्",
+    networksMembers: "सदस्य",
+    networksEmpty: "यो सीपमा अझै कसैले दर्ता गरेको छैन।",
+    projectsCoordinator: "संयोजक",
+    projectsNoCoordinator: "अझै तोकिएको छैन",
   },
 };
 

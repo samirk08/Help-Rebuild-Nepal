@@ -41,7 +41,9 @@ export default function Footer({ lang, t }: { lang: Lang; t: Dict }) {
       </div>
 
       <div className="footer__bar">
-        <p className="footer__note">{t.footerNote}</p>
+        {/* Not t.footerNote: the generated string still says the forms are not
+            connected, which stopped being true when the backend shipped. */}
+        <p className="footer__note">{added(lang).footerNote}</p>
       </div>
     </footer>
   );

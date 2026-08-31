@@ -10,12 +10,12 @@ import { districtOptions } from "@/lib/districts";
 import { submitRequest } from "@/lib/api";
 import {
   EXAMPLE_ITEM_NEED,
-  ITEM_NEEDS,
   RELIEF_CATEGORIES,
   categoryById,
   categoryLabel,
   formatQuantity,
   unitLabel,
+  type ItemNeed,
 } from "@/lib/relief";
 
 const UNMATCHED = "__unmatched__";
@@ -29,15 +29,27 @@ const UNMATCHED = "__unmatched__";
  * would only push the offer off-platform where nobody can see it — but it warns
  * plainly and the resulting listing carries an unrequested label.
  */
-export default function ReliefOfferForm({ lang }: { lang: Lang }) {
+export default function ReliefOfferForm({
+  lang,
+  itemNeeds,
+  preselect,
+}: {
+  lang: Lang;
+  /** Verified item needs, fetched server-side by the page that renders this. */
+  itemNeeds: ItemNeed[];
+  /** `?need=<id>` from the "pledge items for this request" link. */
+  preselect?: string;
+}) {
   const extra = added(lang);
   const { showToast } = useToast();
-  const [target, setTarget] = useState("");
   const [category, setCategory] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // The example is offerable so the flow can be walked before anything is live.
-  const openNeeds = [...ITEM_NEEDS, EXAMPLE_ITEM_NEED];
+  const openNeeds = [...itemNeeds, EXAMPLE_ITEM_NEED];
+  const [target, setTarget] = useState(
+    preselect && openNeeds.some((n) => n.id === preselect) ? preselect : ""
+  );
   const unmatched = target === UNMATCHED;
   const selectedNeed = openNeeds.find((n) => n.id === target);
   const selectedCategory = categoryById(unmatched ? category : (selectedNeed?.category ?? ""));

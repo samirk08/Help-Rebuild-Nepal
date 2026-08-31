@@ -153,21 +153,37 @@ export const PROJECT_PHASES = [
   { stage: "Completed", body: "Work finished, results recorded and handed over." },
 ];
 
+/**
+ * Skill networks. `skill` is the exact "Primary skill" option a volunteer
+ * picks on the registration form — it's what the member count is counted by,
+ * so it has to match the option string verbatim, not just approximately.
+ */
 export const NETWORKS = [
   {
     name: "Engineering network",
     body: "Structural and civil engineers for damage assessment and retrofitting.",
+    skill: "Engineering (structural / civil)",
   },
   {
     name: "Architecture network",
     body: "Designers working on safe, affordable and buildable reconstruction.",
+    skill: "Architecture",
   },
   {
     name: "Medical network",
     body: "Doctors, nurses and paramedics for health camps and emergency cover.",
+    skill: "Health & medical",
   },
-  { name: "WASH network", body: "Water, sanitation and hygiene specialists." },
-  { name: "Logistics network", body: "Transport, warehousing and supply-chain coordinators." },
+  {
+    name: "WASH network",
+    body: "Water, sanitation and hygiene specialists.",
+    skill: "Water & sanitation (WASH)",
+  },
+  {
+    name: "Logistics network",
+    body: "Transport, warehousing and supply-chain coordinators.",
+    skill: "Logistics & transport",
+  },
 ];
 
 export const PROFILE_CARDS = [

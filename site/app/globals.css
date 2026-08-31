@@ -1688,6 +1688,16 @@ textarea:focus-visible {
   color: var(--red-2);
 }
 
+/* Inline-flex so it can sit beside a link inside a table cell, unlike the
+   block-level badges in .badges above. */
+.badge--muted {
+  display: inline-flex;
+  background: var(--track);
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
 .detail__head {
   padding: 28px;
   border-bottom: 1px solid var(--line-2);

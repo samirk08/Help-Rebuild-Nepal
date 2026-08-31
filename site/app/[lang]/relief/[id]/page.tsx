@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import InterestButton from "@/components/InterestButton";
 import StatusTimeline from "@/components/StatusTimeline";
+import ToastButton from "@/components/ToastButton";
 import { added } from "@/lib/added-strings";
 import { dict, isLang, translator } from "@/lib/i18n";
 import {
@@ -11,19 +11,13 @@ import {
   categoryById,
   categoryLabel,
   formatQuantity,
-  itemNeedById,
   unitLabel,
 } from "@/lib/relief";
+import { getItemNeed } from "@/lib/relief-data";
 import { screenPath } from "@/lib/routes";
 
-/**
- * Nothing is published yet, so the worked example is the only detail page
- * there is to build. A static export needs that list up front; add ids here
- * as real item needs start being published.
- */
-export function generateStaticParams() {
-  return [{ id: EXAMPLE_ITEM_NEED.id }];
-}
+// Real item needs are resolved per request; the worked example is static.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -44,7 +38,8 @@ export default async function ReliefDetailPage({
   const { lang, id } = await params;
   if (!isLang(lang)) notFound();
 
-  const need = itemNeedById(id);
+  const isExample = id === EXAMPLE_ITEM_NEED.id;
+  const need = isExample ? EXAMPLE_ITEM_NEED : await getItemNeed(id);
   if (!need) notFound();
 
   const category = categoryById(need.category);
@@ -146,7 +141,18 @@ export default async function ReliefDetailPage({
               <div className="meter__fill" style={{ width: `${percent}%` }} />
             </div>
 
-            <InterestButton label={t.reliefPledgeCta} message={t.reliefToastPledge} />
+            {/* The example has no row to pledge against, so it stays a toast.
+                A real request sends you to the offer form pre-targeted at it. */}
+            {isExample ? (
+              <ToastButton label={t.reliefPledgeCta} message={t.reliefToastPledge} />
+            ) : (
+              <Link
+                href={`${screenPath(lang, "reliefOffer")}?need=${need.id}`}
+                className="btn btn--green btn--block"
+              >
+                {t.reliefPledgeCta}
+              </Link>
+            )}
             <p className="hint" style={{ marginTop: 10 }}>
               {base.interestNote}
             </p>
