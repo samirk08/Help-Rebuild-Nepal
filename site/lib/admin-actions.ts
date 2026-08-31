@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { DOCUMENTS_BUCKET } from "./storage-constants";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
 
@@ -73,6 +74,64 @@ export async function updateSubmissionNotes(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath(returnTo);
+}
+
+/**
+ * Permanently remove a volunteer registration.
+ *
+ * Three things have to happen in this order, and none of them is automatic:
+ *
+ * 1. Uploaded files are erased from Storage first. Deleting the row cascades
+ *    the `documents` records away, which would take the storage paths with
+ *    them and strand the actual files in the bucket forever. For a form that
+ *    collects identity documents, "deleted" has to mean the file is gone, not
+ *    just the row pointing at it.
+ * 2. `matches` rows are removed explicitly. That foreign key has no cascade
+ *    (see supabase/schema.sql), so a matched volunteer cannot be deleted at
+ *    all until its links are gone. A match without a volunteer is meaningless
+ *    anyway.
+ * 3. Only then the submission itself, which cascades the `documents` rows.
+ *
+ * Scoped to `kind = 'volunteer'` so a need can never be removed through this
+ * path: needs carry expressions of interest and can be promoted to projects,
+ * which is a materially different decision.
+ */
+export async function deleteVolunteer(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const client = supabaseAdmin();
+
+  const { data: row } = await client
+    .from("submissions")
+    .select("id")
+    .eq("id", id)
+    .eq("kind", "volunteer")
+    .maybeSingle();
+
+  if (!row) redirect("/admin/volunteers");
+
+  const { data: documents } = await client
+    .from("documents")
+    .select("storage_path")
+    .eq("submission_id", id);
+
+  const paths = (documents ?? []).map((d) => d.storage_path as string);
+  if (paths.length > 0) {
+    const { error: storageError } = await client.storage.from(DOCUMENTS_BUCKET).remove(paths);
+    // Stop rather than continue: deleting the row now would leave these files
+    // in the bucket with nothing left recording that they exist.
+    if (storageError) throw new Error(`Could not remove uploaded files: ${storageError.message}`);
+  }
+
+  const { error: matchError } = await client.from("matches").delete().eq("volunteer_id", id);
+  if (matchError) throw new Error(matchError.message);
+
+  const { error } = await client.from("submissions").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/volunteers");
+  revalidatePath("/admin");
+  redirect("/admin/volunteers");
 }
 
 /** Manual match: an admin decided this volunteer fits this need. No suggestion engine involved. */
