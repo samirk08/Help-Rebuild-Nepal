@@ -112,6 +112,16 @@ export default async function DiagnosticsPage() {
   const interests = await client.from("interests").select("id").limit(1);
   checks.push(fromError("Migration 002 table (interests)", interests.error));
 
+  // 42P01 (undefined_table) here means the tracker's three breakdown cards
+  // fall back to their zeroed tables rather than the page going down.
+  const breakdowns = await client.from("volunteer_skill_counts").select("skill").limit(1);
+  checks.push(fromError("Migration 005 views (tracker breakdowns)", breakdowns.error));
+
+  // Without this the profile cannot tell whose interest is whose, and matching
+  // would fall back to a contact detail two people can share.
+  const interestOwner = await client.from("interests").select("user_id").limit(1);
+  checks.push(fromError("Migration 007 column (interests.user_id)", interestOwner.error));
+
   const allowlist = await adminAllowlistReady();
   checks.push({
     name: "Admin allowlist (migration 004)",
