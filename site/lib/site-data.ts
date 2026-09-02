@@ -127,6 +127,7 @@ export const EXPERTISE = [
   "Project management",
   "Water & sanitation",
   "Logistics",
+  "IT & data",
   "Other",
 ];
 
