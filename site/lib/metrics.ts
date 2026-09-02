@@ -86,12 +86,12 @@ function percent(count: number, total: number): number {
 }
 
 /**
- * Registered volunteers by skill, in the design's seven buckets.
+ * Registered volunteers by skill, in the card's eight buckets.
  *
  * Percentages are of the volunteers who answered the question, not of everyone
  * registered. Someone who skipped it is not evidence of anything, and folding
- * them into "Other" would report them as having a skill outside the six named
- * ones — which is a claim about a person who made no claim.
+ * them into "Other" would report them as having a skill outside the seven
+ * named ones — which is a claim about a person who made no claim.
  */
 export async function skillBreakdown(demo: boolean): Promise<BreakdownRow[]> {
   if (demo) return emptyExpertise();
@@ -119,7 +119,7 @@ export async function skillBreakdown(demo: boolean): Promise<BreakdownRow[]> {
     counts.set(label, skills.reduce((sum, skill) => sum + (bySkill.get(skill) ?? 0), 0));
   }
 
-  // The one bucket the mapping does not name takes everything the other six
+  // The one bucket the mapping does not name takes everything the other seven
   // did not claim. Resolved by lookup rather than by position so that a
   // regenerated card with a second unnamed bucket leaves it empty instead of
   // counting the same people twice. Never negative: a skill option dropped
