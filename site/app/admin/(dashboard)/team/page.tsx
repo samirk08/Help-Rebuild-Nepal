@@ -1,4 +1,5 @@
 import AdminInviteForm from "@/components/AdminInviteForm";
+import AdminRemoveButton from "@/components/AdminRemoveButton";
 import { listTeam } from "@/lib/admin-team";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +13,9 @@ export default async function TeamPage() {
         <div>
           <h1 className="admin-h1">Team</h1>
           <p className="admin-head__note">
-            Everyone who can sign in to this dashboard. Adding someone creates their account and
-            gives you a link to send them.
+            Everyone who can sign in to this dashboard. Adding someone creates their account, grants
+            them access and gives you a link to send them. Volunteers who registered on the site
+            have their own accounts and never appear here.
           </p>
         </div>
       </div>
@@ -32,14 +34,22 @@ export default async function TeamPage() {
                 <th>Email</th>
                 <th>Added</th>
                 <th>Last signed in</th>
+                <th>
+                  <span className="visually-hidden">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {members.map((member) => (
                 <tr key={member.id}>
-                  <td>{member.email}</td>
+                  <td>
+                    {member.email}
+                    {member.isSelf ? (
+                      <span style={{ marginLeft: 8, fontSize: 13, color: "var(--muted)" }}>you</span>
+                    ) : null}
+                  </td>
                   <td className="admin-table__time">
-                    {new Date(member.createdAt).toLocaleDateString()}
+                    {new Date(member.addedAt).toLocaleDateString()}
                   </td>
                   <td className="admin-table__time">
                     {member.lastSignInAt ? (
@@ -49,6 +59,11 @@ export default async function TeamPage() {
                       // but the person has never got in, so their link needs
                       // re-issuing.
                       <span className="admin-badge admin-badge--submitted">Never</span>
+                    )}
+                  </td>
+                  <td>
+                    {member.isSelf ? null : (
+                      <AdminRemoveButton userId={member.id} email={member.email} />
                     )}
                   </td>
                 </tr>
