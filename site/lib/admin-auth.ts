@@ -13,6 +13,15 @@ import { supabaseAdmin } from "./supabase";
  *
  * Membership is a table rather than a flag on the user so that revoking access
  * is a delete an admin can perform and audit, not a metadata edit.
+ *
+ * Every failure answers "not an admin", including the table being absent.
+ * This used to treat a missing `admin_users` as "let everyone through", so
+ * that deploying the allowlist could not lock the team out before they had a
+ * chance to run migration 004. That reasoning expired the moment volunteer
+ * sign-in shipped: from then on the fallback's effect was to hand every
+ * volunteer the whole register, which is the exact breach the allowlist
+ * exists to prevent. It is better to lock everyone out — recoverable by
+ * running the migration — than to let everyone in.
  */
 export async function isAdmin(userId: string | undefined | null): Promise<boolean> {
   if (!userId) return false;
@@ -24,19 +33,15 @@ export async function isAdmin(userId: string | undefined | null): Promise<boolea
     .maybeSingle();
 
   if (error) {
-    // 42P01 = undefined_table: migration 004 has not been run yet. Failing
-    // closed here would lock the whole team out of the dashboard the moment
-    // this deploys, before anyone could apply it — so this one case keeps the
-    // previous behaviour (any signed-in user is an admin), which is exactly as
-    // safe as it was yesterday because volunteer accounts do not exist yet.
-    // /admin/diagnostics reports it so it cannot go unnoticed.
+    // 42P01 = undefined_table: migration 004 has not been run. Named here
+    // because it is the one failure with a specific remedy, and because
+    // /admin/diagnostics is itself behind this gate — so if it ever happens,
+    // the server log is where the reason will be.
     if (error.code === "42P01") {
-      console.error("admin_users is missing — run supabase/004-accounts.sql. Allowing existing admins through in the meantime.");
-      return true;
+      console.error("admin_users is missing — run supabase/004-accounts.sql. Refusing all dashboard access until it exists.");
+    } else {
+      console.error("admin allowlist check failed", error);
     }
-
-    // Anything else is a real fault, and the safe answer is "not an admin".
-    console.error("admin allowlist check failed", error);
     return false;
   }
 
@@ -53,8 +58,8 @@ export async function adminAllowlistReady(): Promise<{ ready: boolean; detail: s
     return {
       ready: false,
       detail:
-        "Not created yet. Run supabase/004-accounts.sql. Until then every signed-in account is " +
-        "treated as an admin, which must be fixed before volunteer sign-in ships.",
+        "Not created yet. Run supabase/004-accounts.sql. Until it exists the dashboard refuses " +
+        "everyone, so in practice nobody can reach this page to read this.",
     };
   }
   if (error) return { ready: false, detail: `[${error.code}] ${error.message}` };
