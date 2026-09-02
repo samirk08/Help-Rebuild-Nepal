@@ -49,16 +49,22 @@ export async function trackerMetrics(demo: boolean): Promise<Metric[]> {
 export type BreakdownRow = { label: string; count: number; percent: number };
 
 /**
- * The design's seven "Skills registered" buckets, against the twelve options
+ * The card's eight "Skills registered" buckets, against the twelve options
  * the volunteer form actually offers for "Primary skill".
  *
  * The card and the form were written separately and do not use the same
  * words — "Logistics" on the card is "Logistics & transport" on the form — so
- * the join has to be stated rather than inferred from the label. The six
- * mapped here are the ones the card names; the seventh, "Other", is whatever
+ * the join has to be stated rather than inferred from the label. The seven
+ * mapped here are the ones the card names; the eighth, "Other", is whatever
  * is left, which is exactly what it says and keeps the percentages adding up.
  * Each string must match its form option verbatim, the same rule NETWORKS in
  * site-data.ts follows for the same reason.
+ *
+ * A bucket takes a list of options, not one, so that renaming a form option
+ * does not orphan the answers already stored under the old wording: the view
+ * groups on the exact string the volunteer picked, so "IT & data" is still
+ * counted next to the longer name that replaced it, in the row it always
+ * belonged to.
  */
 const SKILL_BUCKETS: Record<string, readonly string[]> = {
   Engineering: ["Engineering (structural / civil)"],
@@ -67,6 +73,7 @@ const SKILL_BUCKETS: Record<string, readonly string[]> = {
   "Project management": ["Project management"],
   "Water & sanitation": ["Water & sanitation (WASH)"],
   Logistics: ["Logistics & transport"],
+  "IT & data": ["IT, data & mapping (GIS)", "IT & data"],
 };
 
 /** The design's own table, which is all zeros — what `?demo` and a failed query show. */
