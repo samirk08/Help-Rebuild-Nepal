@@ -27,13 +27,14 @@ const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
  * Key order is not guaranteed across form serialisations, so compare structure
  * rather than raw JSON text.
  */
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+function stableStringify(value: unknown, depth = 0): string {
+  if (depth > 10) return '"__DEPTH_EXCEEDED__"';
+  if (Array.isArray(value)) return `[${value.map((v) => stableStringify(v, depth + 1)).join(",")}]`;
   if (value && typeof value === "object") {
     const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
       a.localeCompare(b)
     );
-    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v, depth + 1)}`).join(",")}}`;
   }
   return JSON.stringify(value) ?? "null";
 }
