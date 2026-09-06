@@ -52,8 +52,9 @@ export default function AdminInviteForm() {
           </p>
 
           <p style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 0 }}>
-            Send this to them over a channel you trust — it signs in whoever opens it, once.
-            They will be asked to choose a password immediately.
+            They now have dashboard access and appear in the list below. Send this to them over a
+            channel you trust — it signs in whoever opens it, once. They will be asked to choose a
+            password immediately.
           </p>
 
           <textarea

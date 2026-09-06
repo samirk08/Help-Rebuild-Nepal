@@ -147,7 +147,7 @@ export const SKILLS: string[] = [
   "Education & child support",
   "Psychosocial support",
   "Translation",
-  "IT & data",
+  "IT, data & mapping (GIS)",
   "Other"
 ];
 
@@ -240,7 +240,7 @@ export const VOL_FORM: FormSection[] = [
           "Education & child support",
           "Psychosocial support",
           "Translation",
-          "IT & data",
+          "IT, data & mapping (GIS)",
           "Other"
         ],
         "span": "span 1"
@@ -537,7 +537,7 @@ export const NEED_FORM: FormSection[] = [
           "Education & child support",
           "Psychosocial support",
           "Translation",
-          "IT & data",
+          "IT, data & mapping (GIS)",
           "Other"
         ]
       },
@@ -1365,6 +1365,7 @@ export const NP_MAP: Record<string, string> = {
   "Psychosocial support": "मनोसामाजिक सहयोग",
   "Translation": "अनुवाद",
   "IT & data": "आईटी र डेटा",
+  "IT, data & mapping (GIS)": "आईटी, डेटा र नक्साङ्कन (जीआईएस)",
   "Tools": "औजार",
   "Software / licences": "सफ्टवेयर / इजाजत",
   "Professional services": "व्यावसायिक सेवा",
