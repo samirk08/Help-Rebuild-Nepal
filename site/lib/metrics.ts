@@ -208,7 +208,7 @@ export async function demandTotals(demo: boolean): Promise<Metric[]> {
   const client = supabaseAdmin();
   const [totals, { count: matched }, { count: projectsCompleted }] = await Promise.all([
     client.from("need_demand_totals").select("active_requests, people_needed, needs_met").maybeSingle(),
-    client.from("matches").select("id", { count: "exact", head: true }),
+    client.from("matches").select("id", { count: "exact", head: true }).in("status", ["verified", "recruiting", "filled", "completed"]),
     client.from("projects").select("id", { count: "exact", head: true }).eq("stage", "completed"),
   ]);
 

@@ -107,6 +107,12 @@ export type AddedStrings = {
   interestCountOne: string;
   networksMembers: string;
   networksEmpty: string;
+  networkMemberBadge: string;
+  networkJoining: string;
+  networkJoinToast: string;
+  networkJoinError: string;
+  networkSignInToJoin: string;
+  networkSignInLink: string;
   projectsCoordinator: string;
   projectsNoCoordinator: string;
 
@@ -293,6 +299,13 @@ const ADDED: Record<Lang, AddedStrings> = {
     interestCountOne: "1 person has expressed interest",
     networksMembers: "members",
     networksEmpty: "No one has registered with this skill yet.",
+    networkMemberBadge: "You're a member",
+    networkJoining: "Joining…",
+    networkJoinToast:
+      "You've joined. The coordination team sees network members first when assembling teams.",
+    networkJoinError: "That did not work. Please try again in a moment.",
+    networkSignInToJoin: "Already registered?",
+    networkSignInLink: "Sign in to join with one click",
     projectsCoordinator: "Coordinator",
     projectsNoCoordinator: "Not yet assigned",
 
@@ -473,6 +486,13 @@ const ADDED: Record<Lang, AddedStrings> = {
     interestCountOne: "१ जनाले इच्छा जनाएका छन्",
     networksMembers: "सदस्य",
     networksEmpty: "यो सीपमा अझै कसैले दर्ता गरेको छैन।",
+    networkMemberBadge: "तपाईं सदस्य हुनुहुन्छ",
+    networkJoining: "जोड्दै…",
+    networkJoinToast:
+      "तपाईं जोडिनुभयो। टोली बनाउँदा समन्वय टोलीले नेटवर्क सदस्यलाई पहिले हेर्छ।",
+    networkJoinError: "जोड्न सकिएन। कृपया केही बेरमा फेरि प्रयास गर्नुहोस्।",
+    networkSignInToJoin: "पहिल्यै दर्ता गर्नुभएको छ?",
+    networkSignInLink: "एक क्लिकमा जोडिन साइन इन गर्नुहोस्",
     projectsCoordinator: "संयोजक",
     projectsNoCoordinator: "अझै तोकिएको छैन",
 

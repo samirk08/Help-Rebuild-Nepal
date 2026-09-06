@@ -141,20 +141,9 @@ export async function deleteVolunteer(formData: FormData) {
 /** Manual match: an admin decided this volunteer fits this need. No suggestion engine involved. */
 export async function createMatch(formData: FormData) {
   await requireAdmin();
-  const needId = String(formData.get("needId"));
-  const volunteerId = String(formData.get("volunteerId"));
-
-  const { error } = await supabaseAdmin()
-    .from("matches")
-    .insert({ need_id: needId, volunteer_id: volunteerId });
-
-  // 23505 = unique_violation against matches_need_volunteer_key (migration
-  // 002). Matching the same volunteer twice is a double-click, not an error
-  // worth showing: the desired state already holds, and the row must not be
-  // duplicated or it would double-count against the need's fill bar.
-  if (error && error.code !== "23505") throw new Error(error.message);
-
-  revalidatePath(`/admin/needs/${needId}`);
+  // Old browser tabs must not bypass the reviewed role/commitment workflow.
+  void formData;
+  throw new Error("Use Matching recommendations to invite a volunteer and confirm both parties' agreement.");
 }
 
 /** Manual promotion: this need became standing work rather than a one-off. */

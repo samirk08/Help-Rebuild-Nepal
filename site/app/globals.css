@@ -3,6 +3,38 @@
    Ported from the approved prototype; values are the design's, not invented.
    ========================================================================== */
 
+.matching-panel { margin: 24px 0; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+.matching-panel h2 { margin: 0 0 10px; font-size: 20px; }
+.matching-panel h3 { margin: 18px 0 8px; font-size: 17px; }
+.matching-panel h4 { margin: 0 0 8px; font-size: 15px; }
+.matching-panel p { font-size: 14px; line-height: 1.6; }
+.matching-panel summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+.matching-form { margin: 14px 0; }
+.matching-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 14px; }
+.matching-fieldset > .btn { justify-self: start; }
+.matching-form label:not(.matching-check) { display: grid; gap: 7px; font-size: 13px; }
+.matching-form input:not([type="checkbox"]):not([type="hidden"]), .matching-form select { width: 100%; min-width: 0; padding: 9px; border: 1px solid var(--field-border); border-radius: var(--radius); font: inherit; background: var(--surface); color: var(--ink); }
+.matching-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.matching-check { display: flex; gap: 9px; align-items: baseline; font-size: 13px; }
+.matching-skills { border: 1px solid var(--line); padding: 12px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; min-width: 0; }
+.matching-skills legend { font-size: 13px; padding: 0 5px; }
+.matching-skills label { display: flex !important; align-items: baseline; }
+.matching-notice { padding: 10px 12px; background: var(--amber-bg); color: var(--amber-ink); }
+.matching-error { color: var(--red-dark); }
+.matching-success { color: var(--green-dark); }
+.matching-meta { color: var(--muted); font-size: 12px !important; font-weight: 400; }
+.matching-role { border-top: 1px solid var(--line); margin-top: 22px; }
+.matching-editor { margin: 12px 0; }
+.matching-group { border-top: 1px solid var(--line-2); }
+.matching-candidate { padding: 16px 0; border-top: 1px solid var(--line-2); overflow-wrap: anywhere; }
+.matching-candidate ul { padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13px; }
+.matching-result { display: inline-block; margin-right: 8px; font-weight: 600; }
+.matching-result--pass { color: var(--green); }
+.matching-result--fail { color: var(--red-dark); }
+.matching-result--unknown { color: var(--amber-ink); }
+.matching-question { margin: 3px 0 6px !important; color: var(--ink-2); }
+@media(max-width: 600px) { .matching-grid,.matching-skills { grid-template-columns: minmax(0,1fr); } .matching-panel { padding: 16px; } }
+
 :root {
   /* Surfaces and ink */
   --bg: #f6f7f8;
@@ -1994,6 +2026,28 @@ textarea:focus-visible {
 .network__count span {
   font-size: 12.5px;
   color: var(--muted-2);
+}
+
+/* The card's join slot once you belong: same footprint as the join button,
+   but inert — membership is a state, not something to press again. */
+.network__member {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--green-line);
+  background: var(--green-tint);
+  color: var(--green);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.network__member::before {
+  content: "✓";
+  font-weight: 700;
 }
 
 .network--new {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { PUBLISHED_STATUSES } from "@/lib/public-needs";
+import { OPEN_NEED_STATUSES } from "@/lib/matching/types";
 import { supabaseAdmin } from "@/lib/supabase";
 import { currentVolunteer } from "@/lib/volunteer-auth";
 
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     .select("id")
     .eq("id", needId)
     .eq("kind", "need")
-    .in("status", PUBLISHED_STATUSES)
+    .in("status", OPEN_NEED_STATUSES)
     .maybeSingle();
 
   if (!need) {
