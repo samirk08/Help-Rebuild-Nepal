@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { recommend } from "../lib/matching/engine";
 import { legacyFacts } from "../lib/matching/normalize";
 import { isoDate } from "../lib/matching/catalog";
-import { parseFacts, parseRole } from "../lib/matching/validation";
+import { parseFacts, parseRole, idFrom } from "../lib/matching/validation";
 import { emailConfigured, sendMatchingEmail } from "../lib/matching/email";
 import { context, now, profile, role, volunteer } from "./fixtures";
 
@@ -119,6 +119,20 @@ test("repeated evaluations and reordered input preserve tie ordering", () => {
 test("calendar validation rejects impossible and ambiguous dates", () => {
   assert.equal(isoDate("31/02/2026"),null);assert.equal(isoDate("2026-02-30"),null);
   assert.equal(isoDate("2026-09-05"),"2026-09-05");assert.equal(isoDate("05/09/2026"),"2026-09-05");assert.equal(isoDate("tomorrow"),null);
+});
+test("idFrom extracts valid UUIDs and rejects invalid formats", () => {
+  const f = new FormData();
+  f.set("id", "123e4567-e89b-12d3-a456-426614174000");
+  assert.equal(idFrom(f, "id"), "123e4567-e89b-12d3-a456-426614174000");
+
+  f.set("id", "invalid-id");
+  assert.throws(() => idFrom(f, "id"), /Invalid record identifier/);
+
+  f.set("id", "");
+  assert.throws(() => idFrom(f, "id"), /Invalid record identifier/);
+
+  const emptyForm = new FormData();
+  assert.throws(() => idFrom(emptyForm, "id"), /Invalid record identifier/);
 });
 test("input validation preserves unknowns and refuses invalid requirements", () => {
   const f=new FormData();assert.equal(parseFacts(f).skills,null);assert.equal(parseFacts(f).hoursPerWeek,null);
