@@ -66,36 +66,32 @@ export async function listTeam(): Promise<TeamMember[]> {
   const selfId = await requireAdmin();
 
   const { data, error } = await supabaseAdmin()
-    .from("admin_users")
-    .select("user_id, email, added_at")
+    .from("admin_team_with_auth")
+    .select("user_id, admin_email, added_at, auth_email, last_sign_in_at")
     .order("added_at", { ascending: true });
 
   if (error) {
-    console.error("admin_users read failed", error);
+    console.error("admin_team_with_auth read failed", error);
     return [];
   }
 
   const rows = (data ?? []) as Array<{
     user_id: string;
-    email: string | null;
+    admin_email: string | null;
+    auth_email: string | null;
     added_at: string;
+    last_sign_in_at: string | null;
   }>;
 
-  const members = await Promise.all(
-    rows.map(async (row) => {
-      // The allowlist keeps its own copy of the email so a member is still
-      // identifiable if this lookup fails or the Auth account is gone.
-      const { data: found } = await supabaseAdmin().auth.admin.getUserById(row.user_id);
-
-      return {
-        id: row.user_id,
-        email: found?.user?.email ?? row.email ?? "—",
-        addedAt: row.added_at,
-        lastSignInAt: found?.user?.last_sign_in_at ?? null,
-        isSelf: row.user_id === selfId,
-      };
-    })
-  );
+  const members = rows.map((row) => ({
+    id: row.user_id,
+    // The allowlist keeps its own copy of the email so a member is still
+    // identifiable if the Auth account lookup yields nothing or it's gone.
+    email: row.auth_email ?? row.admin_email ?? "—",
+    addedAt: row.added_at,
+    lastSignInAt: row.last_sign_in_at,
+    isSelf: row.user_id === selfId,
+  }));
 
   return members.sort((a, b) => a.email.localeCompare(b.email));
 }
