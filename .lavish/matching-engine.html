@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the matching engine works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --surface-2:#fbfcfc;
+  --ink:#12171c; --ink-2:#3d474f; --muted:#5c666f; --muted-2:#78838c; --faint:#98a2ab; --faint-2:#a9b2ba;
+  --line:#e2e6ea; --line-2:#eef1f3; --line-3:#f1f4f5; --field-border:#d7dce1; --track:#eef1f3;
+  --green:#14663c; --green-dark:#0e4a2b; --green-tint:#f1f7f3; --green-line:#d7e6dd; --green-ink:#1f3d2c;
+  --navy:#0a1d4d; --navy-dark:#061336; --navy-line:#1e3466; --navy-soft:#9fb3d9; --navy-head:#152f5c;
+  --navy-accent:#1b3f7a; --navy-tint:#f2f5fa; --navy-tint-line:#d8e0ec; --panel-blue:#f4f6fa; --panel-blue-line:#ccd8e8;
+  --red:#c90026; --red-2:#b2242b; --red-dark:#9c1f25; --red-tint:#fdeceb; --red-line:#dd8b90; --red-soft:#f6d6d8;
+  --amber:#e0a11b; --amber-bg:#fdf8ea; --amber-line:#e6d5a8; --amber-ink:#6b5713;
+  --blue:#2b7fd4; --purple:#7a4fbf; --mint:#5fd08a;
+  --dark:#12171c; --dark-line:#262c32; --dark-text:#c8ced3;
+  --radius:4px; --radius-sm:3px;
+  --font-display:"Archivo",system-ui,sans-serif;
+  --font-body:"Public Sans",Helvetica,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1317; --surface:#161b21; --surface-2:#1a2027;
+    --ink:#e8ecef; --ink-2:#c2cad1; --muted:#9aa4ad; --muted-2:#828d96; --faint:#6b757e; --faint-2:#5b656e;
+    --line:#2a3138; --line-2:#232931; --line-3:#1f252c; --field-border:#333b43; --track:#232931;
+    --green:#5fd08a; --green-dark:#8ee0ac; --green-tint:#132018; --green-line:#28402f; --green-ink:#a9e7c0;
+    --navy:#9fb3d9; --navy-dark:#c5d4ea; --navy-line:#2b3b5c; --navy-head:#a9bcdd; --navy-accent:#8ba3cf;
+    --navy-tint:#141a24; --navy-tint-line:#28324a; --panel-blue:#151b26; --panel-blue-line:#2a3450;
+    --red:#ff6b83; --red-2:#ff8095; --red-dark:#ff9aa9; --red-tint:#251418; --red-line:#5c2c33; --red-soft:#3d1d22;
+    --amber:#e0a11b; --amber-bg:#241f11; --amber-line:#4a3d1c; --amber-ink:#e7c766;
+    --blue:#69aef0; --purple:#b394e8; --mint:#5fd08a;
+    --dark:#0b0e11; --dark-line:#262c32; --dark-text:#c8ced3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1317; --surface:#161b21; --surface-2:#1a2027;
+  --ink:#e8ecef; --ink-2:#c2cad1; --muted:#9aa4ad; --muted-2:#828d96; --faint:#6b757e; --faint-2:#5b656e;
+  --line:#2a3138; --line-2:#232931; --line-3:#1f252c; --field-border:#333b43; --track:#232931;
+  --green:#5fd08a; --green-dark:#8ee0ac; --green-tint:#132018; --green-line:#28402f; --green-ink:#a9e7c0;
+  --navy:#9fb3d9; --navy-dark:#c5d4ea; --navy-line:#2b3b5c; --navy-head:#a9bcdd; --navy-accent:#8ba3cf;
+  --navy-tint:#141a24; --navy-tint-line:#28324a; --panel-blue:#151b26; --panel-blue-line:#2a3450;
+  --red:#ff6b83; --red-2:#ff8095; --red-dark:#ff9aa9; --red-tint:#251418; --red-line:#5c2c33; --red-soft:#3d1d22;
+  --amber:#e0a11b; --amber-bg:#241f11; --amber-line:#4a3d1c; --amber-ink:#e7c766;
+  --blue:#69aef0; --purple:#b394e8; --mint:#5fd08a;
+}
+:root[data-theme="light"]{
+  --bg:#f6f7f8; --surface:#ffffff; --surface-2:#fbfcfc;
+  --ink:#12171c; --ink-2:#3d474f; --muted:#5c666f; --muted-2:#78838c; --faint:#98a2ab; --faint-2:#a9b2ba;
+  --line:#e2e6ea; --line-2:#eef1f3; --line-3:#f1f4f5; --field-border:#d7dce1; --track:#eef1f3;
+  --green:#14663c; --green-dark:#0e4a2b; --green-tint:#f1f7f3; --green-line:#d7e6dd; --green-ink:#1f3d2c;
+  --navy:#0a1d4d; --navy-dark:#061336; --navy-line:#1e3466; --navy-soft:#9fb3d9; --navy-head:#152f5c;
+  --navy-accent:#1b3f7a; --navy-tint:#f2f5fa; --navy-tint-line:#d8e0ec; --panel-blue:#f4f6fa; --panel-blue-line:#ccd8e8;
+  --red:#c90026; --red-2:#b2242b; --red-dark:#9c1f25; --red-tint:#fdeceb; --red-line:#dd8b90; --red-soft:#f6d6d8;
+  --amber:#e0a11b; --amber-bg:#fdf8ea; --amber-line:#e6d5a8; --amber-ink:#6b5713;
+  --blue:#2b7fd4; --purple:#7a4fbf; --mint:#5fd08a;
+}
+
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.6;-webkit-font-smoothing:antialiased;}
+.me-shell{max-width:1100px;margin:0 auto;padding:0 24px 96px;min-width:0;}
+
+/* ---- Masthead ---- */
+.me-mast{background:var(--navy);color:#fff;margin:0 -24px 40px;padding:52px 24px 44px;border-bottom:4px solid var(--red);}
+.me-mast-in{max-width:1052px;margin:0 auto;min-width:0;}
+.me-eyebrow{font-family:var(--font-display);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--navy-soft);margin:0 0 14px;}
+.me-mast h1{font-family:var(--font-display);font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.14;margin:0 0 16px;letter-spacing:-.02em;color:#fff;}
+.me-mast p{margin:0;font-size:16px;color:#d5deee;max-width:64ch;}
+.me-mast strong{color:#fff;}
+
+/* ---- Sections ---- */
+.me-sec{margin:0 0 52px;min-width:0;}
+.me-sec > h2{font-family:var(--font-display);font-size:24px;font-weight:700;letter-spacing:-.01em;margin:0 0 6px;padding-top:8px;}
+.me-lede{color:var(--muted);font-size:15px;margin:0 0 22px;max-width:70ch;}
+.me-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--red);color:#fff;font-family:var(--font-display);font-size:13px;font-weight:700;border-radius:2px;margin-right:10px;vertical-align:2px;}
+
+/* ---- Callout ---- */
+.me-callout{background:var(--amber-bg);border:1px solid var(--amber-line);border-left:4px solid var(--amber);border-radius:var(--radius);padding:20px 22px;margin:0 0 26px;min-width:0;}
+.me-callout h3{font-family:var(--font-display);font-size:16px;margin:0 0 8px;color:var(--amber-ink);}
+.me-callout p{margin:0 0 10px;font-size:14px;color:var(--ink-2);}
+.me-callout p:last-child{margin-bottom:0;}
+.me-callout code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:2px;font-family:var(--font-mono);font-size:12.5px;}
+@media (prefers-color-scheme:dark){.me-callout code{background:rgba(255,255,255,.09);}}
+
+/* ---- Diagram ---- */
+.me-figure{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px 20px;margin:0 0 18px;overflow-x:auto;min-width:0;}
+.me-figure .mermaid{display:flex;justify-content:center;min-width:0;}
+.me-figure .mermaid svg{max-width:100%;height:auto;}
+.me-cap{font-size:12.5px;color:var(--muted);margin:14px 0 0;text-align:center;font-style:italic;}
+
+/* ---- Bucket cards ---- */
+.me-buckets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 22px;}
+.me-bucket{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--line);border-radius:var(--radius);padding:18px;min-width:0;}
+.me-bucket--ready{border-top-color:var(--green);}
+.me-bucket--clarify{border-top-color:var(--amber);}
+.me-bucket--excluded{border-top-color:var(--red);}
+.me-bucket h3{font-family:var(--font-display);font-size:15px;margin:0 0 4px;}
+.me-bucket--ready h3{color:var(--green);}
+.me-bucket--clarify h3{color:var(--amber-ink);}
+.me-bucket--excluded h3{color:var(--red-dark);}
+.me-rule{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);display:block;margin:0 0 10px;overflow-wrap:anywhere;}
+.me-bucket p{margin:0;font-size:13.5px;color:var(--ink-2);}
+
+/* ---- Tables ---- */
+.me-tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);min-width:0;}
+table.me-t{width:100%;border-collapse:collapse;font-size:13.5px;min-width:540px;}
+table.me-t th{background:var(--navy-tint);font-family:var(--font-display);font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--navy-head);text-align:left;padding:11px 14px;border-bottom:1px solid var(--navy-tint-line);white-space:nowrap;}
+table.me-t td{padding:11px 14px;border-bottom:1px solid var(--line-2);vertical-align:top;color:var(--ink-2);}
+table.me-t tr:last-child td{border-bottom:0;}
+table.me-t tbody tr:hover{background:var(--surface-2);}
+table.me-t code{font-family:var(--font-mono);font-size:12px;color:var(--ink);background:var(--line-3);padding:1px 5px;border-radius:2px;white-space:nowrap;}
+.me-pill{display:inline-block;font-size:10.5px;font-weight:700;font-family:var(--font-display);letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;white-space:nowrap;}
+.me-pill--pass{background:var(--green-tint);color:var(--green);border:1px solid var(--green-line);}
+.me-pill--fail{background:var(--red-tint);color:var(--red-dark);border:1px solid var(--red-soft);}
+.me-pill--unknown{background:var(--amber-bg);color:var(--amber-ink);border:1px solid var(--amber-line);}
+
+/* ---- Mock UI (HRN admin) ---- */
+.me-mockframe{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--bg);min-width:0;}
+.me-mockbar{display:flex;align-items:center;gap:8px;background:var(--dark);padding:9px 14px;border-bottom:1px solid var(--dark-line);}
+.me-dot{width:9px;height:9px;border-radius:50%;background:#3a4148;flex:none;}
+.me-mockurl{font-family:var(--font-mono);font-size:11.5px;color:var(--dark-text);margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.me-mockbody{padding:20px;min-width:0;}
+.matching-panel{margin:0;padding:22px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);min-width:0;}
+.matching-panel h2{margin:0 0 10px;font-size:20px;font-family:var(--font-display);}
+.matching-panel h3{margin:18px 0 8px;font-size:17px;font-family:var(--font-display);}
+.matching-panel h4{margin:0 0 8px;font-size:15px;font-family:var(--font-display);}
+.matching-panel p{font-size:14px;line-height:1.6;margin:0 0 10px;}
+.matching-panel summary{cursor:pointer;font-weight:600;padding:10px 0;font-size:14px;}
+.matching-notice{padding:10px 12px;background:var(--amber-bg);color:var(--amber-ink);font-size:13px !important;border-radius:2px;}
+.matching-meta{color:var(--muted);font-size:12px !important;font-weight:400;}
+.matching-role{border-top:1px solid var(--line);margin-top:22px;padding-top:4px;}
+.matching-group{border-top:1px solid var(--line-2);}
+.matching-candidate{padding:16px 0;border-top:1px solid var(--line-2);overflow-wrap:anywhere;}
+.matching-candidate ul{padding:0;list-style:none;display:grid;gap:8px;font-size:13px;margin:0 0 10px;}
+.matching-result{display:inline-block;margin-right:8px;font-weight:600;}
+.matching-result--pass{color:var(--green);}
+.matching-result--fail{color:var(--red-dark);}
+.matching-result--unknown{color:var(--amber-ink);}
+.matching-question{margin:3px 0 6px !important;color:var(--ink-2);font-size:12.5px !important;}
+.matching-candidate a{color:var(--navy);font-weight:600;text-decoration:none;border-bottom:1px solid var(--navy-tint-line);}
+.me-btn{display:inline-block;background:var(--red);color:#fff;font-family:var(--font-display);font-size:13px;font-weight:600;padding:8px 16px;border:0;border-radius:var(--radius);cursor:default;}
+.me-btn--ghost{background:transparent;color:var(--navy);border:1px solid var(--field-border);}
+.matching-check{display:flex;gap:9px;align-items:baseline;font-size:13px;margin:0 0 10px;}
+.me-annot{display:block;font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--red);margin:0 0 6px;}
+
+/* ---- Rank list ---- */
+.me-rank{list-style:none;counter-reset:rk;padding:0;margin:0;display:grid;gap:10px;}
+.me-rank li{counter-increment:rk;display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0;}
+.me-rank li::before{content:counter(rk);font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;background:var(--navy);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:2px;}
+.me-rank b{font-family:var(--font-display);font-size:14px;display:block;margin:0 0 2px;}
+.me-rank span{font-size:13px;color:var(--muted);}
+
+/* ---- Safeguards ---- */
+.me-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;}
+.me-card{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--navy);border-radius:var(--radius);padding:18px;min-width:0;}
+.me-card--green{border-left-color:var(--green);}
+.me-card--red{border-left-color:var(--red);}
+.me-card--amber{border-left-color:var(--amber);}
+.me-card h3{font-family:var(--font-display);font-size:14.5px;margin:0 0 7px;}
+.me-card p{margin:0;font-size:13.5px;color:var(--ink-2);}
+.me-card code{font-family:var(--font-mono);font-size:12px;background:var(--line-3);padding:1px 5px;border-radius:2px;overflow-wrap:anywhere;}
+
+.me-src{font-family:var(--font-mono);font-size:11.5px;color:var(--faint);}
+.me-note{font-size:13.5px;color:var(--muted);margin:16px 0 0;padding-left:14px;border-left:2px solid var(--line);}
+
+@media(max-width:820px){
+  .me-buckets{grid-template-columns:minmax(0,1fr);}
+}
+@media(max-width:600px){
+  .me-shell{padding:0 16px 64px;}
+  .me-mast{margin:0 -16px 32px;padding:36px 16px 30px;}
+  .me-mockbody{padding:12px;}
+  .matching-panel{padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<header class="me-mast">
+  <div class="me-mast-in">
+    <p class="me-eyebrow">Help Rebuild Nepal · Coordination dashboard</p>
+    <h1>How a posted need becomes a confirmed volunteer</h1>
+    <p>The engine is <strong>deterministic and explainable</strong> — it never guesses, never emails on its own, and never shares contact details until a coordinator confirms. Every step below is traced to the code merged in PR&nbsp;#5.</p>
+  </div>
+</header>
+
+<div class="me-shell">
+
+  <!-- 1 -->
+  <section class="me-sec">
+    <h2><span class="me-num">1</span>Start here: needs don't match, roles do</h2>
+    <div class="me-callout">
+      <h3>A posted need on its own produces nothing</h3>
+      <p>Matching runs against <strong>roles</strong> you define inside a need, not the need itself. A verified need with no roles shows an empty panel. Two preconditions must both hold:</p>
+      <p>① The need's status is <code>verified</code> or <code>recruiting</code> &nbsp;·&nbsp; ② at least one role exists on it</p>
+      <p class="me-src">site/lib/matching/types.ts:2 · site/lib/matching/data.ts:30</p>
+    </div>
+    <p class="me-lede">A role carries the hard requirements — skills, work mode, district, dates, hours per week, minimum experience, qualifications — plus soft preferences (preferred specialties, prefer-local, missions) and a headcount. Requirements are what the engine tests; preferences only affect ordering.</p>
+  </section>
+
+  <!-- 2 -->
+  <section class="me-sec">
+    <h2><span class="me-num">2</span>The whole flow</h2>
+    <p class="me-lede">Green is the volunteer's path, navy is the coordinator's. Note how far the flow travels before a single email exists — and that contact details are exchanged only at the very last step.</p>
+    <div class="me-figure">
+      <pre class="mermaid">
+flowchart TD
+  A["Need posted<br/>status: new"] --> B{"Coordinator<br/>verifies need"}
+  B --> C["Status: verified<br/>or recruiting"]
+  C --> D["Coordinator defines a ROLE<br/>skills · dates · hours · district"]
+  D --> E["Engine scores every<br/>volunteer against the role"]
+  E --> F["Ready"]
+  E --> G["Needs confirmation"]
+  E --> H["Not suitable"]
+  G -.->|"coordinator resolves<br/>the unknown"| E
+  F --> I{"Coordinator clicks<br/>Invite volunteer"}
+  I --> J["Invitation queued<br/>+ email in outbox<br/>slot held · 48h clock"]
+  J --> K["Worker re-validates<br/>then sends email"]
+  K --> L{"Volunteer opens<br/>private link"}
+  L -->|Decline| M["Declined<br/>this role only"]
+  L -->|"No response in 48h"| N["Expired<br/>slot released"]
+  L -->|Proceed| O["Accepted<br/>72h for coordinator<br/>NO email · NO contact shared"]
+  O --> P{"Coordinator confirms<br/>'both parties agreed'"}
+  P --> Q["Match + commitment created<br/>2 introduction emails<br/>CONTACT DETAILS SHARED"]
+  Q --> R["Completed<br/>or withdrawn"]
+
+  classDef need fill:#f2f5fa,stroke:#1b3f7a,stroke-width:1.5px,color:#0a1d4d
+  classDef ready fill:#f1f7f3,stroke:#14663c,stroke-width:1.5px,color:#0e4a2b
+  classDef warn fill:#fdf8ea,stroke:#e0a11b,stroke-width:1.5px,color:#6b5713
+  classDef stop fill:#fdeceb,stroke:#c90026,stroke-width:1.5px,color:#9c1f25
+  classDef act fill:#0a1d4d,stroke:#0a1d4d,stroke-width:1.5px,color:#ffffff
+  class A,C,D,E need
+  class F,O,Q,R ready
+  class G,J,K warn
+  class H,M,N stop
+  class B,I,L,P act
+      </pre>
+    </div>
+    <p class="me-cap">Dotted line: a "needs confirmation" candidate re-enters scoring once the missing answer is recorded — nothing is lost, it just isn't invitable yet.</p>
+  </section>
+
+  <!-- 3 -->
+  <section class="me-sec">
+    <h2><span class="me-num">3</span>How a volunteer lands in a bucket</h2>
+    <p class="me-lede">Each volunteer runs through roughly twenty checks. Every check returns <em>pass</em>, <em>fail</em>, or <em>unknown</em>, and the worst result decides the bucket.</p>
+    <div class="me-buckets">
+      <div class="me-bucket me-bucket--ready">
+        <h3>Ready for invitation</h3>
+        <span class="me-rule">every check = pass</span>
+        <p>Invitable. The panel shows the full reasoning and an <strong>Invite volunteer</strong> button.</p>
+      </div>
+      <div class="me-bucket me-bucket--clarify">
+        <h3>Needs confirmation</h3>
+        <span class="me-rule">any check = unknown<br>(and none fail)</span>
+        <p>Not ruled out — just missing an answer. Each unknown carries the exact question to ask.</p>
+      </div>
+      <div class="me-bucket me-bucket--excluded">
+        <h3>Not currently suitable</h3>
+        <span class="me-rule">any check = fail</span>
+        <p>A real conflict: dates, capacity, travel area, or an explicit decline.</p>
+      </div>
+    </div>
+    <div class="me-callout">
+      <h3>The rule that makes this trustworthy</h3>
+      <p><strong>An unknown never satisfies a requirement.</strong> Old registration answers that can't establish a fact are stored as <code>null</code> rather than guessed. A "can help remotely" checkbox proves willingness, not remote-<em>only</em>, so work mode stays unknown until someone confirms it.</p>
+      <p class="me-src">site/lib/matching/normalize.ts:11-14</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="me-sec">
+    <h2><span class="me-num">4</span>Every check, and what trips it</h2>
+    <div class="me-tablewrap">
+      <table class="me-t">
+        <thead><tr><th>Check</th><th>Fails when</th><th>Unknown when</th></tr></thead>
+        <tbody>
+          <tr><td><code>need</code></td><td>Role paused, need closed, or end date passed</td><td>—</td></tr>
+          <tr><td><code>capacity</code></td><td>All slots confirmed or awaiting a reply</td><td>—</td></tr>
+          <tr><td><code>review</code></td><td>Registration was rejected</td><td>Registration not reviewed yet</td></tr>
+          <tr><td><code>notifications</code></td><td>Volunteer paused invitations</td><td>—</td></tr>
+          <tr><td><code>scope</code></td><td>Volunteer is mission-only and this role is outside it</td><td>—</td></tr>
+          <tr><td><code>email</code></td><td>—</td><td>No valid email on file</td></tr>
+          <tr><td><code>consent</code></td><td>—</td><td>Consent to share contact not recorded</td></tr>
+          <tr><td><code>invitation</code></td><td>Already approached for this role</td><td>—</td></tr>
+          <tr><td><code>outstanding</code></td><td>Has a live invitation to a different role</td><td>—</td></tr>
+          <tr><td><code>skill:*</code></td><td>Skill outside their confirmed list</td><td>No confirmed skills, or only a legacy primary skill</td></tr>
+          <tr><td><code>experience</code></td><td>Fewer years than the role requires</td><td>Experience never confirmed</td></tr>
+          <tr><td><code>qualification:*</code></td><td>—</td><td>Not yet verified by a coordinator</td></tr>
+          <tr><td><code>mode</code></td><td>Remote/on-site preference conflicts</td><td>Preference missing or ambiguous</td></tr>
+          <tr><td><code>travel</code></td><td>Required district outside their travel area</td><td>Travel area never confirmed</td></tr>
+          <tr><td><code>deployment</code></td><td>Role runs longer than their maximum stay</td><td>Maximum deployment unknown</td></tr>
+          <tr><td><code>freshness</code></td><td>—</td><td>Availability not confirmed in the last 30 days</td></tr>
+          <tr><td><code>dates</code></td><td>Available range doesn't cover the role</td><td>No confirmed date range</td></tr>
+          <tr><td><code>hours</code></td><td>Offers fewer hours than needed weekly</td><td>Weekly hours not confirmed</td></tr>
+          <tr><td><code>commitment</code></td><td>Already committed to this need</td><td>An existing commitment has no schedule</td></tr>
+          <tr><td><code>capacity-hours</code></td><td>Existing work leaves too little weekly capacity</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="me-note"><strong>The capacity check is smarter than a sum.</strong> It uses <em>peak simultaneous</em> hours across overlapping commitments, so two commitments in different months don't falsely block someone. <span class="me-src">engine.ts:96-99</span></p>
+  </section>
+
+  <!-- 5 -->
+  <section class="me-sec">
+    <h2><span class="me-num">5</span>What the coordinator actually sees</h2>
+    <p class="me-lede">This is the Matching panel as it renders on a need's admin page, in the live design system. Nothing here is a mockup of a future idea — it is what <code>MatchingPanel.tsx</code> outputs today.</p>
+    <div class="me-mockframe">
+      <div class="me-mockbar">
+        <span class="me-dot"></span><span class="me-dot"></span><span class="me-dot"></span>
+        <span class="me-mockurl">helprebuildnepal.com/admin/needs/8f2c…#matching</span>
+      </div>
+      <div class="me-mockbody">
+        <section class="matching-panel">
+          <h2>Matching recommendations</h2>
+          <p>Rules check each role against the volunteer's skills, availability and preferences. Unknown answers stay visible. Mission preferences are optional and can be added later.</p>
+          <p class="matching-notice">Email is not configured yet. You can prepare roles, review candidates and confirm their details now.</p>
+          <p class="matching-meta">248 volunteer records checked · 3 places across active roles · Recomputed from current details when this page loads</p>
+
+          <article class="matching-role">
+            <h3>Structural assessment engineer <span class="matching-meta">2 needed</span></h3>
+            <p>2026-09-20 – 2026-10-18 · 30 hours/week · onsite</p>
+
+            <details class="matching-group" open>
+              <summary>Ready for invitation (1)</summary>
+              <div class="matching-candidate">
+                <span class="me-annot">▸ every check passed</span>
+                <h4><a href="#">Anjali Shrestha</a></h4>
+                <ul>
+                  <li><span class="matching-result matching-result--pass">Meets</span>Volunteer registration reviewed.</li>
+                  <li><span class="matching-result matching-result--pass">Meets</span>Engineering (structural / civil) offered.</li>
+                  <li><span class="matching-result matching-result--pass">Meets</span>6 years reported; 3 required.</li>
+                  <li><span class="matching-result matching-result--pass">Meets</span>Work mode is compatible.</li>
+                  <li><span class="matching-result matching-result--pass">Meets</span>Volunteer is based in the required district.</li>
+                  <li><span class="matching-result matching-result--pass">Meets</span>Role spans 29 days; maximum deployment is 45.</li>
+                  <li><span class="matching-result matching-result--pass">Meets</span>32 hours offered; 30 needed weekly.</li>
+                </ul>
+                <p class="matching-meta">Relevant specialty: seismic retrofit · Expressed interest in this need · Based in the preferred district · 0 invitations in the last 14 days</p>
+                <p><button class="me-btn">Invite volunteer</button></p>
+              </div>
+            </details>
+
+            <details class="matching-group" open>
+              <summary>Needs confirmation (1)</summary>
+              <div class="matching-candidate">
+                <span class="me-annot">▸ only the unknowns are listed</span>
+                <h4><a href="#">Bikash Tamang</a></h4>
+                <ul>
+                  <li><span class="matching-result matching-result--unknown">Confirm</span>Travel area needs confirmation.
+                    <p class="matching-question">Can you travel to Sindhupalchok for these dates?</p></li>
+                  <li><span class="matching-result matching-result--unknown">Confirm</span>Weekly hours are not confirmed.
+                    <p class="matching-question">Can you offer 30 hours per week?</p></li>
+                  <li><span class="matching-result matching-result--unknown">Confirm</span>Availability needs a current confirmation.
+                    <p class="matching-question">Confirm your current availability for this opportunity.</p></li>
+                </ul>
+              </div>
+            </details>
+
+            <details class="matching-group">
+              <summary>Not currently suitable (14)</summary>
+            </details>
+          </article>
+
+          <h3>Invitations and connections</h3>
+          <div class="matching-candidate">
+            <h4>Sunita Gurung · Site logistics lead</h4>
+            <p>Status: <strong>accepted</strong> · Response deadline: 21/09/2026, 17:30 Nepal time</p>
+            <p class="matching-meta">invitation: Accepted by email provider · delivered</p>
+            <label class="matching-check"><input type="checkbox" checked disabled> Both parties have agreed to the work and dates</label>
+            <p><button class="me-btn">Confirm connection</button> <button class="me-btn me-btn--ghost">Cancel invitation</button></p>
+          </div>
+        </section>
+      </div>
+    </div>
+    <p class="me-cap">The amber notice is what you see today, before Resend is configured — roles and candidates work fully; only the Invite button is withheld.</p>
+  </section>
+
+  <!-- 6 -->
+  <section class="me-sec">
+    <h2><span class="me-num">6</span>How candidates are ordered</h2>
+    <p class="me-lede">Within a bucket, sorting runs through this tuple in order — each tier only breaks ties left by the one above it. Fully deterministic, so the list never reshuffles between page loads.</p>
+    <ol class="me-rank">
+      <li><b>More matching specialties</b><span>Counted against the role's preferred specialty tags.</span></li>
+      <li><b>Expressed interest, then mission match</b><span>Someone who asked about this exact need outranks a general mission fit.</span></li>
+      <li><b>Preferred district</b><span>Only when the role sets prefer-local.</span></li>
+      <li><b>Fewest invitations in the last 14 days</b><span>Spreads load instead of repeatedly asking the same people.</span></li>
+      <li><b>Least recently contacted</b><span>Rotates fairly through the register.</span></li>
+      <li><b>Stable hash of role + revision + volunteer</b><span>A deterministic final tiebreak, so equal candidates keep a fixed order.</span></li>
+    </ol>
+    <p class="me-note">Tiers 4 and 5 are the fairness mechanism: without them the same well-documented volunteers would win every role forever. <span class="me-src">engine.ts:116</span></p>
+  </section>
+
+  <!-- 7 -->
+  <section class="me-sec">
+    <h2><span class="me-num">7</span>The invitation clock</h2>
+    <p class="me-lede">An invitation is a time-boxed reservation, not a commitment. The slot is held while it is live, and released the moment it lapses.</p>
+    <div class="me-figure">
+      <pre class="mermaid">
+stateDiagram-v2
+  direction LR
+  [*] --> queued: coordinator invites
+  queued --> sent: worker delivers
+  queued --> cancelled: coordinator cancels
+  sent --> accepted: volunteer proceeds
+  sent --> declined: volunteer declines
+  sent --> expired: 48h elapses
+  sent --> cancelled: coordinator cancels
+  accepted --> confirmed: coordinator confirms
+  accepted --> expired: 72h elapses
+  accepted --> cancelled: coordinator cancels
+  confirmed --> [*]: completed or withdrawn
+  declined --> [*]
+  expired --> [*]
+  cancelled --> [*]
+      </pre>
+    </div>
+    <div class="me-cards">
+      <div class="me-card me-card--amber">
+        <h3>48 hours to respond</h3>
+        <p>From queueing. While live, the slot counts as occupied so the same place isn't offered twice.</p>
+      </div>
+      <div class="me-card me-card--green">
+        <h3>72 hours after accepting</h3>
+        <p>Accepting extends the clock, giving you time to confirm with both sides before it lapses.</p>
+      </div>
+      <div class="me-card me-card--red">
+        <h3>Role edits invalidate</h3>
+        <p>Editing a role bumps <code>revision</code>. Any invitation issued against the old requirements can no longer be confirmed.</p>
+      </div>
+      <div class="me-card">
+        <h3>Re-checked at send time</h3>
+        <p>The worker re-runs eligibility before sending and cancels the email if anything changed while queued.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="me-sec">
+    <h2><span class="me-num">8</span>Who can cause an email</h2>
+    <p class="me-lede">Only two actions in the entire system create an email, and both require a signed-in coordinator on the admin allowlist.</p>
+    <div class="me-tablewrap">
+      <table class="me-t">
+        <thead><tr><th>Action</th><th>Who</th><th>Sends</th></tr></thead>
+        <tbody>
+          <tr><td>Invite volunteer</td><td><span class="me-pill me-pill--fail">Admin only</span></td><td>1 invitation</td></tr>
+          <tr><td>Confirm connection</td><td><span class="me-pill me-pill--fail">Admin only</span></td><td>2 introductions</td></tr>
+          <tr><td>Volunteer clicks Proceed</td><td><span class="me-pill me-pill--pass">Volunteer</span></td><td><strong>Nothing</strong></td></tr>
+          <tr><td>Volunteer clicks Decline</td><td><span class="me-pill me-pill--pass">Volunteer</span></td><td><strong>Nothing</strong></td></tr>
+          <tr><td>Need is posted</td><td><span class="me-pill me-pill--pass">Public</span></td><td><strong>Nothing</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="me-note">A volunteer accepting cannot cause a message to anyone. Only a coordinator's confirmation exchanges contact details. <span class="me-src">actions.ts:88, 115, 167</span></p>
+  </section>
+
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs";
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const paint = document.createElement("canvas").getContext("2d");
+  function toRgba(color){
+    paint.clearRect(0,0,1,1); paint.fillStyle="#000"; paint.fillStyle=color; paint.fillRect(0,0,1,1);
+    return paint.getImageData(0,0,1,1).data;
+  }
+  function compositeRgba(fg,bg){
+    const fa=fg[3]/255, ba=bg[3]/255, a=fa+ba*(1-fa);
+    if(a===0) return [0,0,0,0];
+    return [(fg[0]*fa+bg[0]*ba*(1-fa))/a,(fg[1]*fa+bg[1]*ba*(1-fa))/a,(fg[2]*fa+bg[2]*ba*(1-fa))/a,a*255];
+  }
+  function pageIsDark(){
+    const root=document.documentElement;
+    const rb=toRgba(getComputedStyle(root).backgroundColor);
+    const bb=document.body?toRgba(getComputedStyle(document.body).backgroundColor):[0,0,0,0];
+    const [r,g,b,a]=compositeRgba(bb,rb);
+    if(a>0) return (0.2126*r+0.7152*g+0.0722*b)/255<0.5;
+    const cs=getComputedStyle(root).colorScheme;
+    if(cs.includes("dark")&&!cs.includes("light")) return true;
+    if(cs.includes("light")&&!cs.includes("dark")) return false;
+    return darkQuery.matches;
+  }
+  const diagrams=[...document.querySelectorAll(".mermaid")].map(el=>({el,src:el.textContent}));
+  let applied, rendering=false, queued=false;
+  function queueRender(){ queued=true; if(rendering) return; void render(); }
+  async function render(){
+    rendering=true;
+    try{
+      while(queued){
+        queued=false;
+        const theme=pageIsDark()?"dark":"default";
+        if(theme===applied) continue;
+        mermaid.initialize({startOnLoad:false,theme,securityLevel:"strict"});
+        for(const {el,src} of diagrams){ el.removeAttribute("data-processed"); el.textContent=src; }
+        try{ await mermaid.run({nodes:diagrams.map(d=>d.el)}); }
+        catch(error){ console.error("Mermaid diagram render failed:",error); return; }
+        applied=theme;
+      }
+    } finally { rendering=false; if(queued) queueRender(); }
+  }
+  if(document.readyState==="complete") queueRender();
+  else window.addEventListener("load",queueRender,{once:true});
+  const themeObserver=new MutationObserver(queueRender);
+  for(const el of [document.documentElement,document.body]){
+    if(!el) continue;
+    themeObserver.observe(el,{attributes:true,attributeFilter:["data-theme","class","style"]});
+  }
+  document.addEventListener("change",queueRender,true);
+  document.addEventListener("transitionend",({propertyName})=>{ if(propertyName==="background-color") queueRender(); },true);
+  darkQuery.addEventListener("change",queueRender);
+</script>
+</body>
+</html>
