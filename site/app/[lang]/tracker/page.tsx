@@ -13,6 +13,7 @@ import {
   skillBreakdown,
   trackerMetrics,
 } from "@/lib/metrics";
+import { dataOr } from "@/lib/publication";
 
 // Every figure on this page is a Supabase count — must not run at build time
 // or be cached. See app/[lang]/page.tsx for the same note.
@@ -46,16 +47,32 @@ export default async function TrackerPage({
   // dataset is off unless the build opts in, so only read the query string
   // when it could change what renders.
   const demo = DEMO_ALLOWED && isDemo(await searchParams);
-  const [metrics, skills, origins, demand] = await Promise.all([
+  const reads = await Promise.all([
     trackerMetrics(demo),
     skillBreakdown(demo),
     originBreakdown(demo),
     demandTotals(demo),
   ]);
 
+  // Every figure on this page is a count, and a count nobody could read is not
+  // a zero. When any read failed the page says so rather than presenting a
+  // confident table of zeros during an outage.
+  const unavailable = reads.some((read) => read.state !== "ok");
+  const [metrics, skills, origins, demand] = [
+    dataOr(reads[0], []),
+    dataOr(reads[1], []),
+    dataOr(reads[2], []),
+    dataOr(reads[3], []),
+  ];
+
   return (
     <div className="page">
       <h1 className="h1 h1--page">{t.trackerTitle}</h1>
+      {unavailable ? (
+        <p className="notice notice--warn" role="alert">
+          {extra.boardUnavailable}
+        </p>
+      ) : null}
       <p className="intro" style={{ marginBottom: 20 }}>
         {t.trackerIntro}
       </p>

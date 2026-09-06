@@ -97,6 +97,85 @@ function fromError(name: string, error: { message: string; code?: string } | nul
   return { name, ok: false, detail: `${code}${error.message}${hint}` };
 }
 
+/**
+ * Migration state, read from the ledger view rather than probed.
+ *
+ * The page used to answer "can this deployment write?" by INSERTing a fake
+ * volunteer registration into `submissions` and deleting it again — during a
+ * GET. Two things were wrong with that. A GET that writes can be replayed by
+ * anything that follows links: a browser prefetch, a link scanner, a preview
+ * bot. And when the delete failed, a row called "Diagnostic probe" was left
+ * sitting in the middle of real registrations, where the next person to export
+ * the volunteer list would find it.
+ *
+ * `migration_state` (supabase/011-intake-integrity.sql) reports the same facts
+ * from the catalogs. Write permission is inferred from the GRANT layer instead,
+ * which is what the failing case actually was.
+ */
+async function migrationChecks(
+  client: ReturnType<typeof supabaseAdmin>
+): Promise<Check[]> {
+  const { data, error } = await client
+    .from("migration_state")
+    .select("migration, detail, applied")
+    .order("migration");
+
+  if (error) {
+    return [
+      fromError("Migration ledger (migration 011)", error),
+      {
+        name: "Migration state",
+        ok: false,
+        detail:
+          "Cannot read migration_state, so individual migrations cannot be reported. " +
+          "Run supabase/011-intake-integrity.sql.",
+      },
+    ];
+  }
+
+  const rows = (data ?? []) as Array<{ migration: string; detail: string; applied: boolean }>;
+  return rows.map((row) => ({
+    name: `Migration ${row.migration} — ${row.detail}`,
+    ok: row.applied,
+    detail: row.applied ? "Applied" : `Not applied. Run supabase/${row.migration}-*.sql.`,
+  }));
+}
+
+/**
+ * Whether service_role actually holds INSERT on `submissions`.
+ *
+ * Read from `information_schema.role_table_grants`, so it answers the question
+ * the write probe was really asking — "would the public form's insert be
+ * refused?" — without performing the insert. This is the check that catches a
+ * project missing supabase/003-service-role-grants.sql.
+ */
+async function writePrivilegeCheck(
+  client: ReturnType<typeof supabaseAdmin>
+): Promise<Check> {
+  const { data, error } = await client.rpc("has_submissions_insert");
+
+  if (error) {
+    // The helper is optional: a project that has not run migration 011 still
+    // gets every other check rather than a broken page.
+    return {
+      name: "Write privilege (submissions)",
+      ok: false,
+      detail:
+        `Could not confirm INSERT privilege (${error.code ?? "unknown"}). ` +
+        "Run supabase/011-intake-integrity.sql, then re-check.",
+    };
+  }
+
+  return {
+    name: "Write privilege (submissions)",
+    ok: data === true,
+    detail:
+      data === true
+        ? "service_role holds INSERT on submissions. Forms can save."
+        : "service_role has no INSERT on submissions. Run supabase/003-service-role-grants.sql.",
+  };
+}
+
 export default async function DiagnosticsPage() {
   const checks: Check[] = [describeKey(process.env.SUPABASE_SERVICE_ROLE_KEY)];
   const client = supabaseAdmin();
@@ -104,26 +183,7 @@ export default async function DiagnosticsPage() {
   const base = await client.from("submissions").select("id").limit(1);
   checks.push(fromError("Read submissions", base.error));
 
-  // Present only after supabase/002-public-board.sql has been run. 42703
-  // (undefined_column) here means that migration has not been applied.
-  const migrated = await client.from("submissions").select("id, skills, people_needed").limit(1);
-  checks.push(fromError("Migration 002 columns (skills, people_needed)", migrated.error));
-
-  const interests = await client.from("interests").select("id").limit(1);
-  checks.push(fromError("Migration 002 table (interests)", interests.error));
-
-  // 42P01 (undefined_table) here means the tracker's three breakdown cards
-  // fall back to their zeroed tables rather than the page going down.
-  const breakdowns = await client.from("volunteer_skill_counts").select("skill").limit(1);
-  checks.push(fromError("Migration 005 views (tracker breakdowns)", breakdowns.error));
-
-  // Without this the profile cannot tell whose interest is whose, and matching
-  // would fall back to a contact detail two people can share.
-  const interestOwner = await client.from("interests").select("user_id").limit(1);
-  checks.push(fromError("Migration 007 column (interests.user_id)", interestOwner.error));
-
-  const bugs = await client.from("bug_reports").select("id").limit(1);
-  checks.push(fromError("Migration 008 tables (bug reports)", bugs.error));
+  checks.push(...(await migrationChecks(client)));
 
   const allowlist = await adminAllowlistReady();
   checks.push({
@@ -132,27 +192,7 @@ export default async function DiagnosticsPage() {
     detail: allowlist.detail,
   });
 
-  // The exact path the public volunteer form takes. Written and removed again,
-  // so this reproduces the real failure without leaving a row behind.
-  const probe = await client
-    .from("submissions")
-    .insert({
-      kind: "volunteer",
-      lang: "en",
-      fields: { diagnostic: true },
-      org_or_name: "Diagnostic probe",
-      skills: null,
-      people_needed: null,
-    })
-    .select("id")
-    .single();
-
-  if (probe.error) {
-    checks.push(fromError("Write a submission", probe.error));
-  } else {
-    await client.from("submissions").delete().eq("id", probe.data.id);
-    checks.push({ name: "Write a submission", ok: true, detail: "Inserted and removed. OK" });
-  }
+  checks.push(await writePrivilegeCheck(client));
 
   const failing = checks.filter((c) => !c.ok);
 

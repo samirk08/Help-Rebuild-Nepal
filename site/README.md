@@ -190,10 +190,15 @@ Supabase/Vercel account and can't be scripted from here:
    project URL, anon key and service role key from Project Settings -> API.
 2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once,
    then each numbered migration beside it in order (`002-public-board.sql`
-   through `006-recover-blanked-selects.sql`). Every migration is safe to
+   through `011-intake-integrity.sql`). Every migration is safe to
    re-run, so running the whole set again on an existing project is fine.
+   Admin -> Diagnostics reports which ones this deployment actually has;
+   a migration file existing in the repository is not evidence it has run.
 3. Create a **private** Storage bucket named `submissions` (Storage -> New
    bucket -> uncheck "Public bucket").
+3a. In Auth -> Providers -> Email, keep email sign-in enabled. The volunteer
+   account claim sends a one-time code through it (see "Claiming an account"
+   below), and password recovery uses the same provider.
 4. Invite each teammate in Auth -> Users -> Invite user.
 5. Import this repo into Vercel; add the five environment variables above in
    the project's Settings -> Environment Variables.
@@ -201,6 +206,78 @@ Supabase/Vercel account and can't be scripted from here:
    the DNS records it shows you.
 7. If a GitHub Pages source was ever configured for this repo (Settings ->
    Pages), turn it off — Vercel is the only deploy target now.
+
+## Intake, accounts and uploads
+
+Three rules govern everything that writes to the database. They are stated here
+because each replaced something that looked like a safeguard but was not.
+
+**Claiming an account is proved by the mailbox, not by holding an id.** A
+registration is attached to an `auth.users` row only after a one-time code sent
+to the address on that registration comes back. Submission ids travel in URLs
+and forwarded links, so they are not secrets; the previous flow created an
+`email_confirm: true` account for anyone who had one. Because mailbox control
+is now the actual control, there is no time limit on claiming — someone
+returning to a months-old registration can claim it rather than registering
+again. `/api/account/claim/start` answers identically whether the submission is
+unknown, belongs to a different mailbox, or is already claimed, so it cannot be
+walked to discover which addresses have accounts. `lib/account-claim.ts` holds
+the rules; `lib/account-claim-ports.ts` wires them to Supabase.
+
+**Uploading requires a capability, not an existing row.** `/api/submissions`
+returns a short-lived signed ticket (`lib/upload-tickets.ts`) bound to the row
+it created; an authenticated owner's session works too and is preferred. Both
+upload routes check one of those before signing anything. After the bytes land,
+`/api/uploads/confirm` fetches the object's first 32 bytes through a signed URL
+and identifies the file from them — a `.png` extension and an `image/png`
+declaration are both caller-supplied and neither is checked against the
+content. Limits: 8 files, 10MB each, 40MB per submission, counted against what
+the submission already holds so a second request cannot reset them.
+
+**Duplicate submissions are prevented by a unique index.** Each form generates
+one idempotency key and resends it unchanged on retry, so a dropped response
+resolves to the row that already exists. The previous approach compared the
+last 25 rows in JavaScript, which two simultaneous requests both pass.
+
+### Running the checks
+
+From `site/`:
+
+```bash
+npm run typecheck    # tsc --noEmit
+npm test             # compiles tests/ then runs node --test
+npm run build        # next build
+```
+
+`npm test` needs no Supabase project and sends no mail. Everything with a rule
+in it — intake validation, the claim rules, upload policy and tickets, the
+publication rule — is a pure module tested against fakes (`tests/helpers.ts`).
+Anything whose guarantee is the *database's* — idempotency, document
+uniqueness, the migration ledger — runs against a real Postgres in-process via
+PGlite (`tests/intake-db.test.ts`, `tests/matching-db.test.ts`), because a
+constraint can only be tested by the thing that enforces it.
+
+### Email in development
+
+No test or local run sends production mail.
+
+- The matching worker keeps every outbound message in the `matching_email_outbox`
+  table and only delivers when `MATCHING_EMAIL_ENABLED=1`. Left at `0`, messages
+  queue and can be inspected; `tests/matching.test.ts` asserts that a mocked
+  provider still cannot send while it is off.
+- The account claim and password recovery go through Supabase Auth's own email
+  provider, so they send only from an environment with real Supabase
+  credentials. The claim rules are tested against a fake mailbox instead.
+
+### Diagnostics
+
+Admin -> Diagnostics reports configuration and migration state, and is
+read-only. It used to insert a fake volunteer registration and delete it again
+to test whether writes worked — on a GET, which anything that follows links can
+replay, and which left a row named "Diagnostic probe" among real registrations
+whenever the delete failed. It now reads the `migration_state` view and asks
+the grant layer whether `service_role` holds INSERT, which is what the probe
+was really testing.
 
 ## Additions beyond the design
 

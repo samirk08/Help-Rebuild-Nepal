@@ -1,3 +1,10 @@
+import {
+  PUBLISHED_STATUSES as SHARED_PUBLISHED_STATUSES,
+  canAcceptInterest,
+  ok,
+  unavailable,
+  type ReadResult,
+} from "./publication";
 import { supabaseAdmin } from "./supabase";
 
 /**
@@ -22,8 +29,16 @@ import { supabaseAdmin } from "./supabase";
  *    can help. Admin screens still see all of it.
  */
 
-/** Statuses a verifier has acted on — the only ones the public site shows. */
-export const PUBLISHED_STATUSES = ["verified", "recruiting", "filled", "completed"] as const;
+/**
+ * Statuses a verifier has acted on — the only ones the public site shows.
+ *
+ * Re-exported from lib/publication.ts rather than declared again. The board,
+ * the detail page, the interest route and the public counts each used to carry
+ * their own copy of this list, and they had drifted: a need rejected after
+ * publication vanished from the board while staying reachable at its own URL
+ * and still collecting offers of help.
+ */
+export const PUBLISHED_STATUSES = SHARED_PUBLISHED_STATUSES;
 
 /** Sentinel for the status dropdown's one non-status entry. */
 export const COMMUNITY_REPORTED = "community-reported";
@@ -85,6 +100,12 @@ export type PublicNeedRow = {
   committed: number;
   communityReported: boolean;
   createdAt: string;
+  /**
+   * Whether this need can still take an offer of help. `filled` and
+   * `completed` are published but closed, and the difference has to reach the
+   * UI or the button gets rendered on a request nobody can join.
+   */
+  open: boolean;
 };
 
 export type PublicNeedDetail = PublicNeedRow & {
@@ -155,6 +176,7 @@ function toRow(row: Row, committed: number): PublicNeedRow {
     committed,
     communityReported: isCommunityReported(row.fields),
     createdAt: row.created_at,
+    open: canAcceptInterest(row.status),
   };
 }
 
@@ -170,7 +192,16 @@ async function committedByNeed(ids: string[]): Promise<Map<string, number>> {
   return counts;
 }
 
-export async function listPublicNeeds(filters: NeedFilters = {}): Promise<PublicNeedRow[]> {
+/**
+ * The board's rows, or an explicit statement that the read failed.
+ *
+ * This used to `return []` on error, so a database outage and "nobody has
+ * posted a need yet" rendered as the same encouraging empty state. They are
+ * different facts and the page has to be able to tell them apart.
+ */
+export async function listPublicNeeds(
+  filters: NeedFilters = {}
+): Promise<ReadResult<PublicNeedRow[]>> {
   let query = supabaseAdmin()
     .from("submissions")
     .select("id, org_or_name, district, province, urgency, status, skills, people_needed, created_at, fields")
@@ -198,12 +229,12 @@ export async function listPublicNeeds(filters: NeedFilters = {}): Promise<Public
   const { data, error } = await query;
   if (error) {
     console.error("listPublicNeeds failed", error);
-    return [];
+    return unavailable(error.code ?? "read_failed");
   }
 
   const rows = (data ?? []) as Row[];
   const committed = await committedByNeed(rows.map((r) => r.id));
-  return rows.map((row) => toRow(row, committed.get(row.id) ?? 0));
+  return ok(rows.map((row) => toRow(row, committed.get(row.id) ?? 0)));
 }
 
 export async function getPublicNeed(id: string): Promise<PublicNeedDetail | null> {

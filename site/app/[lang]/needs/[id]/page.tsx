@@ -52,7 +52,9 @@ export default async function NeedDetailPage({
   const need = isExample ? null : await getPublicNeed(id);
   if (!isExample && !need) notFound();
 
-  const facts = need ? realFacts(need, tr) : DETAIL_FACTS.map((f) => ({ k: tr(f.k), v: tr(f.v) }));
+  const facts = need
+    ? realFacts(need, tr, a.valueNotSpecified)
+    : DETAIL_FACTS.map((f) => ({ k: tr(f.k), v: tr(f.v) }));
   const title = need ? `${tr(needSummary(need))} — ${needLocation(need)}` : t.detailTitle;
   const meta = need ? metaLine(need, lang) : t.detailMeta;
   const body = need ? (need.whatToDo ?? "—") : t.detailBody;
@@ -69,20 +71,48 @@ export default async function NeedDetailPage({
           <div className="badges">
             {need?.communityReported ? (
               <span className="badge badge--muted">{a.needsCommunityReported}</span>
+            ) : need ? (
+              // The row's own status, not a fixed "Verified". A filled or
+              // completed request was rendered as still verified and open,
+              // which is the state a reader most needs to know is wrong.
+              <span
+                className={`badge ${need.open ? "badge--verified" : "badge--muted"}`}
+              >
+                {need.open ? (
+                  <span
+                    className="dot dot--xs"
+                    style={{ ["--dot-color" as string]: "var(--green)" }}
+                  />
+                ) : null}
+                {tr(statusLabel(need.status))}
+              </span>
             ) : (
               <span className="badge badge--verified">
                 <span className="dot dot--xs" style={{ ["--dot-color" as string]: "var(--green)" }} />
-                {need ? tr("Verified") : t.verifiedBadge}
+                {t.verifiedBadge}
               </span>
             )}
-            {(need?.urgency ?? "Immediate") === "Immediate" ? (
+            {/* No urgency recorded means no urgency badge. It used to default
+                to "Immediate", inventing the single most consequential claim
+                on the page out of a missing answer. */}
+            {need ? (
+              need.urgency === "Immediate" ? (
+                <span className="badge badge--urgent">
+                  <span
+                    className="dot dot--xs"
+                    style={{ ["--dot-color" as string]: "var(--red-dot)" }}
+                  />
+                  {tr("Immediate")}
+                </span>
+              ) : need.urgency ? (
+                <span className="badge badge--muted">{tr(need.urgency)}</span>
+              ) : null
+            ) : (
               <span className="badge badge--urgent">
                 <span className="dot dot--xs" style={{ ["--dot-color" as string]: "var(--red-dot)" }} />
-                {need ? tr("Immediate") : t.immediateBadge}
+                {t.immediateBadge}
               </span>
-            ) : need?.urgency ? (
-              <span className="badge badge--muted">{tr(need.urgency)}</span>
-            ) : null}
+            )}
           </div>
           <h1 className="detail__title">{title}</h1>
           <p className="detail__meta">{meta}</p>
@@ -121,16 +151,26 @@ export default async function NeedDetailPage({
             <h2 className="eyebrow--label" style={{ marginBottom: 14 }}>
               {t.positions}
             </h2>
+            {/* "4" used to stand in for an unanswered headcount, so a request
+                that never said how many people it needed advertised a number
+                nobody had given. A missing answer now says so. */}
             <p className="detail__count">
               {need?.committed ?? 0}
-              <span>/{need?.peopleNeeded ?? 4}</span>
+              {need && need.peopleNeeded === null ? null : (
+                <span>/{need?.peopleNeeded ?? 4}</span>
+              )}
             </p>
             <p style={{ fontSize: 13.5, color: "var(--muted)", margin: "6px 0 14px" }}>
-              {t.committed}
+              {need && need.peopleNeeded === null ? a.valueNotSpecified : t.committed}
             </p>
             <div className="meter" style={{ marginBottom: 24 }} />
 
-            {need ? (
+            {need && !need.open ? (
+              <div className="notice notice--warn" role="status">
+                <strong>{a.needClosedTitle}</strong>
+                <p style={{ margin: "6px 0 0" }}>{a.needClosedBody}</p>
+              </div>
+            ) : need ? (
               <>
                 <InterestButton
                   lang={lang}
@@ -184,11 +224,46 @@ function metaLine(need: PublicNeedDetail, lang: string): string {
 }
 
 /**
- * The same fact rows the design's example shows, from a real submission.
- * Unanswered optional fields are dropped rather than rendered as "—", so the
- * list stays readable on a sparsely-filled request.
+ * The status a reader sees, in the vocabulary the board already uses.
+ *
+ * Derived from the row rather than hard-coded to "Verified", which is what the
+ * page showed for every published need including the ones already filled.
  */
-function realFacts(need: PublicNeedDetail, tr: (v: string) => string) {
+function statusLabel(status: string): string {
+  switch (status) {
+    case "recruiting":
+      return "Recruiting";
+    case "filled":
+      return "Filled";
+    case "completed":
+      return "Completed";
+    default:
+      return "Verified";
+  }
+}
+
+/**
+ * The facts a volunteer decides on. These are always listed, and an unanswered
+ * one says "Not specified" rather than disappearing: a row that is simply
+ * absent reads as "does not apply here", which is a different claim from "we
+ * never asked" and can be the difference between travelling and not.
+ */
+const DECISIVE_FACTS = new Set([
+  "Skill required",
+  "Experience level",
+  "Duration",
+  "Start date",
+  "Accommodation",
+  "Transport",
+]);
+
+/**
+ * The same fact rows the design's example shows, from a real submission.
+ *
+ * Optional extras stay dropped when unanswered so the list is readable on a
+ * sparsely-filled request; the decisive ones above never are.
+ */
+function realFacts(need: PublicNeedDetail, tr: (v: string) => string, notSpecified: string) {
   const rows: Array<{ k: string; v: string }> = [
     { k: "Skill required", v: need.skills.map(tr).join(", ") },
     { k: "Experience level", v: need.experience ?? "" },
@@ -203,5 +278,7 @@ function realFacts(need: PublicNeedDetail, tr: (v: string) => string) {
     { k: "Resources required", v: need.resources.map(tr).join(", ") },
   ];
 
-  return rows.filter((r) => r.v).map((r) => ({ k: tr(r.k), v: tr(r.v) }));
+  return rows
+    .filter((r) => r.v || DECISIVE_FACTS.has(r.k))
+    .map((r) => ({ k: tr(r.k), v: r.v ? tr(r.v) : notSpecified }));
 }

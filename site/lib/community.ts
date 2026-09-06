@@ -1,4 +1,5 @@
 import { PRIMARY_SKILL_KEY } from "./networks";
+import { isPublicProject, ok, unavailable, type ReadResult } from "./publication";
 import { NETWORKS } from "./site-data";
 import { supabaseAdmin } from "./supabase";
 
@@ -68,26 +69,34 @@ type ProjectRow = {
     district: string | null;
     skills: string[] | null;
     people_needed: number | null;
+    kind: string | null;
+    status: string | null;
   } | null;
 };
 
 /**
  * Standing projects, with the need each was promoted from.
  *
- * A project is only as public as the need behind it, so anything whose need is
- * missing is dropped rather than rendered as an untitled row.
+ * A project is only as public as the need behind it. That was stated in this
+ * comment but not enforced: the query dropped projects whose need row was
+ * missing, and published every other one regardless of the need's status. A
+ * need rejected or withdrawn after promotion kept its project on the public
+ * page. `isPublicProject` applies the same rule the board applies, so the two
+ * cannot drift apart again.
  */
-export async function listProjects(): Promise<PublicProject[]> {
+export async function listProjects(): Promise<ReadResult<PublicProject[]>> {
   const client = supabaseAdmin();
 
   const { data, error } = await client
     .from("projects")
-    .select("id, stage, coordinator, need_id, submissions:need_id(org_or_name, district, skills, people_needed)")
+    .select(
+      "id, stage, coordinator, need_id, submissions:need_id(org_or_name, district, skills, people_needed, kind, status)"
+    )
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("listProjects failed", error);
-    return [];
+    return unavailable(error.code ?? "read_failed");
   }
 
   const rows = (data ?? []).map((row) => ({
@@ -97,8 +106,10 @@ export async function listProjects(): Promise<PublicProject[]> {
     submissions: Array.isArray(row.submissions) ? row.submissions[0] : row.submissions,
   })) as ProjectRow[];
 
-  const withNeed = rows.filter((row) => row.submissions);
-  if (withNeed.length === 0) return [];
+  const withNeed = rows.filter((row) =>
+    isPublicProject({ stage: row.stage, need: row.submissions })
+  );
+  if (withNeed.length === 0) return ok([]);
 
   const { data: matches } = await client
     .from("matches")
@@ -110,17 +121,19 @@ export async function listProjects(): Promise<PublicProject[]> {
     committed.set(match.need_id, (committed.get(match.need_id) ?? 0) + 1);
   }
 
-  return withNeed.map((row) => {
-    const need = row.submissions!;
-    const skills = need.skills ?? [];
-    return {
-      id: row.id,
-      stage: row.stage,
-      coordinator: row.coordinator,
-      title: need.org_or_name ?? (skills[0] ?? "Project"),
-      district: need.district,
-      committed: committed.get(row.need_id) ?? 0,
-      peopleNeeded: need.people_needed,
-    };
-  });
+  return ok(
+    withNeed.map((row) => {
+      const need = row.submissions!;
+      const skills = need.skills ?? [];
+      return {
+        id: row.id,
+        stage: row.stage,
+        coordinator: row.coordinator,
+        title: need.org_or_name ?? (skills[0] ?? "Project"),
+        district: need.district,
+        committed: committed.get(row.need_id) ?? 0,
+        peopleNeeded: need.people_needed,
+      };
+    })
+  );
 }

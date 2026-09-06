@@ -1,4 +1,5 @@
 import { DEMO_COUNTS, TRACKER_LABELS } from "./content";
+import { ok, unavailable, type ReadResult } from "./publication";
 import { DEMAND, EXPERTISE, LOCATIONS } from "./site-data";
 import { supabaseAdmin } from "./supabase";
 
@@ -20,14 +21,14 @@ const CONTRIBUTE_FIELD = "s02-how-you-can-contribute";
  * stay at zero until either a form field exists to ask it directly or an
  * admin tags it — a wrong number here would be worse than an honest zero.
  */
-export async function trackerMetrics(demo: boolean): Promise<Metric[]> {
+export async function trackerMetrics(demo: boolean): Promise<ReadResult<Metric[]>> {
   if (demo) {
-    return TRACKER_LABELS.map((label, i) => ({ label, value: DEMO_COUNTS[i] ?? 0 }));
+    return ok(TRACKER_LABELS.map((label, i) => ({ label, value: DEMO_COUNTS[i] ?? 0 })));
   }
 
   const client = supabaseAdmin();
 
-  const [{ count: total }, { count: remote }, { count: offeringTime }] = await Promise.all([
+  const [totalRead, remoteRead, offeringRead] = await Promise.all([
     client.from("submissions").select("id", { count: "exact", head: true }).eq("kind", "volunteer"),
     client
       .from("submissions")
@@ -41,8 +42,17 @@ export async function trackerMetrics(demo: boolean): Promise<Metric[]> {
       .contains("fields", { [CONTRIBUTE_FIELD]: ["I can contribute time"] }),
   ]);
 
-  const values = [total ?? 0, remote ?? 0, 0, 0, offeringTime ?? 0];
-  return TRACKER_LABELS.map((label, i) => ({ label, value: values[i] ?? 0 }));
+  // A count that could not be read is not a zero. Reporting one would tell
+  // the page "nobody has registered", which during an outage is the most
+  // damaging thing this page can say.
+  const failure = [totalRead, remoteRead, offeringRead].find((read) => read.error);
+  if (failure?.error) {
+    console.error("trackerMetrics failed", failure.error);
+    return unavailable(failure.error.code ?? "read_failed");
+  }
+
+  const values = [totalRead.count ?? 0, remoteRead.count ?? 0, 0, 0, offeringRead.count ?? 0];
+  return ok(TRACKER_LABELS.map((label, i) => ({ label, value: values[i] ?? 0 })));
 }
 
 /** A labelled row with a bar behind it: the two breakdown cards on the tracker. */
@@ -93,8 +103,8 @@ function percent(count: number, total: number): number {
  * them into "Other" would report them as having a skill outside the seven
  * named ones — which is a claim about a person who made no claim.
  */
-export async function skillBreakdown(demo: boolean): Promise<BreakdownRow[]> {
-  if (demo) return emptyExpertise();
+export async function skillBreakdown(demo: boolean): Promise<ReadResult<BreakdownRow[]>> {
+  if (demo) return ok(emptyExpertise());
 
   const { data, error } = await supabaseAdmin()
     .from("volunteer_skill_counts")
@@ -102,7 +112,7 @@ export async function skillBreakdown(demo: boolean): Promise<BreakdownRow[]> {
 
   if (error) {
     console.error("skillBreakdown failed", error);
-    return emptyExpertise();
+    return unavailable(error.code ?? "read_failed");
   }
 
   // The view emits one row per distinct answer plus a null row for the blanks,
@@ -128,10 +138,12 @@ export async function skillBreakdown(demo: boolean): Promise<BreakdownRow[]> {
   const other = EXPERTISE.find((label) => !(label in SKILL_BUCKETS));
   const remainder = Math.max(0, answered - named);
 
-  return EXPERTISE.map((label) => {
-    const count = label === other ? remainder : (counts.get(label) ?? 0);
-    return { label, count, percent: percent(count, answered) };
-  });
+  return ok(
+    EXPERTISE.map((label) => {
+      const count = label === other ? remainder : (counts.get(label) ?? 0);
+      return { label, count, percent: percent(count, answered) };
+    })
+  );
 }
 
 /** How many places the "Registered from" card names before rolling the rest up. */
@@ -157,19 +169,19 @@ function emptyLocations(): BreakdownRow[] {
  * Volunteers who left the field blank are left out entirely rather than shown
  * as an unnamed place: a missing answer is not a location.
  */
-export async function originBreakdown(demo: boolean): Promise<BreakdownRow[]> {
-  if (demo) return emptyLocations();
+export async function originBreakdown(demo: boolean): Promise<ReadResult<BreakdownRow[]>> {
+  if (demo) return ok(emptyLocations());
 
   const { data, error } = await supabaseAdmin()
     .from("volunteer_origin_counts")
     .select("origin, volunteers");
 
-  // An unreachable view falls back to the design's table rather than to an
-  // empty list: no rows is how the page says "nobody has registered yet", and
-  // a failed query is not evidence of that.
+  // An unreachable view is reported as unreachable. It used to fall back to
+  // the design's zeroed table, which is indistinguishable from "nobody has
+  // registered yet" — and a failed query is not evidence of that.
   if (error) {
     console.error("originBreakdown failed", error);
-    return emptyLocations();
+    return unavailable(error.code ?? "read_failed");
   }
 
   const places = ((data ?? []) as Array<{ origin: string | null; volunteers: number | null }>)
@@ -188,7 +200,7 @@ export async function originBreakdown(demo: boolean): Promise<BreakdownRow[]> {
     rows.push({ label: ORIGIN_OTHER, count, percent: percent(count, total) });
   }
 
-  return rows;
+  return ok(rows);
 }
 
 /**
@@ -202,8 +214,8 @@ export async function originBreakdown(demo: boolean): Promise<BreakdownRow[]> {
  * outstanding — and "Volunteers matched" beside it is the other half of that
  * subtraction.
  */
-export async function demandTotals(demo: boolean): Promise<Metric[]> {
-  if (demo) return DEMAND.map((row) => ({ label: row.label, value: Number(row.value) || 0 }));
+export async function demandTotals(demo: boolean): Promise<ReadResult<Metric[]>> {
+  if (demo) return ok(DEMAND.map((row) => ({ label: row.label, value: Number(row.value) || 0 })));
 
   const client = supabaseAdmin();
   const [totals, { count: matched }, { count: projectsCompleted }] = await Promise.all([
@@ -212,7 +224,10 @@ export async function demandTotals(demo: boolean): Promise<Metric[]> {
     client.from("projects").select("id", { count: "exact", head: true }).eq("stage", "completed"),
   ]);
 
-  if (totals.error) console.error("demandTotals failed", totals.error);
+  if (totals.error) {
+    console.error("demandTotals failed", totals.error);
+    return unavailable(totals.error.code ?? "read_failed");
+  }
 
   const values = [
     totals.data?.active_requests ?? 0,
@@ -222,7 +237,7 @@ export async function demandTotals(demo: boolean): Promise<Metric[]> {
     projectsCompleted ?? 0,
   ];
 
-  return DEMAND.map((row, i) => ({ label: row.label, value: values[i] ?? 0 }));
+  return ok(DEMAND.map((row, i) => ({ label: row.label, value: values[i] ?? 0 })));
 }
 
 /**

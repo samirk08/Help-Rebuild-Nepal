@@ -7,17 +7,38 @@ import FormFieldView from "@/components/FormField";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
 import type { Dict, Lang } from "@/lib/content";
-import { NEED_SECTIONS, VOLUNTEER_SECTIONS } from "@/lib/form-schema";
-import { submitRequest, type SubmissionKind } from "@/lib/api";
+import { NEED_SECTIONS, VOLUNTEER_SECTIONS, fieldKey, type EnhancedSection } from "@/lib/form-schema";
+import {
+  SubmissionValidationError,
+  newIdempotencyKey,
+  submitRequest,
+  type SubmissionKind,
+} from "@/lib/api";
+import { validateIntake, type FieldError } from "@/lib/intake-schema";
 import { translator } from "@/lib/i18n";
 import { confirmationPath } from "@/lib/routes";
 import { ORGANIZE_OPTIONS, PMDRF_URL } from "@/lib/site-data";
-import { uploadDocuments } from "@/lib/uploads";
+import { uploadDocuments, type UploadOutcome } from "@/lib/uploads";
 
 type Mode = "volunteer" | "post";
 
 /** Sections 1 and 2 start open; the rest are collapsed until asked for. */
 const INITIALLY_OPEN = 2;
+
+/**
+ * A saved submission whose attachments did not all land.
+ *
+ * Held separately from the form state because the request itself has already
+ * succeeded: nothing here should read as "your submission failed", and the
+ * only remaining decision is about the files.
+ */
+type AttachmentState = {
+  submissionId: string;
+  ticket?: string;
+  results: UploadOutcome[];
+  kind: SubmissionKind;
+  retrying: boolean;
+};
 
 export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode; t: Dict }) {
   const router = useRouter();
@@ -34,10 +55,20 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
   const [submitting, setSubmitting] = useState(false);
   const [filled, setFilled] = useState<Record<string, boolean>>({});
   const [revision, setRevision] = useState(0);
+  const [errors, setErrors] = useState<FieldError[]>([]);
+  const [attachments, setAttachments] = useState<AttachmentState | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   // Files live here, not in component state — a picked File never needs to
   // trigger a re-render of the form around it, only to be here when submit runs.
   const pendingFiles = useRef<Record<string, File[]>>({});
+  /**
+   * One key for this filled-in form, generated once and reused on every retry.
+   *
+   * That is what makes a retry safe: if the first request reached the database
+   * but the response was lost, resending the same key resolves to the row that
+   * already exists instead of registering the person twice.
+   */
+  const idempotencyKey = useRef(newIdempotencyKey());
 
   const toggle = (n: string) => setOpen((prev) => ({ ...prev, [n]: !prev[n] }));
   const setAll = (value: boolean) =>
@@ -66,6 +97,11 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
 
   const bump = () => setRevision((r) => r + 1);
 
+  const errorByField = useMemo(
+    () => new Map(errors.map((problem) => [problem.field, messageFor(problem, extra)])),
+    [errors, extra]
+  );
+
   const copy = useMemo(
     () => ({
       kicker: isVolunteer ? "I can help" : "I need support",
@@ -81,27 +117,89 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
     [isVolunteer]
   );
 
+  /**
+   * Puts the person on the first thing that needs fixing.
+   *
+   * A list of errors above a long collapsed form is not actionable — the field
+   * it names may be inside a section that is closed, several screens away. So
+   * the section is opened first, then the control is focused, which also means
+   * a screen reader announces the field and its message rather than just a
+   * count of problems.
+   */
+  function focusFirstError(list: FieldError[]) {
+    const first = list[0];
+    if (!first?.field) return;
+
+    const sectionN = /^s(\d+)-/.exec(first.field)?.[1];
+    if (sectionN) setOpen((prev) => ({ ...prev, [sectionN]: true }));
+
+    // After the section's panel has been un-`inert`ed by the render above;
+    // focusing an inert subtree silently does nothing.
+    requestAnimationFrame(() => {
+      const control = formRef.current?.querySelector<HTMLElement>(
+        `[name="${CSS.escape(first.field)}"]`
+      );
+      control?.focus();
+      control?.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
-    setSubmitting(true);
 
     // Captured before any `await`: React's synthetic event can detach
     // `currentTarget` once the handler yields, so `formRef` is what's safe to
     // use afterward, not `event.currentTarget`.
     const formEl = formRef.current;
-    if (!formEl) {
-      setSubmitting(false);
+    if (!formEl) return;
+
+    const kind: SubmissionKind = isVolunteer ? "volunteer" : "need";
+
+    // The same schema the API applies, run here first so the common mistakes
+    // are caught without a round trip. The server still re-checks everything;
+    // this is a convenience, never the enforcement.
+    const payload: Record<string, string | string[]> = {};
+    for (const [key, value] of new FormData(formEl).entries()) {
+      if (typeof value !== "string") continue;
+      const existing = payload[key];
+      if (existing === undefined) payload[key] = value;
+      else if (Array.isArray(existing)) existing.push(value);
+      else payload[key] = [existing, value];
+    }
+
+    const local = validateIntake(kind, payload);
+    if (!local.ok) {
+      setErrors(local.errors);
+      focusFirstError(local.errors);
       return;
     }
 
-    const kind: SubmissionKind = isVolunteer ? "volunteer" : "need";
+    setErrors([]);
+    setSubmitting(true);
+
     try {
-      const result = await submitRequest(kind, lang, new FormData(formEl));
+      const result = await submitRequest(kind, lang, new FormData(formEl), idempotencyKey.current);
 
       const files = Object.values(pendingFiles.current).flat();
       if (result.id && files.length > 0) {
-        await uploadDocuments(result.id, files);
+        const summary = await uploadDocuments(result.id, files, result.uploadTicket);
+
+        // A partly-failed set of attachments stops the navigation. The request
+        // itself is saved either way — that is what the panel says — so the
+        // choice is retry the files or carry on, and neither one means filling
+        // the form in again.
+        if (summary.failed > 0) {
+          setAttachments({
+            submissionId: result.id,
+            ticket: result.uploadTicket,
+            results: summary.results,
+            kind,
+            retrying: false,
+          });
+          setSubmitting(false);
+          return;
+        }
       }
 
       // Leave for the confirmation page rather than resetting and staying put.
@@ -115,10 +213,36 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       // and re-enabling the button first would reopen exactly that window.
       router.push(confirmationPath(lang, kind, result.id));
     } catch (err) {
+      if (err instanceof SubmissionValidationError) {
+        setErrors(err.errors);
+        focusFirstError(err.errors);
+        setSubmitting(false);
+        return;
+      }
       console.error("Submission failed", err);
       showToast(extra.submitError);
       setSubmitting(false);
     }
+  }
+
+  /** Re-uploads only the files that failed, against the submission that exists. */
+  async function retryAttachments() {
+    if (!attachments || attachments.retrying) return;
+    setAttachments({ ...attachments, retrying: true });
+
+    const failed = attachments.results.filter((r) => r.status === "failed").map((r) => r.file);
+    const summary = await uploadDocuments(attachments.submissionId, failed, attachments.ticket);
+
+    const merged = attachments.results.map((previous) => {
+      if (previous.status === "uploaded") return previous;
+      return summary.results.find((r) => r.file === previous.file) ?? previous;
+    });
+
+    if (merged.every((r) => r.status === "uploaded")) {
+      router.push(confirmationPath(lang, attachments.kind, attachments.submissionId));
+      return;
+    }
+    setAttachments({ ...attachments, results: merged, retrying: false });
   }
 
   return (
@@ -167,6 +291,55 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
         </div>
       </div>
 
+      {errors.length > 0 ? (
+        <div className="notice notice--warn" role="alert" tabIndex={-1}>
+          <strong>{extra.errorSummaryTitle}</strong>
+          <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
+            {errors.map((problem) => (
+              <li key={`${problem.field}-${problem.code}`}>
+                {labelFor(problem.field, sections, tr)}: {messageFor(problem, extra)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {attachments ? (
+        <div className="notice notice--warn" role="status" style={{ marginBottom: 16 }}>
+          <strong>{extra.attachTitle}</strong>
+          <p style={{ margin: "6px 0 10px" }}>{extra.attachIntro}</p>
+          <ul style={{ margin: "0 0 12px", paddingLeft: 20 }}>
+            {attachments.results.map((outcome) => (
+              <li key={`${outcome.file.name}-${outcome.file.size}`}>
+                {outcome.file.name} —{" "}
+                {outcome.status === "uploaded"
+                  ? extra.attachUploaded
+                  : `${extra.attachFailed}${outcome.message ? `: ${outcome.message}` : ""}`}
+              </li>
+            ))}
+          </ul>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn btn--dark"
+              onClick={retryAttachments}
+              disabled={attachments.retrying}
+            >
+              {attachments.retrying ? extra.attachRetrying : extra.attachRetry}
+            </button>
+            <button
+              type="button"
+              className="reset-button linkish"
+              onClick={() =>
+                router.push(confirmationPath(lang, attachments.kind, attachments.submissionId))
+              }
+            >
+              {extra.attachContinue}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {/* Validation stays on so the consent checkbox is genuinely required. */}
       <form ref={formRef} onSubmit={handleSubmit} onChange={bump} onClick={bump}>
         <input type="hidden" name="__form_version" value="2" />
@@ -211,6 +384,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
                         onFilesChange={(name, files) => {
                           pendingFiles.current[name] = files;
                         }}
+                        error={errorByField.get(fieldKey(section.n, field.label))}
                       />
                     ))}
                   </div>
@@ -280,9 +454,20 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
 
           <section className="submitbar">
             <label className="consent">
-              <input type="checkbox" name="consent" required />
+              <input
+                type="checkbox"
+                name="consent"
+                required
+                aria-invalid={errorByField.has("consent") || undefined}
+                aria-describedby={errorByField.has("consent") ? "consent-error" : undefined}
+              />
               <span>{tr(copy.consent)}</span>
             </label>
+            {errorByField.has("consent") ? (
+              <span className="field__error" id="consent-error">
+                {errorByField.get("consent")}
+              </span>
+            ) : null}
             <button type="submit" className="btn btn--dark" disabled={submitting}>
               {tr(copy.cta)} <span aria-hidden="true">→</span>
             </button>
@@ -291,4 +476,49 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       </form>
     </div>
   );
+}
+
+/**
+ * The translated message for one validation code.
+ *
+ * The schema's English text is a fallback, not the string shown: these have to
+ * be readable in Nepali too, and the code is what carries across languages.
+ */
+function messageFor(problem: FieldError, extra: ReturnType<typeof added>): string {
+  switch (problem.code) {
+    case "required":
+      return extra.errRequired;
+    case "too_long":
+      return extra.errTooLong;
+    case "too_short":
+      return extra.errTooShort;
+    case "invalid_email":
+      return extra.errInvalidEmail;
+    case "invalid_phone":
+      return extra.errInvalidPhone;
+    case "invalid_date":
+      return extra.errInvalidDate;
+    case "invalid_option":
+      return extra.errInvalidOption;
+    case "invalid_number":
+      return extra.errInvalidNumber;
+    case "consent_required":
+      return extra.errConsent;
+    default:
+      return problem.message;
+  }
+}
+
+/** The label a person actually saw, so the summary names the field they filled. */
+function labelFor(
+  field: string,
+  sections: EnhancedSection[],
+  tr: (value: string) => string
+): string {
+  for (const section of sections) {
+    for (const candidate of section.fields) {
+      if (fieldKey(section.n, candidate.label) === field) return tr(candidate.label);
+    }
+  }
+  return field;
 }

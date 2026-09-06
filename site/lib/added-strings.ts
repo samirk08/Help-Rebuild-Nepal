@@ -160,6 +160,57 @@ export type AddedStrings = {
   loginError: string;
   loginNoAccount: string;
   loginRegister: string;
+
+  /** Field-level validation, keyed to the codes in lib/intake-schema.ts. */
+  errorSummaryTitle: string;
+  errRequired: string;
+  errTooLong: string;
+  errTooShort: string;
+  errInvalidEmail: string;
+  errInvalidPhone: string;
+  errInvalidDate: string;
+  errInvalidOption: string;
+  errInvalidNumber: string;
+  errConsent: string;
+
+  /** The panel shown when a submission saved but an attachment did not. */
+  attachTitle: string;
+  attachIntro: string;
+  attachRetry: string;
+  attachRetrying: string;
+  attachContinue: string;
+  attachUploaded: string;
+  attachFailed: string;
+
+  /** The two-step, mailbox-verified account claim. */
+  claimCodeStepTitle: string;
+  claimCodeSent: string;
+  claimCodeLabel: string;
+  claimCodeHint: string;
+  claimSendCode: string;
+  claimSendingCode: string;
+  claimCodeInvalid: string;
+  claimStartHint: string;
+  claimUseAnotherEmail: string;
+  recoverTitle: string;
+  recoverIntro: string;
+  recoverSubmit: string;
+  recoverSubmitting: string;
+  recoverSent: string;
+  recoverLink: string;
+
+  /**
+   * States that must never be shown as a zero or as an invented value.
+   * See lib/publication.ts for why these three are kept apart.
+   */
+  boardUnavailable: string;
+  boardUnavailableTitle: string;
+  boardUnavailableCount: string;
+  boardLastUpdated: string;
+  valueNotSpecified: string;
+  valueNotCollected: string;
+  needClosedTitle: string;
+  needClosedBody: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -359,6 +410,55 @@ const ADDED: Record<Lang, AddedStrings> = {
     loginError: "Incorrect email or password.",
     loginNoAccount: "Not registered yet?",
     loginRegister: "Register as a volunteer",
+
+    errorSummaryTitle: "Please check these answers before submitting",
+    errRequired: "This answer is required.",
+    errTooLong: "This answer is too long.",
+    errTooShort: "This answer is too short.",
+    errInvalidEmail: "Enter a valid email address.",
+    errInvalidPhone: "Enter a valid phone number.",
+    errInvalidDate: "Enter a date as YYYY-MM-DD.",
+    errInvalidOption: "Choose one of the offered answers.",
+    errInvalidNumber: "Enter a number above zero.",
+    errConsent: "Please tick the consent box to continue.",
+
+    attachTitle: "Your request was saved. Some files were not attached.",
+    attachIntro:
+      "You do not need to fill the form in again. Retry the files below, or continue without them and send them to us later.",
+    attachRetry: "Retry these files",
+    attachRetrying: "Retrying…",
+    attachContinue: "Continue without them",
+    attachUploaded: "Attached",
+    attachFailed: "Not attached",
+
+    claimCodeStepTitle: "Enter the code we sent you",
+    claimCodeSent:
+      "If that email matches this registration, a six-digit code is on its way. It expires shortly.",
+    claimCodeLabel: "Six-digit code",
+    claimCodeHint: "Check the mailbox for the address on your registration.",
+    claimSendCode: "Send me a code",
+    claimSendingCode: "Sending…",
+    claimCodeInvalid: "That code is not right, or it has expired. Request a new one.",
+    claimStartHint:
+      "We will email a code to confirm the mailbox is yours before linking your registration.",
+    claimUseAnotherEmail: "Use a different email",
+    recoverTitle: "Reset your password",
+    recoverIntro: "We will email a link to set a new password.",
+    recoverSubmit: "Send reset link",
+    recoverSubmitting: "Sending…",
+    recoverSent: "If that email has an account, a reset link is on its way.",
+    recoverLink: "Forgotten your password?",
+
+    boardUnavailable:
+      "We could not load the requests just now. This is a problem at our end, not an empty board — please try again shortly.",
+    boardUnavailableTitle: "Requests are unavailable",
+    boardUnavailableCount: "Count unavailable",
+    boardLastUpdated: "Updated",
+    valueNotSpecified: "Not specified",
+    valueNotCollected: "Not collected",
+    needClosedTitle: "This request is no longer taking offers of help",
+    needClosedBody:
+      "It has been filled or completed. The board lists requests that still need people.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -546,6 +646,55 @@ const ADDED: Record<Lang, AddedStrings> = {
     loginError: "इमेल वा पासवर्ड मिलेन।",
     loginNoAccount: "अझै दर्ता गर्नुभएको छैन?",
     loginRegister: "स्वयंसेवकका रूपमा दर्ता गर्नुहोस्",
+
+    errorSummaryTitle: "पेस गर्नुअघि यी उत्तरहरू जाँच्नुहोस्",
+    errRequired: "यो उत्तर आवश्यक छ।",
+    errTooLong: "यो उत्तर धेरै लामो भयो।",
+    errTooShort: "यो उत्तर धेरै छोटो भयो।",
+    errInvalidEmail: "मान्य इमेल ठेगाना लेख्नुहोस्।",
+    errInvalidPhone: "मान्य फोन नम्बर लेख्नुहोस्।",
+    errInvalidDate: "मिति YYYY-MM-DD ढाँचामा लेख्नुहोस्।",
+    errInvalidOption: "दिइएका विकल्पमध्ये एउटा छान्नुहोस्।",
+    errInvalidNumber: "शून्यभन्दा माथिको संख्या लेख्नुहोस्।",
+    errConsent: "अगाडि बढ्न सहमति बाकसमा चिन्ह लगाउनुहोस्।",
+
+    attachTitle: "तपाईंको अनुरोध सुरक्षित भयो। केही फाइल संलग्न हुन सकेनन्।",
+    attachIntro:
+      "फारम फेरि भर्नुपर्दैन। तलका फाइल पुनः प्रयास गर्नुहोस्, वा तिनीहरूविना अगाडि बढेर पछि पठाउनुहोस्।",
+    attachRetry: "यी फाइल पुनः प्रयास गर्नुहोस्",
+    attachRetrying: "पुनः प्रयास हुँदै…",
+    attachContinue: "तिनीहरूविना अगाडि बढ्नुहोस्",
+    attachUploaded: "संलग्न भयो",
+    attachFailed: "संलग्न भएन",
+
+    claimCodeStepTitle: "हामीले पठाएको कोड लेख्नुहोस्",
+    claimCodeSent:
+      "यदि त्यो इमेल यस दर्तासँग मिल्छ भने छ अङ्कको कोड पठाइँदैछ। यो छिट्टै समाप्त हुन्छ।",
+    claimCodeLabel: "छ अङ्कको कोड",
+    claimCodeHint: "आफ्नो दर्तामा दिइएको ठेगानाको इमेल हेर्नुहोस्।",
+    claimSendCode: "मलाई कोड पठाउनुहोस्",
+    claimSendingCode: "पठाउँदै…",
+    claimCodeInvalid: "त्यो कोड मिलेन, वा समाप्त भयो। नयाँ कोड माग्नुहोस्।",
+    claimStartHint:
+      "दर्ता जोड्नुअघि इमेल तपाईंकै हो भनी पुष्टि गर्न हामी कोड पठाउनेछौं।",
+    claimUseAnotherEmail: "अर्को इमेल प्रयोग गर्नुहोस्",
+    recoverTitle: "पासवर्ड रिसेट गर्नुहोस्",
+    recoverIntro: "नयाँ पासवर्ड राख्न हामी लिंक इमेल गर्नेछौं।",
+    recoverSubmit: "रिसेट लिंक पठाउनुहोस्",
+    recoverSubmitting: "पठाउँदै…",
+    recoverSent: "यदि त्यो इमेलको खाता छ भने रिसेट लिंक पठाइँदैछ।",
+    recoverLink: "पासवर्ड बिर्सनुभयो?",
+
+    boardUnavailable:
+      "अहिले अनुरोधहरू लोड गर्न सकिएन। यो हाम्रो तर्फको समस्या हो, बोर्ड खाली भएको होइन — केही बेरमा फेरि प्रयास गर्नुहोस्।",
+    boardUnavailableTitle: "अनुरोधहरू उपलब्ध छैनन्",
+    boardUnavailableCount: "गणना उपलब्ध छैन",
+    boardLastUpdated: "अद्यावधिक",
+    valueNotSpecified: "उल्लेख गरिएको छैन",
+    valueNotCollected: "सङ्कलन गरिएको छैन",
+    needClosedTitle: "यो अनुरोधले अब सहयोगका प्रस्ताव लिँदैन",
+    needClosedBody:
+      "यो पूरा भइसक्यो वा सम्पन्न भयो। बोर्डमा अझै मानिस चाहिने अनुरोधहरू देखिन्छन्।",
   },
 };
 

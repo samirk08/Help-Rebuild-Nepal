@@ -42,7 +42,19 @@ export default async function NeedsPage({
     status: one(query.status),
   };
 
-  const needs = await listPublicNeeds(filters);
+  const result = await listPublicNeeds(filters);
 
-  return <NeedsBoard lang={lang} t={dict(lang)} needs={needs} filters={filters} />;
+  // An outage is passed through as an outage rather than flattened to an empty
+  // list — "no needs match your filters" and "we cannot reach the database"
+  // must not render as the same page.
+  return (
+    <NeedsBoard
+      lang={lang}
+      t={dict(lang)}
+      needs={result.state === "ok" ? result.data : []}
+      unavailable={result.state !== "ok"}
+      lastUpdated={result.state === "ok" ? result.lastUpdated : null}
+      filters={filters}
+    />
+  );
 }

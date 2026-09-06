@@ -37,7 +37,9 @@ export default async function ProjectsPage({ params }: { params: Promise<{ lang:
   const t = dict(lang);
   const tr = translator(lang);
   const a = added(lang);
-  const projects = await listProjects();
+  const result = await listProjects();
+  const projects = result.state === "ok" ? result.data : [];
+  const unavailable = result.state !== "ok";
 
   return (
     <div className="page">
@@ -46,12 +48,20 @@ export default async function ProjectsPage({ params }: { params: Promise<{ lang:
         {t.projectsIntro}
       </p>
 
+      {unavailable ? (
+        <p className="notice notice--warn" role="alert">
+          {a.boardUnavailable}
+        </p>
+      ) : null}
+
       <div className="grid grid--290 mb-16">
         {PROJECT_PHASES.map((phase) => (
           <div className="card" key={phase.stage}>
             <h2 className="phase__stage">{tr(phase.stage)}</h2>
+            {/* A failed read has no count. Rendering 0 would report "no
+                projects at this stage", which is a claim we cannot make. */}
             <p className="phase__value">
-              {projects.filter((p) => p.stage === STAGE_KEY[phase.stage]).length}
+              {unavailable ? "—" : projects.filter((p) => p.stage === STAGE_KEY[phase.stage]).length}
             </p>
             <p className="phase__body">{tr(phase.body)}</p>
           </div>
