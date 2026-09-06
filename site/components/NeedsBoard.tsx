@@ -44,11 +44,16 @@ export default function NeedsBoard({
   t,
   needs,
   filters,
+  unavailable = false,
+  lastUpdated = null,
 }: {
   lang: Lang;
   t: Dict;
   needs: PublicNeedRow[];
   filters: NeedFilters;
+  /** True when the read failed. Distinct from a successful read of no rows. */
+  unavailable?: boolean;
+  lastUpdated?: string | null;
 }) {
   const tr = translator(lang);
   const a = added(lang);
@@ -89,13 +94,24 @@ export default function NeedsBoard({
   const hasFilters = Boolean(
     filters.province || filters.district || filters.skill || filters.urgency || filters.status
   );
-  const count =
-    needs.length === 1 ? a.needsCountOne : `${needs.length} ${a.needsCountMany}`;
+  // A count is a claim about how many requests exist. When the read failed we
+  // do not know that number, so none is shown rather than an implied zero.
+  const count = unavailable
+    ? a.boardUnavailableCount
+    : needs.length === 1
+      ? a.needsCountOne
+      : `${needs.length} ${a.needsCountMany}`;
 
   return (
     <div className="page">
       <h1 className="h1 h1--page">{t.needsTitle}</h1>
       <p className="intro">{t.needsIntro}</p>
+
+      {unavailable ? (
+        <p className="notice notice--warn" role="alert">
+          {a.boardUnavailable}
+        </p>
+      ) : null}
 
       <form className="filterbar" method="get">
         <Select name="province" label="Province" all="All provinces" value={filters.province} tr={tr}>
@@ -144,7 +160,20 @@ export default function NeedsBoard({
             {a.needsClearFilters}
           </Link>
         ) : null}
-        <p className="filterbar__count">{count}</p>
+        <p className="filterbar__count">
+          {count}
+          {lastUpdated ? (
+            <span className="hint" style={{ marginLeft: 8 }}>
+              {a.boardLastUpdated}{" "}
+              <time dateTime={lastUpdated}>
+                {new Date(lastUpdated).toLocaleTimeString(lang === "np" ? "ne-NP" : "en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </time>
+            </span>
+          ) : null}
+        </p>
       </form>
 
       <div className="card card--flush">
@@ -176,7 +205,14 @@ export default function NeedsBoard({
             </tr>
           </thead>
           <tbody>
-            {sorted.length === 0 ? (
+            {unavailable ? (
+              <tr>
+                <td colSpan={NEED_COLUMNS.length} className="needtable__empty">
+                  <p className="card__title card__title--lg">{a.boardUnavailableTitle}</p>
+                  <p className="card__body">{a.boardUnavailable}</p>
+                </td>
+              </tr>
+            ) : sorted.length === 0 ? (
               <tr>
                 <td colSpan={NEED_COLUMNS.length} className="needtable__empty">
                   <p className="card__title card__title--lg">{t.needsEmptyTitle}</p>

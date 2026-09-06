@@ -9,6 +9,6 @@
     "rootDir": "..",
     "plugins": []
   },
-  "include": ["./*.test.ts", "./fixtures.ts"],
+  "include": ["./*.ts"],
   "exclude": ["../node_modules", "../.next"]
 }

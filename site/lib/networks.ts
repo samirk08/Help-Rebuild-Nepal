@@ -8,8 +8,8 @@ import { currentVolunteer } from "./volunteer-auth";
  *
  * A member is a row in network_members: one account, one network. Two ways in:
  * an explicit click on "Join network", or automatically into your primary-skill
- * network when your registration is claimed (see /api/account/create and the
- * migration's backfill). Registrations never claimed by an account cannot hold
+ * network when your registration is claimed (see /api/account/claim/verify and
+ * the migration's backfill). Registrations never claimed by an account cannot hold
  * a membership row, so the public count adds them by primary skill — the same
  * derivation the page used before joining existed, now only for the rows that
  * cannot join.

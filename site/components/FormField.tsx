@@ -12,6 +12,7 @@ export default function FormFieldView({
   lang,
   tr,
   onFilesChange,
+  error,
 }: {
   field: EnhancedField;
   sectionN: string;
@@ -19,12 +20,20 @@ export default function FormFieldView({
   tr: (value: string) => string;
   /** Only consulted for the "files" widget — see FileUpload's own doc comment. */
   onFilesChange?: (fieldName: string, files: File[]) => void;
+  /** What is wrong with this answer, already translated. */
+  error?: string;
 }) {
   const key = fieldKey(sectionN, field.label);
   const label = tr(field.label);
   const placeholder = field.ph ? tr(field.ph) : undefined;
-  const describedBy = field.note ? `${key}-note` : undefined;
   const extra = added(lang);
+
+  // The message is announced with the field rather than only in the summary
+  // above, so someone tabbing back to a control hears why it was rejected.
+  const errorId = error ? `${key}-error` : undefined;
+  const describedBy =
+    [field.note ? `${key}-note` : null, errorId].filter(Boolean).join(" ") || undefined;
+  const invalid = error ? true : undefined;
 
   // Chip and radio groups label a set of controls, so they use a labelled group
   // rather than a <label> pointing at a single input.
@@ -76,6 +85,7 @@ export default function FormFieldView({
           type="text"
           placeholder={placeholder}
           aria-describedby={describedBy}
+          aria-invalid={invalid}
         />
       ) : null}
 
@@ -87,6 +97,7 @@ export default function FormFieldView({
           name={key}
           defaultValue=""
           aria-describedby={describedBy}
+          aria-invalid={invalid}
         >
           {!isSelectPlaceholder(field.options?.[0]) ? <option value="">{lang === "np" ? "छान्नुहोस्" : "Select…"}</option> : null}
           {(field.options ?? []).map((option, i) => (
@@ -105,6 +116,7 @@ export default function FormFieldView({
           rows={4}
           placeholder={placeholder}
           aria-describedby={describedBy}
+          aria-invalid={invalid}
         />
       ) : null}
 
@@ -133,8 +145,14 @@ export default function FormFieldView({
       ) : null}
 
       {field.note ? (
-        <span className="field__note" id={describedBy}>
+        <span className="field__note" id={`${key}-note`}>
           {tr(field.note)}
+        </span>
+      ) : null}
+
+      {error ? (
+        <span className="field__error" id={errorId}>
+          {error}
         </span>
       ) : null}
     </>
@@ -142,7 +160,15 @@ export default function FormFieldView({
 
   if (isGroup) {
     return (
-      <div className="field" role="group" aria-labelledby={`${key}-legend`} style={{ gridColumn: field.span }}>
+      <div
+        className="field"
+        role="group"
+        aria-labelledby={`${key}-legend`}
+        aria-describedby={describedBy}
+        aria-invalid={invalid}
+        data-invalid={invalid}
+        style={{ gridColumn: field.span }}
+      >
         <span className="field__label" id={`${key}-legend`}>
           {label}
         </span>
@@ -152,7 +178,7 @@ export default function FormFieldView({
   }
 
   return (
-    <div className="field" style={{ gridColumn: field.span }}>
+    <div className="field" data-invalid={invalid} style={{ gridColumn: field.span }}>
       <label className="field__label" htmlFor={key}>
         {label}
       </label>

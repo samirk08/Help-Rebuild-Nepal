@@ -1363,6 +1363,21 @@ textarea:focus-visible {
   color: var(--faint);
 }
 
+/* Validation messages sit with their field, not only in the summary above it.
+   Colour is never the only signal: the message itself is the answer, and the
+   control also carries aria-invalid. */
+.field__error {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--red-dot, #c90026);
+}
+
+.field[data-invalid="true"] .input,
+.field[data-invalid="true"] .select,
+.field[data-invalid="true"] .textarea {
+  border-color: var(--red-dot, #c90026);
+}
+
 .input,
 .select,
 .textarea {

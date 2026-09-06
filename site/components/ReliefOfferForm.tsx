@@ -1,14 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import Combobox from "@/components/Combobox";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
 import { districtOptions } from "@/lib/districts";
-import { submitRequest } from "@/lib/api";
+import { SubmissionValidationError, newIdempotencyKey, submitRequest } from "@/lib/api";
 import { confirmationPath } from "@/lib/routes";
 import {
   EXAMPLE_ITEM_NEED,
@@ -53,6 +53,9 @@ export default function ReliefOfferForm({
   const [target, setTarget] = useState(
     preselect && openNeeds.some((n) => n.id === preselect) ? preselect : ""
   );
+  // One key per filled-in offer, so a retried send resolves to the pledge that
+  // already exists rather than double-counting the supply.
+  const idempotencyKey = useRef(newIdempotencyKey());
   const unmatched = target === UNMATCHED;
   const selectedNeed = openNeeds.find((n) => n.id === target);
   const selectedCategory = categoryById(unmatched ? category : (selectedNeed?.category ?? ""));
@@ -62,11 +65,24 @@ export default function ReliefOfferForm({
     if (submitting) return;
     setSubmitting(true);
     try {
-      const result = await submitRequest("relief-offer", lang, new FormData(event.currentTarget));
+      const result = await submitRequest(
+        "relief-offer",
+        lang,
+        new FormData(event.currentTarget),
+        idempotencyKey.current
+      );
       // Same reasoning as RequestForm: leave for the confirmation page and keep
       // the button disabled while the navigation is in flight.
       router.push(confirmationPath(lang, "relief-offer", result.id));
     } catch (err) {
+      // The server refuses an offer against a need that is already met or no
+      // longer listed. That is a real answer about the request, not an outage,
+      // so it is shown rather than reported as "something went wrong".
+      if (err instanceof SubmissionValidationError) {
+        showToast(err.errors[0]?.message ?? extra.submitError);
+        setSubmitting(false);
+        return;
+      }
       console.error("Relief offer submission failed", err);
       showToast(extra.submitError);
       setSubmitting(false);

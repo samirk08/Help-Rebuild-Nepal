@@ -29,7 +29,11 @@ export default async function HomePage({
   // Awaiting `searchParams` makes this page render on demand, and the demo
   // dataset is off unless the build opts in, so only read the query string
   // when it could change what renders. Everything else here is static.
-  const metrics = await trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
+  const read = await trackerMetrics(DEMO_ALLOWED && isDemo(await searchParams));
+  // The band is a summary with its own page behind it, so a failed read hides
+  // the figures rather than interrupting the home page. Showing zeros here
+  // would be the one thing worse than showing nothing.
+  const metrics = read.state === "ok" ? read.data : [];
 
   return (
     <>

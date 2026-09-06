@@ -105,7 +105,11 @@ export default function VolunteerLoginPage({
           </button>
         </form>
 
-        <p className="hint" style={{ marginTop: 24 }}>
+        <p className="hint" style={{ marginTop: 18 }}>
+          <Link href={`/${currentLang}/account/recover`}>{a.recoverLink}</Link>
+        </p>
+
+        <p className="hint" style={{ marginTop: 12 }}>
           {a.loginNoAccount}{" "}
           <Link href={screenPath(currentLang, "volunteer")}>{a.loginRegister}</Link>
         </p>
