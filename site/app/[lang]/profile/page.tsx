@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import StatusTimeline from "@/components/StatusTimeline";
+import OwnMatchingProfile from "@/components/OwnMatchingProfile";
 import { added, type AddedStrings } from "@/lib/added-strings";
 import { statusLabel } from "@/lib/admin-render";
 import type { Lang } from "@/lib/content";
@@ -178,6 +179,8 @@ function Registered({
           `}</style>
         ) : null}
       </section>
+
+      <OwnMatchingProfile id={reg.id} lang={lang}/>
 
       <div className="grid grid--280">
         {reg.sections.map((section) => (

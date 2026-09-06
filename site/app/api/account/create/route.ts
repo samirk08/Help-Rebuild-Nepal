@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { addMember, networkForSkill, PRIMARY_SKILL_KEY } from "@/lib/networks";
 import { supabaseAdmin } from "@/lib/supabase";
 
 type Body = {
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
   const admin = supabaseAdmin();
   const { data: submission, error: submissionError } = await admin
     .from("submissions")
-    .select("id, kind, user_id, contact_email, created_at")
+    .select("id, kind, user_id, contact_email, created_at, fields")
     .eq("id", body.submissionId)
     .maybeSingle();
 
@@ -133,6 +134,14 @@ export async function POST(request: Request) {
     }
     return failure("submission_claimed", 409);
   }
+
+  // Enrol the new account in its primary-skill network, matching the public
+  // count, which already includes this registration under that skill. Best
+  // effort: the account is created and linked either way, and a person who
+  // lands unenrolled just sees the Join button.
+  const fields = (submission.fields ?? {}) as Record<string, unknown>;
+  const network = networkForSkill(fields[PRIMARY_SKILL_KEY]);
+  if (network) await addMember(created.user.id, network);
 
   return NextResponse.json({ ok: true });
 }

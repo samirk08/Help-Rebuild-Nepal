@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { createMatch, promoteToProject, updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
+import { promoteToProject, updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
+import MatchingPanel from "@/components/MatchingPanel";
 import { documentsFor } from "@/lib/admin-documents";
 import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
 import { NEED_SECTIONS } from "@/lib/form-schema";
@@ -27,7 +28,6 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
     documents,
     { data: matches },
     { data: project },
-    { data: verifiedVolunteers },
     { data: interests },
   ] = await Promise.all([
       Promise.resolve(renderSubmissionFields(row.fields, NEED_SECTIONS)),
@@ -37,13 +37,6 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
         .select("id, status, volunteer_id, submissions:volunteer_id(org_or_name)")
         .eq("need_id", id),
       client.from("projects").select("id, stage, coordinator").eq("need_id", id).maybeSingle(),
-      client
-        .from("submissions")
-        .select("id, org_or_name")
-        .eq("kind", "volunteer")
-        .in("status", ["verified", "recruiting"])
-        .order("org_or_name")
-        .limit(300),
       client
         .from("interests")
         .select("id, name, contact, message, created_at")
@@ -143,6 +136,8 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
         </>
       ) : null}
 
+      <MatchingPanel need={row}/>
+
       {/* People who clicked "I can help with this" on the public board. Their
           contact details are only ever shown here, never on the public page. */}
       <h2 className="admin-section-title">Expressed interest</h2>
@@ -195,24 +190,6 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
           <p className="admin-empty admin-empty--inline">No volunteer matched yet.</p>
         )}
       </div>
-      {verifiedVolunteers && verifiedVolunteers.length > 0 ? (
-        <form action={createMatch} className="admin-form-row" style={{ marginBottom: 24 }}>
-          <input type="hidden" name="needId" value={id} />
-          <select name="volunteerId" required defaultValue="" aria-label="Volunteer to match">
-            <option value="" disabled>
-              Choose a volunteer…
-            </option>
-            {verifiedVolunteers.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.org_or_name ?? v.id}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className="btn btn--outline btn--sm">
-            Mark matched
-          </button>
-        </form>
-      ) : null}
 
       <h2 className="admin-section-title">Project</h2>
       <div className="admin-detail">

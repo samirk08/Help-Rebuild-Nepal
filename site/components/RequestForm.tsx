@@ -169,6 +169,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
 
       {/* Validation stays on so the consent checkbox is genuinely required. */}
       <form ref={formRef} onSubmit={handleSubmit} onChange={bump} onClick={bump}>
+        <input type="hidden" name="__form_version" value="2" />
         <div className="form-sections">
           {sections.map((section) => (
             <section className="fsection" key={section.n}>

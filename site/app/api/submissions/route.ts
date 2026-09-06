@@ -208,6 +208,13 @@ export async function POST(request: Request) {
   // strings, and relief-offer just returned — this narrows what's left.
   const kind = body.kind as "volunteer" | "need";
   const normalized = normalizeChipFields(kind, fields);
+  // Record the form version without treating it as proof of qualifications.
+  // Older open browser tabs remain legacy submissions.
+  if (fields.__form_version === "2") normalized.__form_version = 2;
+  else delete normalized.__form_version;
+  if (fields.consent !== "on") {
+    return NextResponse.json({ error: "Coordination consent is required" }, { status: 400 });
+  }
   const columns = COLUMN_FIELDS[kind];
 
   // A repeat of something just submitted is the same submission, not a new

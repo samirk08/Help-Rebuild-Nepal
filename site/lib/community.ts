@@ -1,3 +1,4 @@
+import { PRIMARY_SKILL_KEY } from "./networks";
 import { NETWORKS } from "./site-data";
 import { supabaseAdmin } from "./supabase";
 
@@ -6,15 +7,17 @@ import { supabaseAdmin } from "./supabase";
  * skill networks and standing projects.
  */
 
-const PRIMARY_SKILL_FIELD = "s03-primary-skill";
-
 /**
  * Members per skill network.
  *
- * A "member" is a registered volunteer whose primary skill is the network's
- * skill. Nothing asks people to join a network separately, so deriving it from
- * what they already told us is both accurate and avoids a second, emptier
- * number that would contradict the register.
+ * Two kinds of member, counted once each. Accounts that joined (or were
+ * auto-enrolled by primary skill — migration 009 backfill and the claim flow)
+ * are rows in network_members. Registrations never claimed by an account
+ * cannot hold a membership row, so they are added by primary skill — the
+ * derivation this page used before joining existed, kept only for the rows
+ * that cannot join. `user_id is null` is what keeps the two sets disjoint:
+ * every claimed registration is enrolled in its skill network, so counting
+ * unclaimed rows only never counts the same person twice.
  *
  * Counts everyone registered, not only verified volunteers: this is a measure
  * of how much capacity exists, and the tracker counts the same way.
@@ -25,12 +28,19 @@ export async function networkCounts(): Promise<Map<string, number>> {
 
   const results = await Promise.all(
     NETWORKS.map(async (network) => {
-      const { count } = await client
-        .from("submissions")
-        .select("id", { count: "exact", head: true })
-        .eq("kind", "volunteer")
-        .eq(`fields->>${PRIMARY_SKILL_FIELD}`, network.skill);
-      return [network.name, count ?? 0] as const;
+      const [joined, unclaimed] = await Promise.all([
+        client
+          .from("network_members")
+          .select("id", { count: "exact", head: true })
+          .eq("network", network.name),
+        client
+          .from("submissions")
+          .select("id", { count: "exact", head: true })
+          .eq("kind", "volunteer")
+          .is("user_id", null)
+          .eq(`fields->>${PRIMARY_SKILL_KEY}`, network.skill),
+      ]);
+      return [network.name, (joined.count ?? 0) + (unclaimed.count ?? 0)] as const;
     })
   );
 

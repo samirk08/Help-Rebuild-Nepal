@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import DeleteVolunteerButton from "@/components/DeleteVolunteerButton";
+import MatchingProfileEditor from "@/components/MatchingProfileEditor";
+import { getMatchingProfile } from "@/lib/matching/data";
 import { updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
 import { documentsFor } from "@/lib/admin-documents";
 import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
@@ -25,6 +27,7 @@ export default async function VolunteerDetailPage({ params }: { params: Promise<
   const sections = renderSubmissionFields(row.fields, VOLUNTEER_SECTIONS);
   const documents = await documentsFor(id);
   const returnTo = `/admin/volunteers/${id}`;
+  const matching = await getMatchingProfile(id);
 
   return (
     <div>
@@ -93,6 +96,8 @@ export default async function VolunteerDetailPage({ params }: { params: Promise<
           </div>
         ) : null}
       </div>
+
+      <div id="matching-profile">{matching.available ? <MatchingProfileEditor key={matching.profile?.revision ?? 0} volunteer={row} profile={matching.profile} admin/> : <p className="matching-notice">Apply supabase/010-matching-engine.sql to confirm matching details.</p>}</div>
 
       {sections.map((section) => (
         <div key={section.title}>

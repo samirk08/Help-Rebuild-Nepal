@@ -24,18 +24,8 @@ export async function isAdmin(userId: string | undefined | null): Promise<boolea
     .maybeSingle();
 
   if (error) {
-    // 42P01 = undefined_table: migration 004 has not been run yet. Failing
-    // closed here would lock the whole team out of the dashboard the moment
-    // this deploys, before anyone could apply it — so this one case keeps the
-    // previous behaviour (any signed-in user is an admin), which is exactly as
-    // safe as it was yesterday because volunteer accounts do not exist yet.
-    // /admin/diagnostics reports it so it cannot go unnoticed.
-    if (error.code === "42P01") {
-      console.error("admin_users is missing — run supabase/004-accounts.sql. Allowing existing admins through in the meantime.");
-      return true;
-    }
-
-    // Anything else is a real fault, and the safe answer is "not an admin".
+    // Volunteer accounts now exist. Missing migrations must never grant them
+    // access to private registrations or matching details.
     console.error("admin allowlist check failed", error);
     return false;
   }
@@ -53,8 +43,7 @@ export async function adminAllowlistReady(): Promise<{ ready: boolean; detail: s
     return {
       ready: false,
       detail:
-        "Not created yet. Run supabase/004-accounts.sql. Until then every signed-in account is " +
-        "treated as an admin, which must be fixed before volunteer sign-in ships.",
+        "Not created yet. Run supabase/004-accounts.sql and review the admin allowlist. Dashboard access is denied until it is available.",
     };
   }
   if (error) return { ready: false, detail: `[${error.code}] ${error.message}` };

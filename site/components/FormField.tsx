@@ -80,17 +80,15 @@ export default function FormFieldView({
       ) : null}
 
       {field.isSelect && !field.widget ? (
-        // A dropdown that opens with a real answer submits that answer when
-        // it is left alone, exactly as it reads on screen. Only a "Select…"
-        // prompt is blanked, so that "unanswered" stays distinguishable from
-        // the first option — see isSelectPlaceholder().
+        // Untouched controls, including collapsed sections, stay unanswered.
         <select
           className="select"
           id={key}
           name={key}
-          defaultValue={isSelectPlaceholder(field.options?.[0]) ? "" : field.options?.[0]}
+          defaultValue=""
           aria-describedby={describedBy}
         >
+          {!isSelectPlaceholder(field.options?.[0]) ? <option value="">{lang === "np" ? "छान्नुहोस्" : "Select…"}</option> : null}
           {(field.options ?? []).map((option, i) => (
             <option key={option} value={i === 0 && isSelectPlaceholder(option) ? "" : option}>
               {tr(option)}

@@ -5,3 +5,4 @@ site/out/
 site/*.tsbuildinfo
 site/next-env.d.ts
 site/.env*.local
+site/.test-build/

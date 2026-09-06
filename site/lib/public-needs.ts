@@ -163,7 +163,7 @@ async function committedByNeed(ids: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (ids.length === 0) return counts;
 
-  const { data } = await supabaseAdmin().from("matches").select("need_id").in("need_id", ids);
+  const { data } = await supabaseAdmin().from("matches").select("need_id").in("need_id", ids).in("status", ["verified", "recruiting", "filled", "completed"]);
   for (const match of data ?? []) {
     counts.set(match.need_id, (counts.get(match.need_id) ?? 0) + 1);
   }
