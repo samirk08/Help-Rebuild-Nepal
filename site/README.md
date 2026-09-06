@@ -196,9 +196,10 @@ Supabase/Vercel account and can't be scripted from here:
    a migration file existing in the repository is not evidence it has run.
 3. Create a **private** Storage bucket named `submissions` (Storage -> New
    bucket -> uncheck "Public bucket").
-3a. In Auth -> Providers -> Email, keep email sign-in enabled. The volunteer
-   account claim sends a one-time code through it (see "Claiming an account"
-   below), and password recovery uses the same provider.
+3a. Configure Auth email — three settings, none of them optional. The claim
+   flow and password recovery both stop working if any is missed, and two of
+   them fail in ways that look like a code bug rather than a config gap. See
+   "Auth email prerequisites" below.
 4. Invite each teammate in Auth -> Users -> Invite user.
 5. Import this repo into Vercel; add the five environment variables above in
    the project's Settings -> Environment Variables.
@@ -238,6 +239,47 @@ the submission already holds so a second request cannot reset them.
 one idempotency key and resends it unchanged on retry, so a dropped response
 resolves to the row that already exists. The previous approach compared the
 last 25 rows in JavaScript, which two simultaneous requests both pass.
+
+### Auth email prerequisites
+
+Three Supabase settings the claim and recovery flows depend on. Each one fails
+in a way that looks like an application bug, so they are written down here.
+
+**1. The Magic Link template must emit a code, not a link.** `signInWithOtp`
+sends a magic link by default, even though the method is named "OTP". The claim
+form asks for a six-digit code, so Auth -> Emails -> Magic Link must include
+`{{ .Token }}` in its body. Without this, people receive a link, the form they
+are looking at asks for a code they were never sent, and clicking the link
+signs them in *without linking their registration* — they land on the profile
+page being told they have not registered. Nothing in the code can detect this;
+the template is the only place it can be fixed.
+
+**2. Custom SMTP is required before any real volunteer uses this.** Supabase's
+built-in email service sends about two messages per hour across the whole
+project and refuses addresses that are not on the project team. It is for
+development. Set a provider under Auth -> Emails -> SMTP Settings, then raise
+the ceiling on the Rate Limits page — the default there is 30 messages per
+hour, which a registration drive will exceed.
+
+**3. `/{lang}/account/reset` must be on the redirect allow-list.** Auth ->
+URL Configuration. `resetPasswordForEmail` is called with that path, and
+Supabase rejects a `redirectTo` that is not listed. The existing entry covers
+`/admin/auth/callback` only, so this is a new one — add `/en/account/reset` and
+`/np/account/reset`, or a wildcard covering both.
+
+### Verifying a migration actually applied
+
+Admin -> Diagnostics reads the ledger and reports each migration, or in the SQL
+editor directly:
+
+```sql
+select migration, detail, applied from migration_state order by migration;
+```
+
+Every row should read `applied = true`. Migration 011 also de-duplicates
+`documents` by `storage_path` before adding its unique index; if that table had
+repeats from retried confirms, those rows are gone and the earliest of each set
+was kept.
 
 ### Running the checks
 
