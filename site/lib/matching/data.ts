@@ -50,3 +50,10 @@ export async function getNeed(id: string): Promise<Submission & { matching_conta
   if (error || !data) throw new Error("Need unavailable.");
   return data;
 }
+
+export async function getNeeds(ids: string[]): Promise<(Submission & { matching_contact_approved: boolean })[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabaseAdmin().from("submissions").select("*").eq("kind","need").in("id",ids);
+  if (error || !data) throw new Error("Needs unavailable.");
+  return data;
+}
