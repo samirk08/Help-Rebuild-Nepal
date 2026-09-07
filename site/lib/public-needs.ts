@@ -61,6 +61,14 @@ export const STATUS_OPTIONS = [
 
 const F = {
   postingAs: "s01-you-are-posting-as",
+  // Three-step form (lib/intake-schema.ts). Old rows have none of these and
+  // fall back to what they did record, so nothing published before this
+  // release loses its summary line.
+  v3Title: "n3-title",
+  v3Detail: "n3-detail",
+  v3Municipality: "n3-municipality",
+  v3WorkMode: "n3-work-mode",
+  v3Type: "n3-type",
   municipality: "s02-municipality",
   ward: "s02-ward",
   resources: "s03-resources-required",
@@ -104,6 +112,8 @@ export type PublicNeedRow = {
   committed: number;
   communityReported: boolean;
   createdAt: string;
+  /** The requester's own one-line summary. Only the three-step form asks. */
+  title: string | null;
   /**
    * Whether this need can still take an offer of help. `filled` and
    * `completed` are published but closed, and the difference has to reach the
@@ -167,19 +177,20 @@ function toRow(row: Row, committed: number): PublicNeedRow {
     id: row.id,
     org: row.org_or_name,
     district: row.district,
-    municipality: str(row.fields, F.municipality),
+    municipality: str(row.fields, F.municipality) ?? str(row.fields, F.v3Municipality),
     province: row.province,
     urgency: row.urgency,
     status: row.status,
     skills: row.skills ?? [],
-    whatToDo: str(row.fields, F.whatToDo),
-    workMode: str(row.fields, F.workMode),
+    whatToDo: str(row.fields, F.whatToDo) ?? str(row.fields, F.v3Detail),
+    workMode: str(row.fields, F.workMode) ?? str(row.fields, F.v3WorkMode),
     startDate: str(row.fields, F.startDate),
     duration: str(row.fields, F.duration),
     peopleNeeded: row.people_needed,
     committed,
     communityReported: isCommunityReported(row.fields),
     createdAt: row.created_at,
+    title: str(row.fields, F.v3Title),
     open: canAcceptInterest(row.status),
   };
 }
@@ -266,7 +277,7 @@ export async function getPublicNeed(id: string): Promise<PublicNeedDetail | null
     ward: str(row.fields, F.ward),
     resources: list(row.fields, F.resources),
     experience: str(row.fields, F.experience),
-    whatToDo: str(row.fields, F.whatToDo),
+    whatToDo: str(row.fields, F.whatToDo) ?? str(row.fields, F.v3Detail),
     objectives: str(row.fields, F.objectives),
     startDate: str(row.fields, F.startDate),
     duration: str(row.fields, F.duration),
@@ -275,7 +286,7 @@ export async function getPublicNeed(id: string): Promise<PublicNeedDetail | null
     food: str(row.fields, F.food),
     transport: str(row.fields, F.transport),
     equipment: str(row.fields, F.equipment),
-    workMode: str(row.fields, F.workMode),
+    workMode: str(row.fields, F.workMode) ?? str(row.fields, F.v3WorkMode),
     paid: str(row.fields, F.paid),
     extra: str(row.fields, F.extra),
     interestCount: interestCount ?? 0,
@@ -287,7 +298,14 @@ export function needLocation(need: PublicNeedRow): string {
   return [need.municipality, need.district].filter(Boolean).join(" · ") || "—";
 }
 
-/** What the board's "Need" column shows: the skills asked for. */
+/**
+ * What the board's "Need" column shows.
+ *
+ * The requester's own title first, because they wrote it to be read. Older
+ * rows have no title — the long form never asked for one — so they keep
+ * falling back to the skills a coordinator recorded, then to the organisation.
+ */
 export function needSummary(need: PublicNeedRow): string {
+  if (need.title) return need.title;
   return need.skills.length > 0 ? need.skills.join(", ") : (need.org ?? "—");
 }

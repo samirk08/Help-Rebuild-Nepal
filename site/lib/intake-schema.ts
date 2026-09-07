@@ -193,6 +193,211 @@ function checkRule(rule: Rule, raw: unknown, errors: FieldError[]): void {
 }
 
 /**
+ * The three-step need intake (form version 3).
+ *
+ * The old form asked nine sections of a person who is, by definition, in the
+ * middle of something bad: exact coordinates, equipment on site, accommodation,
+ * objectives, experience level required. Most of that is a coordinator's job to
+ * establish during verification — `matching_roles` already exists for exactly
+ * that — and asking for it up front is how a request gets abandoned halfway.
+ *
+ * So this collects what is needed to *triage* a request, and nothing else:
+ * what and where, who to call, and confirm.
+ *
+ * Deliberately namespaced `n3-` rather than reusing the generated `s01-` keys.
+ * Those come from the design file and can be regenerated; these are a stable
+ * contract this form owns. Old submissions keep their own keys and still
+ * render, because nothing rewrites them.
+ */
+export const NEED_TYPES = [
+  "Skilled volunteers",
+  "Relief items",
+  "Assessment or survey",
+  "Transport or logistics",
+  "Something else",
+] as const;
+
+export const NEED_WORK_MODES = ["On site", "Remote", "Either"] as const;
+
+/**
+ * Stored verbatim in the `urgency` column, so these strings must keep matching
+ * `URGENCY_OPTIONS` in lib/public-needs.ts or the board's filter silently
+ * stops matching anything.
+ */
+export const NEED_URGENCY = ["Immediate", "Urgent", "Upcoming", "Reconstruction"] as const;
+
+export const N3 = {
+  type: "n3-type",
+  title: "n3-title",
+  detail: "n3-detail",
+  district: "n3-district",
+  municipality: "n3-municipality",
+  workMode: "n3-work-mode",
+  urgency: "n3-urgency",
+  organization: "n3-organization",
+  person: "n3-person",
+  email: "n3-email",
+  phone: "n3-phone",
+  photos: "n3-photos",
+  /** Set when the person asked to be called instead of finishing the form. */
+  assist: "n3-assist",
+} as const;
+
+const N3_OPTIONS: Record<string, readonly string[]> = {
+  [N3.type]: NEED_TYPES,
+  [N3.workMode]: NEED_WORK_MODES,
+  [N3.urgency]: NEED_URGENCY,
+};
+
+const N3_TEXT: Record<string, { max: number; min?: number }> = {
+  [N3.title]: { max: TEXT_LIMITS.short, min: 6 },
+  [N3.detail]: { max: TEXT_LIMITS.long, min: 20 },
+  [N3.district]: { max: TEXT_LIMITS.short },
+  [N3.municipality]: { max: TEXT_LIMITS.short },
+  [N3.organization]: { max: TEXT_LIMITS.short, min: 2 },
+  [N3.person]: { max: TEXT_LIMITS.short, min: 2 },
+};
+
+/** Whether this payload came from the three-step form. */
+export function isNeedV3(raw: unknown): boolean {
+  if (typeof raw !== "object" || raw === null) return false;
+  return firstString((raw as Record<string, unknown>).__form_version) === "3";
+}
+
+/**
+ * Validates a three-step need submission.
+ *
+ * The assisted path is the interesting case. Someone who asks to be called has
+ * given us a name, a number and consent, and nothing else — that is the whole
+ * point. Refusing it for a missing description would defeat the feature, so the
+ * required set narrows to what a coordinator needs in order to ring them back.
+ * It is still a `submissions` row with the same statuses, so it moves through
+ * verification exactly like any other request.
+ */
+export function validateNeedV3(raw: unknown): IntakeResult {
+  const errors: FieldError[] = [];
+
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return {
+      ok: false,
+      errors: [{ field: "", code: "required", message: "fields must be an object." }],
+    };
+  }
+
+  const input = raw as Record<string, unknown>;
+  const assisted = firstString(input[N3.assist]) === "on";
+  const fields: Record<string, unknown> = {};
+
+  const text = (key: string, required: boolean) => {
+    const rule = N3_TEXT[key] ?? { max: TEXT_LIMITS.line };
+    const value = firstString(input[key])?.trim() ?? "";
+
+    if (value === "") {
+      if (required) errors.push({ field: key, code: "required", message: "This answer is required." });
+      return;
+    }
+    if (value.length > rule.max) {
+      errors.push({
+        field: key,
+        code: "too_long",
+        message: `Please keep this to ${rule.max} characters or fewer.`,
+      });
+      return;
+    }
+    if (rule.min !== undefined && value.length < rule.min) {
+      errors.push({
+        field: key,
+        code: "too_short",
+        message: `Please give at least ${rule.min} characters.`,
+      });
+      return;
+    }
+    fields[key] = value;
+  };
+
+  const choice = (key: string, required: boolean) => {
+    const value = firstString(input[key])?.trim() ?? "";
+    if (value === "") {
+      if (required) errors.push({ field: key, code: "required", message: "Choose one of these." });
+      return;
+    }
+    if (!N3_OPTIONS[key].includes(value)) {
+      errors.push({
+        field: key,
+        code: "invalid_option",
+        message: "Choose one of the offered answers.",
+      });
+      return;
+    }
+    fields[key] = value;
+  };
+
+  // Step one. Skipped entirely on the assisted path — a coordinator fills it
+  // in on the call, which is what the person asked for.
+  choice(N3.type, !assisted);
+  text(N3.title, !assisted);
+  text(N3.detail, !assisted);
+  text(N3.district, !assisted);
+  text(N3.municipality, false);
+  choice(N3.workMode, !assisted);
+  choice(N3.urgency, !assisted);
+
+  // Step two. Always required: without a way to reach the requester there is
+  // no request, only a description of a problem.
+  text(N3.organization, true);
+  text(N3.person, false);
+
+  const email = firstString(input[N3.email])?.trim() ?? "";
+  const phone = firstString(input[N3.phone])?.trim() ?? "";
+
+  if (email !== "") {
+    if (email.length > 254 || !EMAIL_PATTERN.test(email)) {
+      errors.push({ field: N3.email, code: "invalid_email", message: "Enter a valid email address." });
+    } else {
+      fields[N3.email] = email;
+    }
+  }
+  if (phone !== "") {
+    if (!PHONE_PATTERN.test(phone)) {
+      errors.push({ field: N3.phone, code: "invalid_phone", message: "Enter a valid phone number." });
+    } else {
+      fields[N3.phone] = phone;
+    }
+  }
+
+  // Email and phone are separate fields now — the old form ran them together
+  // in one box, which is why no need ever had a usable `contact_email` and the
+  // matching engine could never introduce a requester. At least one is needed;
+  // a callback request obviously needs the phone.
+  if (assisted && phone === "") {
+    errors.push({
+      field: N3.phone,
+      code: "required",
+      message: "A phone number is required so we can call you back.",
+    });
+  } else if (!assisted && email === "" && phone === "") {
+    errors.push({
+      field: N3.email,
+      code: "required",
+      message: "Give an email address or a phone number so we can reach you.",
+    });
+  }
+
+  if (firstString(input.consent) !== "on") {
+    errors.push({
+      field: "consent",
+      code: "consent_required",
+      message: "Coordination consent is required.",
+    });
+  }
+
+  if (assisted) fields[N3.assist] = "on";
+
+  if (errors.length > 0) return { ok: false, errors };
+  return { ok: true, fields };
+}
+
+/**
  * Validates one intake payload and returns the value that should be stored.
  *
  * Returns *every* problem rather than the first, because a form that reports
@@ -204,6 +409,11 @@ function checkRule(rule: Rule, raw: unknown, errors: FieldError[]): void {
  * full original payload is preserved upstream for provenance either way.
  */
 export function validateIntake(kind: IntakeKind, raw: unknown): IntakeResult {
+  // Version the payload rather than switching the rules under everyone. A tab
+  // opened before this release still posts the old keys, and refusing it would
+  // lose a request that the person believed they had filled in correctly.
+  if (kind === "need" && isNeedV3(raw)) return validateNeedV3(raw);
+
   const errors: FieldError[] = [];
 
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {

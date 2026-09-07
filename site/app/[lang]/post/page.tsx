@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import RequestForm from "@/components/RequestForm";
+import NeedIntakeForm from "@/components/NeedIntakeForm";
 import { dict, isLang } from "@/lib/i18n";
 
 export async function generateMetadata({
@@ -18,5 +18,5 @@ export async function generateMetadata({
 export default async function PostNeedPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLang(lang)) notFound();
-  return <RequestForm lang={lang} mode="post" t={dict(lang)} />;
+  return <NeedIntakeForm lang={lang} t={dict(lang)} />;
 }
