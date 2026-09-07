@@ -1,0 +1,56 @@
+name: Checks
+
+# Why this exists: the Vercel checks on a pull request only prove the Next.js
+# app builds. They do not run `npm test`, so a pull request could be green with
+# a test file that does not even compile — which is exactly what happened on
+# two of the automated pull requests this workflow was added alongside.
+#
+# Typecheck, tests and build, on every pull request and every push to main.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  # A new push supersedes an in-flight run on the same branch.
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Compiles tests/ and runs node --test. Needs no Supabase project and
+      # sends no mail: the rules are tested against fakes, and the guarantees
+      # that belong to the database run against PGlite in-process.
+      - name: Tests
+        run: npm test
+
+      # Placeholder values. `next build` reads these at module scope in a few
+      # places; nothing here contacts Supabase, and no real credential belongs
+      # in a workflow file that runs on pull requests from forks.
+      - name: Build
+        run: npm run build
+        env:
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
