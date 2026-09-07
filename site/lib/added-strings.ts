@@ -84,6 +84,13 @@ export type AddedStrings = {
 
   footerNote: string;
   headerTagline: string;
+  navGetInvolved: string;
+  navProgress: string;
+  navMenu: string;
+  navMain: string;
+  navLanguage: string;
+  navHome: string;
+  navSkillNetworks: string;
   loopWords: string[];
 
   thanksVolunteerTitle: string;
@@ -456,6 +463,13 @@ const ADDED: Record<Lang, AddedStrings> = {
     // needs, matched to people who can help", which wrapped to five lines in
     // the header's narrow column.
     headerTagline: "Volunteer. Connect. Rebuild.",
+    navGetInvolved: "Get involved",
+    navProgress: "Our progress",
+    navMenu: "Menu",
+    navMain: "Main navigation",
+    navLanguage: "Language",
+    navHome: "Help Rebuild Nepal home",
+    navSkillNetworks: "Skill networks",
 
     // Overrides the generated LOOP_WORDS. Every word here must map to a real
     // "Primary skill" option, or the headline invites people the form has
@@ -857,6 +871,13 @@ const ADDED: Record<Lang, AddedStrings> = {
       "पेश गरिएको विवरण सुरक्षित रूपमा राखिन्छ र प्रकाशित हुनुअघि व्यक्तिले समीक्षा गर्छ।",
 
     headerTagline: "स्वयंसेवा। जोड्नुहोस्। पुनर्निर्माण।",
+    navGetInvolved: "सहभागी हुनुहोस्",
+    navProgress: "हाम्रो प्रगति",
+    navMenu: "मेनु",
+    navMain: "मुख्य नेभिगेसन",
+    navLanguage: "भाषा",
+    navHome: "हेल्प रिबिल्ड नेपालको गृहपृष्ठ",
+    navSkillNetworks: "सीप नेटवर्क",
 
     loopWords: [
       "इन्जिनियर",

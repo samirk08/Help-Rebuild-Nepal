@@ -61,20 +61,20 @@ export default async function ReliefPage({ params }: { params: Promise<{ lang: s
       </div>
 
       {itemNeeds.length === 0 ? (
-        <div className="card card--flush">
-          <div className="needtable__empty">
-            <p className="card__title card__title--lg">{t.reliefEmptyTitle}</p>
-            <p className="card__body">{t.reliefEmptyBody}</p>
-            <div className="btn-row" style={{ justifyContent: "center" }}>
-              <Link href={screenPath(lang, "post")} className="btn btn--navy btn--sm">
-                {base.postCta}
-              </Link>
-              <Link href={screenPath(lang, "reliefDetail")} className="btn btn--outline btn--sm">
-                {t.reliefSeeExample}
-              </Link>
-            </div>
+        <section className="card card--empty-lg" aria-labelledby="relief-empty-title">
+          <h2 id="relief-empty-title" className="card__title card__title--lg" style={{ marginTop: 0 }}>
+            {t.reliefEmptyTitle}
+          </h2>
+          <p className="card__body">{t.reliefEmptyBody}</p>
+          <div className="btn-row" style={{ justifyContent: "center" }}>
+            <Link href={screenPath(lang, "post")} className="btn btn--navy btn--sm">
+              {base.postCta}
+            </Link>
+            <Link href={screenPath(lang, "reliefDetail")} className="btn btn--outline btn--sm">
+              {t.reliefSeeExample}
+            </Link>
           </div>
-        </div>
+        </section>
       ) : (
         <div className="card card--flush">
           <table className="needtable">

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { screenPath, confirmationPath, navItems, isActivePath } from "../lib/routes";
+import { screenPath, confirmationPath, navItems, navGroups, isActivePath } from "../lib/routes";
 
 test("screenPath generates correct paths for screens", () => {
   assert.equal(screenPath("en", "home"), "/en");
@@ -67,4 +67,21 @@ test("isActivePath correctly identifies active routes", () => {
   // Partial matches should fail
   assert.equal(isActivePath("/en/volunteers", "/en/volunteer", false), false);
   assert.equal(isActivePath("/np/volunteer", "/en/volunteer", false), false);
+});
+
+test("compact navigation keeps every grouped destination once in both languages", () => {
+  for (const lang of ["en", "np"] as const) {
+    const groups = navGroups(lang);
+    assert.equal(groups.length, 2);
+    assert.deepEqual(groups.map((group) => group.items.map((item) => item.id)), [
+      ["needs", "relief", "missions", "networks"], ["projects", "tracker"],
+    ]);
+    const original = navItems(lang);
+    for (const item of groups.flatMap((group) => group.items)) {
+      assert.equal(item.href, original.find((entry) => entry.id === item.id)?.href);
+    }
+    assert.equal(new Set(groups.flatMap((group) => group.items.map((item) => item.href))).size, 6);
+  }
+  assert.notEqual(navGroups("en")[0].label, navGroups("np")[0].label);
+  assert.notEqual(navGroups("en")[1].label, navGroups("np")[1].label);
 });
