@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import JoinNetworkButton from "@/components/JoinNetworkButton";
+import { added } from "@/lib/added-strings";
 import { networkCounts } from "@/lib/community";
 import { dict, isLang, translator } from "@/lib/i18n";
+import { networkViewer } from "@/lib/networks";
 import { screenPath } from "@/lib/routes";
 import { NETWORKS } from "@/lib/site-data";
 
@@ -27,7 +30,14 @@ export default async function NetworksPage({ params }: { params: Promise<{ lang:
 
   const t = dict(lang);
   const tr = translator(lang);
-  const counts = await networkCounts();
+  const a = added(lang);
+
+  // `networkViewer` and JoinNetworkButton already existed and were correct.
+  // Nothing referenced them: every card rendered a hardcoded link to the
+  // registration form, so a person who had just registered and signed in was
+  // told to register again in order to join. Typecheck, tests and build all
+  // passed, because working code that nobody calls is still valid code.
+  const [counts, viewer] = await Promise.all([networkCounts(), networkViewer()]);
 
   return (
     <div className="page">
@@ -45,12 +55,28 @@ export default async function NetworksPage({ params }: { params: Promise<{ lang:
               <strong>{counts.get(network.name) ?? 0}</strong>
               <span>{t.membersLabel}</span>
             </p>
-            <Link
-              href={screenPath(lang, "volunteer")}
-              className="btn btn--outline btn--outline-green btn--sm btn--block"
-            >
-              {t.joinNetwork}
-            </Link>
+            {viewer.memberships.has(network.name) ? (
+              <p className="network__member">{a.networkMemberBadge}</p>
+            ) : viewer.registered ? (
+              <JoinNetworkButton lang={lang} network={network.name} label={t.joinNetwork} />
+            ) : (
+              // Not registered, or signed out. Both genuinely need the form
+              // first — joining a network attaches to a registration.
+              <>
+                <Link
+                  href={screenPath(lang, "volunteer")}
+                  className="btn btn--outline btn--outline-green btn--sm btn--block"
+                >
+                  {t.joinNetwork}
+                </Link>
+                {!viewer.signedIn ? (
+                  <p className="hint" style={{ marginTop: 10, fontSize: 12 }}>
+                    {a.networkSignInToJoin}{" "}
+                    <Link href={screenPath(lang, "accountLogin")}>{a.networkSignInLink}</Link>
+                  </p>
+                ) : null}
+              </>
+            )}
           </div>
         ))}
 
