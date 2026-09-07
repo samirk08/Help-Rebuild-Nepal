@@ -56,6 +56,7 @@ Every page lives under a language segment; `/` redirects to `/en`.
 | Volunteer profile | `/[lang]/profile` |
 | For partners | `/[lang]/partners` |
 | Admin dashboard | `/admin` (login at `/admin/login`) |
+| Situation Room | `/admin/situation` |
 
 `lang` is `en` or `np`. Both are prerendered at build time, and the language
 switch preserves whatever page you are on. `/admin` sits outside the language
@@ -190,7 +191,7 @@ Supabase/Vercel account and can't be scripted from here:
    project URL, anon key and service role key from Project Settings -> API.
 2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once,
    then each numbered migration beside it in order (`002-public-board.sql`
-   through `015-invitation-attempts.sql`). Every migration is safe to
+   through `016-situation-room.sql`). Every migration is safe to
    re-run, so running the whole set again on an existing project is fine.
    Admin -> Diagnostics reports which ones this deployment actually has;
    a migration file existing in the repository is not evidence it has run.
@@ -261,6 +262,20 @@ matching engine sees changes without a second write path.
 Choosing a mission does **not** narrow who gets invited to what. Only the
 explicit "only invite me to needs within my missions" switch does that, and it
 is off by default and reversible in one click.
+
+### Situation Room
+
+The coordinator action queue at `/admin/situation`. Items are **derived** from
+existing tables on every load — a need in `submitted` is awaiting verification
+whether or not anyone filed a ticket. `queue_assignments` and `queue_events`
+(migration 016) store only what cannot be derived: owner, due date, priority
+override, snooze/resolve, and an append-only activity log. Resolving a row
+records that a human dealt with the queue entry; it does not verify the need,
+confirm the invitation, or otherwise mutate the underlying record.
+
+Unanswered matching clarification questions are not in the queue yet. The
+engine already produces the question text, but nothing stores an asked
+question and its answer.
 
 ### Auth email prerequisites
 
@@ -470,6 +485,7 @@ lib/
   admin-actions.ts     every admin mutation, as Server Actions
   admin-render.ts      renders a submission's raw fields against its form schema
   admin-documents.ts   signed read URLs for uploaded documents
+  situation/           Situation Room derivation, loader and coordinator actions
 scripts/
   gen-content.js       regenerates lib/content.ts from the design file
 ```

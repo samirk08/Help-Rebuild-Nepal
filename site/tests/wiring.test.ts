@@ -87,6 +87,23 @@ test("the networks page decides what to show from the signed-in viewer", () => {
  * actions are invoked through a form rather than `fetch`, so the general rule
  * above cannot see them.
  */
+test("the Situation Room page calls the actions that change the queue", () => {
+  const page = readFileSync(join(APP, "admin", "(dashboard)", "situation", "page.tsx"), "utf8");
+  const actions = readFileSync(join(COMPONENTS, "SituationItemActions.tsx"), "utf8");
+  const layout = readFileSync(join(APP, "admin", "(dashboard)", "layout.tsx"), "utf8");
+
+  assert.match(layout, /\/admin\/situation/, "the Situation Room must be in the admin nav");
+  assert.match(page, /loadQueue/, "the page must load the derived queue");
+  assert.match(page, /SituationItemActions/, "the page must render the actions");
+  assert.match(page, /updateQueueItem/, "assign/due/priority must be reachable");
+  assert.match(page, /snoozeQueueItem/, "snooze must be reachable");
+  assert.match(page, /resolveQueueItem/, "resolve must be reachable");
+  assert.match(actions, /updateQueueItem/);
+  assert.match(actions, /snoozeQueueItem/);
+  assert.match(actions, /resolveQueueItem/);
+  assert.match(page, /metricsView|metrics/, "failed reads must have a metrics path that can show unavailable");
+});
+
 test("the missions pages call the actions that change membership", () => {
   const list = readFileSync(join(APP, "[lang]", "missions", "page.tsx"), "utf8");
   const detail = readFileSync(join(APP, "[lang]", "missions", "[id]", "page.tsx"), "utf8");

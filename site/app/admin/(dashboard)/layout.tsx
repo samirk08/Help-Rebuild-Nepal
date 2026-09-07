@@ -4,6 +4,7 @@ import { supabaseServerClient } from "@/lib/supabase-server";
 
 const NAV = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/situation", label: "Situation Room" },
   { href: "/admin/volunteers", label: "Volunteers" },
   { href: "/admin/needs", label: "Needs" },
   { href: "/admin/relief", label: "Relief items" },
