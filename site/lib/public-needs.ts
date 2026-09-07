@@ -96,6 +96,10 @@ export type PublicNeedRow = {
   urgency: string | null;
   status: string;
   skills: string[];
+  whatToDo: string | null;
+  workMode: string | null;
+  startDate: string | null;
+  duration: string | null;
   peopleNeeded: number | null;
   committed: number;
   communityReported: boolean;
@@ -112,16 +116,12 @@ export type PublicNeedDetail = PublicNeedRow & {
   ward: string | null;
   resources: string[];
   experience: string | null;
-  whatToDo: string | null;
   objectives: string | null;
-  startDate: string | null;
-  duration: string | null;
   deadline: string | null;
   accommodation: string | null;
   food: string | null;
   transport: string | null;
   equipment: string | null;
-  workMode: string | null;
   paid: string | null;
   extra: string | null;
   interestCount: number;
@@ -172,6 +172,10 @@ function toRow(row: Row, committed: number): PublicNeedRow {
     urgency: row.urgency,
     status: row.status,
     skills: row.skills ?? [],
+    whatToDo: str(row.fields, F.whatToDo),
+    workMode: str(row.fields, F.workMode),
+    startDate: str(row.fields, F.startDate),
+    duration: str(row.fields, F.duration),
     peopleNeeded: row.people_needed,
     committed,
     communityReported: isCommunityReported(row.fields),

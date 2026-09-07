@@ -27,6 +27,14 @@ export default function FormFieldView({
   const label = tr(field.label);
   const placeholder = field.ph ? tr(field.ph) : undefined;
   const extra = added(lang);
+  const inputType = field.label === "Email" ? "email"
+    : field.label === "Phone / WhatsApp" ? "tel"
+    : sectionN === "05" && ["Start date", "Deadline"].includes(field.label) ? "date"
+    : "text";
+  const autoComplete = field.label === "Full name" ? "name"
+    : field.label === "Email" ? "email"
+    : field.label === "Phone / WhatsApp" ? "tel"
+    : undefined;
 
   // The message is announced with the field rather than only in the summary
   // above, so someone tabbing back to a control hears why it was rejected.
@@ -82,7 +90,8 @@ export default function FormFieldView({
           className="input"
           id={key}
           name={key}
-          type="text"
+          type={inputType}
+          autoComplete={autoComplete}
           placeholder={placeholder}
           aria-describedby={describedBy}
           aria-invalid={invalid}

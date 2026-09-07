@@ -25,6 +25,19 @@ export type AddedStrings = {
   uploadRejectedSize: string;
   uploadRejectedCount: string;
   sectionFilled: string;
+  formRemoteVolunteer: string;
+  formRemoteNeed: string;
+  formVolunteerIntro: string;
+  formNeedIntro: string;
+  formConsentLabel: string;
+  needsSortBy: string;
+  needsAscending: string;
+  needsDescending: string;
+  needsNewest: string;
+  needsWorkMode: string;
+  needsTiming: string;
+  needsPeople: string;
+  needsConfirmed: string;
 
   reliefNav: string;
   reliefTitle: string;
@@ -241,6 +254,26 @@ export type AddedStrings = {
   missionNoneChosen: string;
   missionSaveScope: string;
   missionsUnavailable: string;
+
+  /** The volunteer workspace (Phase 2.1). */
+  profileUnavailableTitle: string;
+  profileUnavailableBody: string;
+  readyTitle: string;
+  readyYes: string;
+  readyPausedNote: string;
+  readyMissingTitle: string;
+  readyFixMatching: string;
+  readyFixRegistration: string;
+  readyFixCoordinator: string;
+  wsInvitationsTitle: string;
+  wsInvitationsEmpty: string;
+  wsInvitationExpires: string;
+  wsInvitationLapsed: string;
+  wsInvitationAccepted: string;
+  wsInvitationWaiting: string;
+  wsCommitmentsTitle: string;
+  wsCommitmentsEmpty: string;
+  wsCommittedHours: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -259,6 +292,19 @@ const ADDED: Record<Lang, AddedStrings> = {
     uploadRejectedSize: "larger than 10 MB",
     uploadRejectedCount: "over the 8 file limit",
     sectionFilled: "has entries",
+    formRemoteVolunteer: "Remote work selected. Travel and deployment questions are hidden. You can still offer equipment, resources or logistics support.",
+    formRemoteNeed: "Remote work selected. On-site accommodation, food, transport and equipment questions are hidden. Keep the location of the community receiving support.",
+    formVolunteerIntro: "Share your skills and availability so the coordination team can find suitable requests. Your name, email, phone number and consent are required; other details are optional.",
+    formNeedIntro: "Describe the task and who it will help. The coordination team reviews your request before it appears on the needs board.",
+    formConsentLabel: "Consent",
+    needsSortBy: "Sort by",
+    needsAscending: "Ascending",
+    needsDescending: "Descending",
+    needsNewest: "Date posted",
+    needsWorkMode: "Work mode",
+    needsTiming: "Start / duration",
+    needsPeople: "People needed",
+    needsConfirmed: "confirmed",
 
     reliefNav: "Relief items",
     reliefTitle: "Relief items",
@@ -521,6 +567,27 @@ const ADDED: Record<Lang, AddedStrings> = {
     missionSaveScope: "Save this preference",
     missionsUnavailable:
       "Mission teams could not be loaded just now. This is a problem at our end — please try again shortly.",
+
+    profileUnavailableTitle: "We could not load your registration",
+    profileUnavailableBody:
+      "This is a problem at our end, not a sign that your registration is missing. Please try again shortly — do not fill the form in again, or you will end up with two records.",
+    readyTitle: "Ready for invitations",
+    readyYes: "Your details are complete. A coordinator can invite you to suitable work.",
+    readyPausedNote:
+      "You have paused invitations. Nothing will be sent until you turn them back on.",
+    readyMissingTitle: "Still needed before you can be invited",
+    readyFixMatching: "Add this in your matching details above.",
+    readyFixRegistration: "Contact us to update this on your registration.",
+    readyFixCoordinator: "A coordinator will do this — nothing for you to fix.",
+    wsInvitationsTitle: "Open invitations",
+    wsInvitationsEmpty: "No open invitations. You will be emailed if a suitable role comes up.",
+    wsInvitationExpires: "Respond by",
+    wsInvitationLapsed: "This response window has closed",
+    wsInvitationAccepted: "You said yes — waiting on the requester",
+    wsInvitationWaiting: "Awaiting your response",
+    wsCommitmentsTitle: "Current commitments",
+    wsCommitmentsEmpty: "No confirmed commitments yet.",
+    wsCommittedHours: "hours a week promised at your busiest overlap",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -537,6 +604,19 @@ const ADDED: Record<Lang, AddedStrings> = {
     uploadRejectedSize: "१० MB भन्दा ठूलो",
     uploadRejectedCount: "८ फाइलको सीमा नाघ्यो",
     sectionFilled: "मा प्रविष्टि छ",
+    formRemoteVolunteer: "दूरबाट काम गर्ने विकल्प छानिएको छ। यात्रा र स्थलगत परिचालनका प्रश्नहरू लुकाइएका छन्। तपाईंले अझै उपकरण, स्रोतसाधन वा व्यवस्थापन सहयोग दिन सक्नुहुन्छ।",
+    formRemoteNeed: "दूरबाट काम गर्ने विकल्प छानिएको छ। स्थलगत बसोबास, खाना, यातायात र उपकरणका प्रश्नहरू लुकाइएका छन्। सहयोग पाउने समुदायको स्थान भने उल्लेख गर्नुहोस्।",
+    formVolunteerIntro: "समन्वय टोलीले उपयुक्त अनुरोध खोज्न सकोस् भनेर आफ्नो सीप र उपलब्धता बताउनुहोस्। नाम, इमेल, फोन नम्बर र सहमति अनिवार्य छन्; अन्य विवरण वैकल्पिक हुन्।",
+    formNeedIntro: "गर्नुपर्ने काम र त्यसले कसलाई सहयोग गर्छ बताउनुहोस्। आवश्यकता सूचीमा देखिनुअघि समन्वय टोलीले तपाईंको अनुरोध समीक्षा गर्छ।",
+    formConsentLabel: "सहमति",
+    needsSortBy: "क्रम मिलाउनुहोस्",
+    needsAscending: "बढ्दो क्रममा",
+    needsDescending: "घट्दो क्रममा",
+    needsNewest: "पोस्ट गरिएको मिति",
+    needsWorkMode: "काम गर्ने तरिका",
+    needsTiming: "सुरु / अवधि",
+    needsPeople: "चाहिने व्यक्ति",
+    needsConfirmed: "पुष्टि भएका",
 
     reliefNav: "राहत सामग्री",
     reliefTitle: "राहत सामग्री",
@@ -789,6 +869,27 @@ const ADDED: Record<Lang, AddedStrings> = {
     missionSaveScope: "यो प्राथमिकता सुरक्षित गर्नुहोस्",
     missionsUnavailable:
       "अहिले अभियान टोलीहरू लोड गर्न सकिएन। यो हाम्रो तर्फको समस्या हो — केही बेरमा फेरि प्रयास गर्नुहोस्।",
+
+    profileUnavailableTitle: "तपाईंको दर्ता लोड गर्न सकिएन",
+    profileUnavailableBody:
+      "यो हाम्रो तर्फको समस्या हो; तपाईंको दर्ता हराएको होइन। केही बेरमा फेरि प्रयास गर्नुहोस् — फारम फेरि नभर्नुहोस्, नत्र दुईवटा रेकर्ड बन्नेछन्।",
+    readyTitle: "निमन्त्रणाका लागि तयार",
+    readyYes: "तपाईंका विवरण पूरा छन्। संयोजकले उपयुक्त कामका लागि निम्तो दिन सक्छन्।",
+    readyPausedNote:
+      "तपाईंले निमन्त्रणा रोक्नुभएको छ। फेरि नखोलेसम्म केही पठाइने छैन।",
+    readyMissingTitle: "निमन्त्रणा पाउनुअघि अझै चाहिने कुरा",
+    readyFixMatching: "माथिको मिलान विवरणमा यो थप्नुहोस्।",
+    readyFixRegistration: "दर्तामा यो अद्यावधिक गर्न हामीलाई सम्पर्क गर्नुहोस्।",
+    readyFixCoordinator: "यो संयोजकले गर्नेछन् — तपाईंले केही गर्नु पर्दैन।",
+    wsInvitationsTitle: "खुला निमन्त्रणाहरू",
+    wsInvitationsEmpty: "कुनै खुला निमन्त्रणा छैन। उपयुक्त काम आएमा इमेल गरिनेछ।",
+    wsInvitationExpires: "जवाफ दिनुहोस्",
+    wsInvitationLapsed: "जवाफको अवधि सकियो",
+    wsInvitationAccepted: "तपाईंले स्वीकार गर्नुभयो — अनुरोधकर्ताको प्रतीक्षामा",
+    wsInvitationWaiting: "तपाईंको जवाफको प्रतीक्षामा",
+    wsCommitmentsTitle: "हालका प्रतिबद्धताहरू",
+    wsCommitmentsEmpty: "अझै पुष्टि भएको प्रतिबद्धता छैन।",
+    wsCommittedHours: "सबैभन्दा व्यस्त समयमा प्रति हप्ता वाचा गरिएका घण्टा",
   },
 };
 

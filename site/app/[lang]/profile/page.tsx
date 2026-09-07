@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import StatusTimeline from "@/components/StatusTimeline";
 import OwnMatchingProfile from "@/components/OwnMatchingProfile";
+import VolunteerWorkspace from "@/components/VolunteerWorkspace";
 import { added, type AddedStrings } from "@/lib/added-strings";
 import { statusLabel } from "@/lib/admin-render";
 import type { Lang } from "@/lib/content";
@@ -51,6 +52,23 @@ export default async function ProfilePage({ params }: { params: Promise<{ lang: 
           {a.profileNotRegistered}{" "}
           <Link href={screenPath(lang, "volunteer")}>{dict(lang).registerArrow}</Link>
         </p>
+      </div>
+    );
+  }
+
+  // A failed read is not "you have not registered". Sending a registered
+  // person back to the form during an outage is how one human becomes two
+  // rows, which is the duplicate the whole claim flow exists to prevent.
+  if (profile.state === "unavailable") {
+    return (
+      <div className="page page--narrow">
+        <h1 className="h1 h1--page">{a.profileUnavailableTitle}</h1>
+        <p className="intro">{a.profileUnavailableBody}</p>
+        {profile.email ? (
+          <p style={{ marginTop: 20, fontSize: 13, color: "var(--faint)" }}>
+            {a.profileSignedInAs} {profile.email}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -185,6 +203,8 @@ async function Registered({
           `}</style>
         ) : null}
       </section>
+
+      <VolunteerWorkspace id={reg.id} lang={lang} />
 
       <OwnMatchingProfile id={reg.id} lang={lang}/>
 

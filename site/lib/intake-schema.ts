@@ -1,5 +1,6 @@
 import { NEED_SECTIONS, VOLUNTEER_SECTIONS, fieldKey, isSelectPlaceholder } from "./form-schema";
 import type { SubmissionKind } from "./api";
+import { applicableIntakeFields } from "./form-visibility";
 
 /**
  * The single validation contract for everything that enters the system.
@@ -212,7 +213,7 @@ export function validateIntake(kind: IntakeKind, raw: unknown): IntakeResult {
     };
   }
 
-  const input = raw as Record<string, unknown>;
+  const input = applicableIntakeFields(kind, raw as Record<string, unknown>);
 
   for (const rule of REQUIRED[kind]) checkRule(rule, input[rule.key], errors);
 
