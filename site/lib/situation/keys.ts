@@ -20,6 +20,7 @@ export const ITEM_KINDS = [
   "proposal_decision",
   "email_stuck",
   "item_unpledged",
+  "unanswered_question",
 ] as const;
 
 export type ItemKind = (typeof ITEM_KINDS)[number];
@@ -34,6 +35,7 @@ export const ITEM_KIND_LABEL: Record<ItemKind, string> = {
   proposal_decision: "Requester proposal decision",
   email_stuck: "Failed or stuck email",
   item_unpledged: "Relief item short of pledges",
+  unanswered_question: "Unanswered clarification question",
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
