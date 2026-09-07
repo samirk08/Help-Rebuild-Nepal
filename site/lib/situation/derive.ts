@@ -181,7 +181,9 @@ export function deriveQueueItems(sources: QueueSources): DerivedItem[] {
     const created = Date.parse(mail.created_at);
     const stuckPending = mail.status === "pending" && Number.isFinite(created) && created < now - STUCK_EMAIL_MS;
     if (mail.status !== "failed" && !stuckPending) continue;
-    const invite = invites.get(mail.invitation_id);
+    // Nullable since migration 017 — a clarification email has a question,
+    // not an invitation, behind it.
+    const invite = mail.invitation_id ? invites.get(mail.invitation_id) : undefined;
     const subject = `${mail.kind} email ${mail.status}${mail.last_error ? ` — ${mail.last_error}` : ""}`;
     items.push({
       key: itemKey("email_stuck", mail.id),
@@ -196,6 +198,30 @@ export function deriveQueueItems(sources: QueueSources): DerivedItem[] {
       skills: [],
       missionIds: [],
       searchText: searchBlob([subject, mail.kind, mail.status, mail.last_error]),
+    });
+  }
+
+  // A question the engine generated, sent to a volunteer, and still waiting.
+  // Before migration 017 there was nothing to derive this from: the engine
+  // produced the question, a coordinator retyped it into an email by hand, and
+  // the answer never came back into the system.
+  for (const question of sources.questions) {
+    if (question.state !== "open") continue;
+    const volunteer = volunteers.get(question.volunteer_id);
+    const subject = `Waiting on an answer: ${question.question}`;
+    items.push({
+      key: itemKey("unanswered_question", question.id),
+      kind: "unanswered_question",
+      recordId: question.id,
+      href: `/admin/volunteers/${question.volunteer_id}`,
+      subject,
+      nextAction: "Chase the answer, or withdraw the question if it no longer matters",
+      waitingSince: question.asked_at,
+      derivedDueAt: addDays(question.asked_at, 3),
+      derivedPriority: "normal",
+      skills: [],
+      missionIds: [],
+      searchText: searchBlob([subject, question.check_key, volunteer?.org_or_name]),
     });
   }
 

@@ -4,15 +4,33 @@ import { recommend } from "./engine";
 import { emailConfigured, sendMatchingEmail } from "./email";
 import type { EmailPayload } from "./email";
 
-type Outbox = { id:string; invitation_id:string; kind:string; payload:EmailPayload; attempts:number; status:string };
+type Outbox = { id:string; invitation_id:string|null; question_id?:string|null; kind:string; payload:EmailPayload; attempts:number; status:string };
 export async function processMatchingEmails() {
   if (!emailConfigured()) return { enabled:false, sent:0, failed:0, cancelled:0 };
   const db = supabaseAdmin();
+  // A heartbeat, because a worker that stopped six hours ago and a worker with
+  // nothing to do leave identical outbox rows. Without this, Diagnostics
+  // cannot tell a silent queue from a healthy one. Best effort: failing to
+  // record a run must never stop the run.
+  const { data: run } = await db.from("worker_runs").insert({ worker: "matching-email" }).select("id").maybeSingle();
   const { data, error } = await db.rpc("matching_claim_emails",{p_limit:3});
-  if (error) throw new Error("Could not claim pending email work.");
+  if (error) {
+    if (run) await db.from("worker_runs").update({ finished_at:new Date().toISOString(), error:"claim failed" }).eq("id",run.id);
+    throw new Error("Could not claim pending email work.");
+  }
   const counts = { enabled:true, sent:0, failed:0, cancelled:0 };
-  for (const job of (data ?? []) as Outbox[]) {
+  const jobs = (data ?? []) as Outbox[];
+  for (const job of jobs) {
     try {
+      // A clarification email belongs to a question, not an invitation
+      // (migration 017). It carries no contact details, so none of the
+      // invitation-side approval checks apply — it is simply sent.
+      if (job.kind === "clarification") {
+        const providerId = await sendMatchingEmail(job.id, job.payload);
+        await db.rpc("matching_record_sent",{p_job:job.id,p_provider:providerId});
+        counts.sent += 1;
+        continue;
+      }
       const {data:i,error:readError} = await db.from("matching_invitations").select("*").eq("id",job.invitation_id).single();
       if (readError) throw new Error("Invitation could not be read.");
       const need = await getNeed(i.need_id);
@@ -48,6 +66,14 @@ export async function processMatchingEmails() {
       await db.from("matching_email_outbox").update({status:terminal ? "failed" : "pending",last_error:message,locked_until:null,available_at:new Date(Date.now()+Math.min(60,2**job.attempts)*60000).toISOString()}).eq("id",job.id).neq("status","sent");
       counts.failed++;
     }
+  }
+  if (run) {
+    await db.from("worker_runs").update({
+      finished_at: new Date().toISOString(),
+      claimed: jobs.length,
+      sent: counts.sent,
+      failed: counts.failed,
+    }).eq("id", run.id);
   }
   return counts;
 }

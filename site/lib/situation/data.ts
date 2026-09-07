@@ -23,6 +23,7 @@ import type {
   QueueItem,
   QueueQuery,
   QueueSnapshot,
+  QuestionRow,
   QueueSources,
   RoleRow,
   VolunteerRow,
@@ -85,6 +86,7 @@ export async function loadQueueSources(): Promise<
     volunteers,
     profiles,
     events,
+    questions,
     outbox,
     itemNeeds,
     pledged,
@@ -138,6 +140,18 @@ export async function loadQueueSources(): Promise<
           .range(from, to),
       false
     ),
+    // Optional like the rest of the matching tables: a project without
+    // migration 017 simply has no question items, rather than a broken page.
+    collect<QuestionRow>(
+      (from, to) =>
+        db
+          .from("matching_questions")
+          .select("id, volunteer_id, role_id, check_key, question, asked_at, state")
+          .eq("state", "open")
+          .order("id")
+          .range(from, to),
+      false
+    ),
     collect<OutboxRow>(
       (from, to) =>
         db
@@ -175,7 +189,7 @@ export async function loadQueueSources(): Promise<
   const failed = required.find((result) => result.state === "error");
   if (failed && failed.state === "error") return unavailable(failed.reason);
 
-  const optional = [invitations, roles, profiles, events, outbox, assignments];
+  const optional = [invitations, roles, profiles, events, outbox, questions, assignments];
   const optionalFailed = optional.find((result) => result.state === "error");
   if (optionalFailed && optionalFailed.state === "error") return unavailable(optionalFailed.reason);
 
@@ -199,6 +213,7 @@ export async function loadQueueSources(): Promise<
     profiles: valueOrEmpty(profiles),
     events: valueOrEmpty(events),
     outbox: valueOrEmpty(outbox),
+    questions: valueOrEmpty(questions),
     itemNeeds: valueOrEmpty(itemNeeds).map((row) => ({
       ...row,
       pledged: pledgedById.get(row.id) ?? 0,

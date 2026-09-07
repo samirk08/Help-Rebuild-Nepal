@@ -45,6 +45,7 @@ function sources(overrides: Partial<QueueSources> = {}): QueueSources {
     profiles: [],
     events: [],
     outbox: [],
+    questions: [],
     itemNeeds: [],
     ...overrides,
   };

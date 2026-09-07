@@ -140,6 +140,7 @@ async function sourcesFromDb(now: string): Promise<QueueSources> {
     })),
     events: stringify(events),
     outbox: stringify(outbox),
+    questions: [],
     itemNeeds: stringify(itemNeeds).map((row) => ({
       ...row,
       needed_by: iso(row.needed_by).slice(0, 10),

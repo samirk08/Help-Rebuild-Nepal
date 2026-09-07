@@ -1,4 +1,5 @@
 import { adminAllowlistReady } from "@/lib/admin-auth";
+import { healthChecks, workerHealth } from "@/lib/matching/health";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -214,6 +215,11 @@ export default async function DiagnosticsPage() {
   });
 
   checks.push(await writePrivilegeCheck(client));
+
+  // Outbound mail. Nothing here is critical: a stuck queue is serious but does
+  // not stop a form saving, and the banner above claims public forms are
+  // failing whenever a critical check does.
+  checks.push(...healthChecks(await workerHealth()));
 
   const failing = checks.filter((c) => !c.ok);
   // Anything not explicitly marked optional counts as breaking, so a check

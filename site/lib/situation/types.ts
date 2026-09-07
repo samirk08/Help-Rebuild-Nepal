@@ -75,6 +75,7 @@ export type QueueSources = {
   profiles: ProfileRow[];
   events: EventRow[];
   outbox: OutboxRow[];
+  questions: QuestionRow[];
   itemNeeds: ItemNeedRow[];
 };
 
@@ -131,11 +132,23 @@ export type EventRow = {
 
 export type OutboxRow = {
   id: string;
-  invitation_id: string;
+  // Nullable since migration 017: a clarification email belongs to a question,
+  // not to an invitation.
+  invitation_id: string | null;
   kind: string;
   status: string;
   last_error: string | null;
   created_at: string;
+};
+
+export type QuestionRow = {
+  id: string;
+  volunteer_id: string;
+  role_id: string | null;
+  check_key: string;
+  question: string;
+  asked_at: string;
+  state: string;
 };
 
 export type ItemNeedRow = {
