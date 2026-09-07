@@ -66,7 +66,7 @@ export async function supabaseClaimPorts(): Promise<ClaimPorts> {
       return !error;
     },
 
-    async linkSubmission(submissionId: string, userId: string): Promise<boolean> {
+    async linkSubmission(submissionId: string, userId: string, kind): Promise<boolean> {
       // `is("user_id", null)` in the UPDATE itself is what makes two
       // simultaneous claims resolve to one winner: the second matches no row
       // and comes back empty rather than overwriting the first.
@@ -74,7 +74,7 @@ export async function supabaseClaimPorts(): Promise<ClaimPorts> {
         .from("submissions")
         .update({ user_id: userId })
         .eq("id", submissionId)
-        .eq("kind", "volunteer")
+        .eq("kind", kind)
         .is("user_id", null)
         .select("id")
         .maybeSingle();
