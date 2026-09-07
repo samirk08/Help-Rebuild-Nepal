@@ -91,11 +91,11 @@ export function fakePorts(state: FakeState): ClaimPorts {
       return false;
     },
 
-    async linkSubmission(submissionId, userId) {
+    async linkSubmission(submissionId, userId, kind) {
       const row = state.submissions.get(submissionId);
       // The `is("user_id", null)` guard the real UPDATE carries: a second
       // claimant matches no row rather than overwriting the first.
-      if (!row || row.kind !== "volunteer" || row.user_id !== null) return false;
+      if (!row || row.kind !== kind || row.user_id !== null) return false;
       row.user_id = userId;
       return true;
     },

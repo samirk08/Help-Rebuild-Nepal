@@ -324,6 +324,49 @@ export type AddedStrings = {
   n3AssistSubmit: string;
   n3AssistConsent: string;
   n3RoleNote: string;
+
+  /** The requester workspace (Phase 3.2). */
+  rqNav: string;
+  rqTitle: string;
+  rqIntro: string;
+  rqSignedOut: string;
+  rqSignIn: string;
+  rqNoRequest: string;
+  rqNoRequestBody: string;
+  rqUnavailable: string;
+  rqReference: string;
+  rqStatus: string;
+  rqCoordinator: string;
+  rqNoCoordinator: string;
+  rqFiledOn: string;
+  rqAssisted: string;
+  rqEditTitle: string;
+  rqEditWarning: string;
+  rqEditSave: string;
+  rqSummaryLabel: string;
+  rqDetailLabel: string;
+  rqProposedTitle: string;
+  rqProposedEmpty: string;
+  rqProposedNote: string;
+  rqConfirm: string;
+  rqDecline: string;
+  rqOutcomeTitle: string;
+  rqOutcomeIntro: string;
+  rqOutcomeYes: string;
+  rqOutcomePartly: string;
+  rqOutcomeNo: string;
+  rqOutcomeNote: string;
+  rqOutcomeSave: string;
+  rqCloseTitle: string;
+  rqCloseBody: string;
+  rqCloseReason: string;
+  rqClose: string;
+  rqReopen: string;
+  rqReopenBody: string;
+  rqHistoryTitle: string;
+  rqHistoryEmpty: string;
+  rqClaimTitle: string;
+  rqClaimIntro: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -692,6 +735,55 @@ const ADDED: Record<Lang, AddedStrings> = {
     n3AssistConsent: "I agree to be contacted about this request.",
     n3RoleNote:
       "Skills, headcount and dates are worked out with a coordinator once your request is verified.",
+
+    rqNav: "My request",
+    rqTitle: "Your request",
+    rqIntro: "Where it has got to, and what you can change.",
+    rqSignedOut: "Sign in with the email on your request to see it.",
+    rqSignIn: "Sign in",
+    rqNoRequest: "No request is linked to this account",
+    rqNoRequestBody:
+      "If you filed one, use the link on your confirmation page to link it to this account.",
+    rqUnavailable:
+      "We could not load your request just now. This is a problem at our end, not a sign it is missing — please try again shortly, and do not file it again.",
+    rqReference: "Reference",
+    rqStatus: "Status",
+    rqCoordinator: "Your coordinator",
+    rqNoCoordinator: "Not assigned yet",
+    rqFiledOn: "Filed on",
+    rqAssisted: "You asked us to call you about this",
+    rqEditTitle: "Correct your request",
+    rqEditWarning:
+      "Changing what the work is will cancel any invitations already sent, so a coordinator can check them against the new description. Fixing the one-line summary alone does not.",
+    rqEditSave: "Save changes",
+    rqSummaryLabel: "One-line summary",
+    rqDetailLabel: "What needs to happen",
+    rqProposedTitle: "People being found for you",
+    rqProposedEmpty: "Nobody has been approached yet. A coordinator does this once your request is verified.",
+    rqProposedNote:
+      "Names and contact details are shared only once both sides agree, so you see roles here rather than people.",
+    rqConfirm: "Go ahead with this",
+    rqDecline: "Not this one",
+    rqOutcomeTitle: "Did the support help?",
+    rqOutcomeIntro:
+      "This is the only way we learn whether any of this worked. It is read by a coordinator, not published.",
+    rqOutcomeYes: "Yes, the need was met",
+    rqOutcomePartly: "Partly",
+    rqOutcomeNo: "No",
+    rqOutcomeNote: "Anything you want to add",
+    rqOutcomeSave: "Send this",
+    rqCloseTitle: "Close this request",
+    rqCloseBody:
+      "Close it if the problem is solved, however it was solved. You can reopen it afterwards.",
+    rqCloseReason: "Why are you closing it? (optional)",
+    rqClose: "Close the request",
+    rqReopen: "Reopen the request",
+    rqReopenBody: "This request is closed. Reopening sends it back for review.",
+    rqHistoryTitle: "What has happened",
+    rqHistoryEmpty: "Nothing recorded yet.",
+    rqClaimTitle: "Link your request to this account",
+    rqClaimIntro:
+      "Enter the email address on your request and we will send a code to confirm it is yours.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -1047,6 +1139,55 @@ const ADDED: Record<Lang, AddedStrings> = {
     n3AssistConsent: "यो अनुरोधबारे मलाई सम्पर्क गर्न म सहमत छु।",
     n3RoleNote:
       "सीप, कति जना र मिति तपाईंको अनुरोध प्रमाणित भएपछि संयोजकसँग मिलाइन्छ।",
+
+    rqNav: "मेरो अनुरोध",
+    rqTitle: "तपाईंको अनुरोध",
+    rqIntro: "यो कहाँ पुग्यो, र तपाईंले के बदल्न सक्नुहुन्छ।",
+    rqSignedOut: "आफ्नो अनुरोधमा दिइएको इमेलले साइन इन गर्नुहोस्।",
+    rqSignIn: "साइन इन गर्नुहोस्",
+    rqNoRequest: "यो खातासँग कुनै अनुरोध जोडिएको छैन",
+    rqNoRequestBody:
+      "तपाईंले अनुरोध पठाउनुभएको छ भने, पुष्टि पृष्ठको लिंकबाट यसलाई यो खातासँग जोड्नुहोस्।",
+    rqUnavailable:
+      "अहिले तपाईंको अनुरोध लोड गर्न सकिएन। यो हाम्रो तर्फको समस्या हो; अनुरोध हराएको होइन — केही बेरमा फेरि प्रयास गर्नुहोस्, फेरि नपठाउनुहोस्।",
+    rqReference: "सन्दर्भ",
+    rqStatus: "स्थिति",
+    rqCoordinator: "तपाईंको संयोजक",
+    rqNoCoordinator: "अझै तोकिएको छैन",
+    rqFiledOn: "पठाइएको मिति",
+    rqAssisted: "तपाईंले यसबारे फोन गर्न भन्नुभएको थियो",
+    rqEditTitle: "आफ्नो अनुरोध सच्याउनुहोस्",
+    rqEditWarning:
+      "कामको विवरण बदल्नुभयो भने पठाइसकिएका निमन्त्रणा रद्द हुन्छन्, ताकि संयोजकले नयाँ विवरणसँग मिलाएर जाँच्न सकून्। एक वाक्यको सारांश मात्र बदल्दा हुँदैन।",
+    rqEditSave: "परिवर्तन सुरक्षित गर्नुहोस्",
+    rqSummaryLabel: "एक वाक्यको सारांश",
+    rqDetailLabel: "के हुनुपर्छ",
+    rqProposedTitle: "तपाईंका लागि खोजिँदै गरेका मानिस",
+    rqProposedEmpty: "अझै कसैलाई सम्पर्क गरिएको छैन। अनुरोध प्रमाणित भएपछि संयोजकले गर्नेछन्।",
+    rqProposedNote:
+      "नाम र सम्पर्क विवरण दुवै पक्ष सहमत भएपछि मात्र साझा हुन्छ, त्यसैले यहाँ व्यक्ति होइन भूमिका देखिन्छ।",
+    rqConfirm: "यसैसँग अगाडि बढौं",
+    rqDecline: "यो होइन",
+    rqOutcomeTitle: "सहयोग काम लाग्यो?",
+    rqOutcomeIntro:
+      "यो काम भयो कि भएन भन्ने हामीले थाहा पाउने एउटै बाटो यही हो। संयोजकले पढ्छन्, सार्वजनिक हुँदैन।",
+    rqOutcomeYes: "हो, आवश्यकता पूरा भयो",
+    rqOutcomePartly: "आंशिक रूपमा",
+    rqOutcomeNo: "भएन",
+    rqOutcomeNote: "थप्न चाहनुभएको कुरा",
+    rqOutcomeSave: "पठाउनुहोस्",
+    rqCloseTitle: "यो अनुरोध बन्द गर्नुहोस्",
+    rqCloseBody:
+      "समस्या जसरी भए पनि समाधान भयो भने बन्द गर्नुहोस्। पछि फेरि खोल्न सकिन्छ।",
+    rqCloseReason: "किन बन्द गर्दै हुनुहुन्छ? (ऐच्छिक)",
+    rqClose: "अनुरोध बन्द गर्नुहोस्",
+    rqReopen: "अनुरोध फेरि खोल्नुहोस्",
+    rqReopenBody: "यो अनुरोध बन्द छ। फेरि खोल्दा पुनः समीक्षामा जान्छ।",
+    rqHistoryTitle: "के-के भयो",
+    rqHistoryEmpty: "अझै केही अभिलेख छैन।",
+    rqClaimTitle: "आफ्नो अनुरोध यो खातासँग जोड्नुहोस्",
+    rqClaimIntro:
+      "आफ्नो अनुरोधमा दिइएको इमेल लेख्नुहोस्, हामी पुष्टिका लागि कोड पठाउनेछौं।",
   },
 };
 

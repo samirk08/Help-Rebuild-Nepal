@@ -41,10 +41,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  const { submissionId, email } = body as { submissionId?: unknown; email?: unknown };
+  const { submissionId, email, kind } = body as {
+    submissionId?: unknown;
+    email?: unknown;
+    kind?: unknown;
+  };
 
   const ports = await supabaseClaimPorts();
-  const result = await startClaim(ports, { submissionId, email });
+  // A requester claiming their need uses the same mailbox proof as a
+  // volunteer claiming their registration — one flow, one set of guarantees.
+  const result = await startClaim(ports, {
+    submissionId,
+    email,
+    kind: kind === "need" ? "need" : "volunteer",
+  });
 
   if (!result.ok) {
     const status = result.error === "invalid_request" ? 400 : 502;
