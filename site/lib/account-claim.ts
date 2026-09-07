@@ -42,6 +42,8 @@ export type ClaimSubmission = {
  * Each port is one operation with one obvious real implementation, so the fake
  * used in tests cannot drift far from what Supabase actually does.
  */
+export type ClaimKind = "volunteer" | "need";
+
 export type ClaimPorts = {
   loadSubmission(id: string): Promise<ClaimSubmission | null>;
   /** Sends a one-time code. Resolves false when the provider refused. */
@@ -55,7 +57,7 @@ export type ClaimPorts = {
    * two simultaneous claims resolve to one winner rather than to whoever
    * happened to write last.
    */
-  linkSubmission(submissionId: string, userId: string): Promise<boolean>;
+  linkSubmission(submissionId: string, userId: string, kind: ClaimKind): Promise<boolean>;
   /** Best-effort enrolment in the primary-skill network. Never fatal. */
   enrolInNetwork?(userId: string, fields: Record<string, unknown>): Promise<void>;
 };
@@ -64,7 +66,17 @@ export function normalizedEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export type StartInput = { submissionId: unknown; email: unknown };
+export type StartInput = {
+  submissionId: unknown;
+  email: unknown;
+  /**
+   * A requester claims their need exactly as a volunteer claims their
+   * registration: same mailbox proof, same single-use code, same refusal to
+   * reveal whether a record exists. Reusing this rather than writing a second
+   * flow means the security properties are the ones already under test.
+   */
+  kind?: ClaimKind;
+};
 
 export type StartResult =
   | { ok: true; sent: boolean }
@@ -96,9 +108,11 @@ export async function startClaim(ports: ClaimPorts, input: StartInput): Promise<
 
   const submission = await ports.loadSubmission(input.submissionId);
 
+  const kind: ClaimKind = input.kind === "need" ? "need" : "volunteer";
+
   const claimable =
     submission !== null &&
-    submission.kind === "volunteer" &&
+    submission.kind === kind &&
     submission.user_id === null &&
     typeof submission.contact_email === "string" &&
     normalizedEmail(submission.contact_email) === email;
@@ -115,6 +129,7 @@ export type CompleteInput = {
   email: unknown;
   code: unknown;
   password: unknown;
+  kind?: ClaimKind;
 };
 
 export type CompleteError =
@@ -165,8 +180,9 @@ export async function completeClaim(
   const userId = await ports.verifyCode(email, input.code.trim());
   if (!userId) return { ok: false, error: "invalid_code" };
 
+  const kind: ClaimKind = input.kind === "need" ? "need" : "volunteer";
   const submission = await ports.loadSubmission(input.submissionId);
-  if (!submission || submission.kind !== "volunteer") {
+  if (!submission || submission.kind !== kind) {
     return { ok: false, error: "submission_unavailable" };
   }
   if (
@@ -181,16 +197,16 @@ export async function completeClaim(
     // Re-running a claim you already completed is a success, not an error: it
     // is what a refreshed tab or a retried request looks like.
     if (submission.user_id === userId) {
-      await setPasswordAndEnrol(ports, userId, input.password, submission);
+      await setPasswordAndEnrol(ports, userId, input.password, submission, kind);
       return { ok: true, userId };
     }
     return { ok: false, error: "already_claimed" };
   }
 
-  const linked = await ports.linkSubmission(submission.id, userId);
+  const linked = await ports.linkSubmission(submission.id, userId, kind);
   if (!linked) return { ok: false, error: "already_claimed" };
 
-  const ready = await setPasswordAndEnrol(ports, userId, input.password, submission);
+  const ready = await setPasswordAndEnrol(ports, userId, input.password, submission, kind);
   if (!ready) return { ok: false, error: "server_error" };
 
   return { ok: true, userId };
@@ -200,10 +216,14 @@ async function setPasswordAndEnrol(
   ports: ClaimPorts,
   userId: string,
   password: string,
-  submission: ClaimSubmission
+  submission: ClaimSubmission,
+  kind: ClaimKind
 ): Promise<boolean> {
   const set = await ports.setPassword(userId, password);
   if (!set) return false;
+  // Skill networks are a volunteer concept. A requester claiming their own
+  // need must not be quietly enrolled in one.
+  if (kind !== "volunteer") return true;
   // Best effort: someone who lands unenrolled just sees the Join button, and
   // failing the whole claim over it would strand an account that already exists.
   if (ports.enrolInNetwork) {

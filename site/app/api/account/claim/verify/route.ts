@@ -39,10 +39,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 
-  const { submissionId, email, code, password } = body as Record<string, unknown>;
+  const { submissionId, email, code, password, kind } = body as Record<string, unknown>;
 
   const ports = await supabaseClaimPorts();
-  const result = await completeClaim(ports, { submissionId, email, code, password });
+  const result = await completeClaim(ports, {
+    submissionId,
+    email,
+    code,
+    password,
+    kind: kind === "need" ? "need" : "volunteer",
+  });
 
   if (!result.ok) {
     const status =
