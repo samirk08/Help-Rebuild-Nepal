@@ -3,7 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-type Check = { name: string; ok: boolean; detail: string };
+/**
+ * `critical` distinguishes "this deployment is broken" from "a feature you may
+ * not use is unavailable". Without it every row weighed the same and one
+ * unapplied optional migration made the page announce that public forms were
+ * failing — which, being untrue, teaches the reader to ignore the banner.
+ */
+type Check = { name: string; ok: boolean; detail: string; critical?: boolean };
 
 /**
  * Why this page exists: when a public form starts returning 500, the only
@@ -115,9 +121,13 @@ function fromError(name: string, error: { message: string; code?: string } | nul
 async function migrationChecks(
   client: ReturnType<typeof supabaseAdmin>
 ): Promise<Check[]> {
+  // `critical` arrives with migration 012. Selecting it explicitly would make
+  // this whole panel fail on a project that only has 011, so the column is
+  // read defensively and every row treated as critical until 012 says
+  // otherwise — the safe direction to be wrong in.
   const { data, error } = await client
     .from("migration_state")
-    .select("migration, detail, applied")
+    .select("*")
     .order("migration");
 
   if (error) {
@@ -126,6 +136,7 @@ async function migrationChecks(
       {
         name: "Migration state",
         ok: false,
+        critical: true,
         detail:
           "Cannot read migration_state, so individual migrations cannot be reported. " +
           "Run supabase/011-intake-integrity.sql.",
@@ -133,11 +144,21 @@ async function migrationChecks(
     ];
   }
 
-  const rows = (data ?? []) as Array<{ migration: string; detail: string; applied: boolean }>;
+  const rows = (data ?? []) as Array<{
+    migration: string;
+    detail: string;
+    applied: boolean;
+    critical?: boolean;
+  }>;
+
   return rows.map((row) => ({
     name: `Migration ${row.migration} — ${row.detail}`,
     ok: row.applied,
-    detail: row.applied ? "Applied" : `Not applied. Run supabase/${row.migration}-*.sql.`,
+    critical: row.critical ?? true,
+    detail: row.applied
+      ? "Applied"
+      : `Not applied. Run supabase/${row.migration}-*.sql.` +
+        (row.critical === false ? " This feature is unavailable until you do; intake is unaffected." : ""),
   }));
 }
 
@@ -195,6 +216,10 @@ export default async function DiagnosticsPage() {
   checks.push(await writePrivilegeCheck(client));
 
   const failing = checks.filter((c) => !c.ok);
+  // Anything not explicitly marked optional counts as breaking, so a check
+  // added later without a `critical` flag errs toward being reported loudly.
+  const breaking = failing.filter((c) => c.critical !== false);
+  const optional = failing.filter((c) => c.critical === false);
 
   return (
     <div>
@@ -213,11 +238,22 @@ export default async function DiagnosticsPage() {
           <p className="admin-stat__value">All clear</p>
           <p className="admin-stat__label">Forms can save and the dashboard can read.</p>
         </div>
-      ) : (
+      ) : breaking.length > 0 ? (
         <div className="admin-stat admin-stat--amber" style={{ marginBottom: 24 }}>
-          <p className="admin-stat__value">{failing.length} failing</p>
+          <p className="admin-stat__value">{breaking.length} failing</p>
           <p className="admin-stat__label">
             Public forms are likely returning errors right now. Details below.
+          </p>
+        </div>
+      ) : (
+        // Nothing here stops a form saving, so the page does not say it does.
+        <div className="admin-stat admin-stat--green" style={{ marginBottom: 24 }}>
+          <p className="admin-stat__value">Forms are fine</p>
+          <p className="admin-stat__label">
+            {optional.length === 1
+              ? "One optional migration has not been run, so that feature is unavailable."
+              : `${optional.length} optional migrations have not been run, so those features are unavailable.`}{" "}
+            Intake, matching and the dashboard are unaffected.
           </p>
         </div>
       )}

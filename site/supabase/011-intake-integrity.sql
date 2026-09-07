@@ -75,7 +75,14 @@ create unique index if not exists documents_storage_path_uidx
 -- reports what is actually present in the database rather than what is present
 -- in the repository, which is the distinction that matters: a migration file
 -- committed to git is not a migration that has been run.
-create or replace view migration_state as
+-- Dropped rather than replaced, because a later migration widens this view and
+-- CREATE OR REPLACE VIEW cannot remove a column. Without the drop, re-running
+-- the migration set in order on an up-to-date project fails with "cannot drop
+-- columns from view" — which would make the README's promise that every
+-- migration is safe to re-run quietly untrue.
+drop view if exists migration_state;
+
+create view migration_state as
 with expected(migration, object_kind, object_name, detail) as (
   values
     ('schema',  'table',  'submissions',        'Core intake tables'),
