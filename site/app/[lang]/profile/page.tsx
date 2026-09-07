@@ -8,6 +8,7 @@ import { added, type AddedStrings } from "@/lib/added-strings";
 import { statusLabel } from "@/lib/admin-render";
 import type { Lang } from "@/lib/content";
 import { dict, isLang, localePath, translator } from "@/lib/i18n";
+import { listMissions, missionViewer } from "@/lib/missions";
 import { navItems, screenPath } from "@/lib/routes";
 import { STATUSES } from "@/lib/site-data";
 import { getVolunteerProfile, type VolunteerRegistration } from "@/lib/volunteer-profile";
@@ -78,7 +79,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ lang: 
   );
 }
 
-function Registered({
+async function Registered({
   lang,
   a,
   email,
@@ -91,6 +92,11 @@ function Registered({
 }) {
   const t = dict(lang);
   const tr = translator(lang);
+
+  // The missions this person has chosen, resolved to their titles.
+  const [allMissions, viewer] = await Promise.all([listMissions(), missionViewer()]);
+  const chosen = new Set(viewer.memberships.map((m) => m.missionId));
+  const chosenMissions = allMissions.filter((m) => chosen.has(m.id));
 
   // Chip answers arrive joined with ", "; translate each part so a list like
   // "Nepali, English" still localises. Free text falls through unchanged.
@@ -181,6 +187,27 @@ function Registered({
       </section>
 
       <OwnMatchingProfile id={reg.id} lang={lang}/>
+
+      {/* Missions are chosen on their own page; this is the reminder of what
+          you picked, so the profile stays the one place that answers "what
+          have I told them about me?". */}
+      <section className="panel panel--organize" style={{ marginBottom: 16 }}>
+        <h2 className="panel__title">{a.missionYourMissions}</h2>
+        {chosenMissions.length > 0 ? (
+          <ul className="bullets" style={{ margin: "8px 0 12px" }}>
+            {chosenMissions.map((mission) => (
+              <li key={mission.id}>
+                <Link href={`${screenPath(lang, "missions")}/${mission.id}`}>{mission.title}</Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="panel__body">{a.missionNoneChosen}</p>
+        )}
+        <Link href={screenPath(lang, "missions")} className="btn btn--outline btn--sm">
+          {a.missionsTitle} →
+        </Link>
+      </section>
 
       <div className="grid grid--280">
         {reg.sections.map((section) => (

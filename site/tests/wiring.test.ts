@@ -80,3 +80,21 @@ test("the networks page decides what to show from the signed-in viewer", () => {
   assert.match(page, /JoinNetworkButton/, "a registered viewer must get the join button");
   assert.match(page, /memberships/, "an existing member must not be asked to join again");
 });
+
+/**
+ * The mission actions have the same shape as the network join did before it
+ * was fixed: correct server actions that a page has to actually call. Server
+ * actions are invoked through a form rather than `fetch`, so the general rule
+ * above cannot see them.
+ */
+test("the missions pages call the actions that change membership", () => {
+  const list = readFileSync(join(APP, "[lang]", "missions", "page.tsx"), "utf8");
+  const detail = readFileSync(join(APP, "[lang]", "missions", "[id]", "page.tsx"), "utf8");
+  const card = readFileSync(join(COMPONENTS, "MissionCard.tsx"), "utf8");
+
+  assert.match(list, /missionViewer/, "the list must ask who is asking");
+  assert.match(list, /setMissionOnly/, "the scope switch must be reachable");
+  assert.match(card, /joinMission/, "a card must be able to join");
+  assert.match(card, /leaveMission/, "joining must be reversible from the same place");
+  assert.match(detail, /joinMission|leaveMission/, "the detail page must offer the same action");
+});

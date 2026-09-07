@@ -16,6 +16,7 @@ export const ROUTES = {
   tracker: "/tracker",
   projects: "/projects",
   networks: "/networks",
+  missions: "/missions",
   accountLogin: "/account/login",
   profile: "/profile",
   partners: "/partners",
@@ -64,6 +65,17 @@ export function navItems(lang: Lang): Array<{ id: string; label: string; href: s
 
   const afterNeeds = items.findIndex((i) => i.id === "needs") + 1;
   items.splice(afterNeeds || items.length, 0, relief);
+
+  // Missions sit beside networks: both are "who is here", as opposed to the
+  // needs and projects entries, which are "what is being done".
+  const missions = {
+    id: "missions",
+    label: added(lang).missionsNav,
+    href: screenPath(lang, "missions"),
+  };
+  const afterNetworks = items.findIndex((i) => i.id === "networks") + 1;
+  items.splice(afterNetworks || items.length, 0, missions);
+
   return items;
 }
 
