@@ -150,6 +150,37 @@ test("a relief offer needs a positive quantity and a contact", () => {
   assert.equal(good.pledge.district, "Dolakha");
 });
 
+test("a deeply nested payload is refused at the boundary, not walked", () => {
+  // An automated pull request proposed a recursion-depth guard inside
+  // `stableStringify` in the submissions route, on the theory that a nested
+  // payload could overflow the stack. The guard would have been the wrong
+  // place: two different over-deep structures would both stringify to the same
+  // sentinel, and identical keys mean the second submission is silently
+  // discarded as a duplicate. Losing a registration is worse than the crash.
+  //
+  // The real defence is that nothing nested ever reaches it. The schema keeps
+  // strings and arrays of strings and drops everything else, so what the
+  // idempotency key is derived from is flat by construction.
+  let nested: unknown = "bottom";
+  for (let i = 0; i < 2000; i++) nested = { deeper: nested };
+
+  const result = validateIntake("volunteer", volunteerPayload({ "s01-full-name": nested }));
+
+  // The nested value is not a string, so the required-name rule rejects it.
+  assert.deepEqual(codes(result), ["s01-full-name:required"]);
+
+  // And when the nesting rides along on a key the schema does not know, it is
+  // dropped rather than stored — so it never reaches the key derivation.
+  const ignored = validateIntake("volunteer", volunteerPayload({ "s99-unknown": nested }));
+  assert.ok(ignored.ok);
+  for (const value of Object.values(ignored.fields)) {
+    assert.ok(
+      typeof value === "string" || (Array.isArray(value) && value.every((v) => typeof v === "string")),
+      "every stored value must be a string or an array of strings"
+    );
+  }
+});
+
 test("the request budget refuses a caller past the limit and says when to retry", () => {
   resetRateLimits();
   const now = 1_000_000;
