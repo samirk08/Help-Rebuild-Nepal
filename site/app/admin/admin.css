@@ -191,6 +191,17 @@
   gap: 8px;
 }
 
+.admin-banner {
+  background: var(--amber-bg);
+  color: var(--amber-ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
 .admin-back {
   display: inline-block;
   font-size: 12.5px;
@@ -649,4 +660,94 @@
 
 .admin-login__submit {
   margin-top: 6px;
+}
+
+/* ---------------------------------------------------------- Situation Room */
+
+.admin-stat--unavailable::before {
+  background: var(--muted-2);
+}
+
+.admin-stat--unavailable .admin-stat__value {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.situation-actions {
+  display: grid;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.situation-actions .matching-form {
+  margin: 0;
+}
+
+.situation-actions .matching-fieldset {
+  gap: 8px;
+}
+
+.situation-actions .matching-fieldset > .btn {
+  justify-self: start;
+}
+
+.situation-log {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.situation-log--compact {
+  margin-top: 6px;
+}
+
+.situation-log--empty {
+  padding-left: 0;
+  list-style: none;
+}
+
+.situation-handover {
+  display: grid;
+  gap: 12px;
+}
+
+.situation-handover__item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.situation-handover__type {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.situation-handover__item h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.situation-handover__item p {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.situation-pager {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 13.5px;
+}
+
+.situation-pager span {
+  color: var(--muted);
 }
