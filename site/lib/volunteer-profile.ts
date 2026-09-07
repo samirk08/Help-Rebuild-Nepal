@@ -49,6 +49,13 @@ export type VolunteerRegistration = {
 export type VolunteerProfile =
   | { state: "signed-out" }
   | { state: "no-registration"; email: string | null }
+  /**
+   * The read failed. Distinct from `no-registration` on purpose: telling a
+   * registered person "you have not registered yet" during an outage invites
+   * them to fill the form in again, which is how one person becomes two rows
+   * and their history is split across both.
+   */
+  | { state: "unavailable"; email: string | null }
   | { state: "registered"; email: string | null; registration: VolunteerRegistration };
 
 const PRIMARY_SKILL_KEY = fieldKey("03", "Primary skill");
@@ -84,10 +91,11 @@ export async function getVolunteerProfile(): Promise<VolunteerProfile> {
     .maybeSingle();
 
   if (error) {
-    // A read fault should degrade to the empty state, not a 500: the page
-    // stays useful (it still links to the form) and the log says why.
+    // Not "no registration". That wording sent a registered person back to the
+    // form during an outage, producing a second row for the same human — the
+    // exact duplicate the claim flow exists to prevent.
     console.error("volunteer profile read failed", error);
-    return { state: "no-registration", email };
+    return { state: "unavailable", email };
   }
   if (!data) return { state: "no-registration", email };
 

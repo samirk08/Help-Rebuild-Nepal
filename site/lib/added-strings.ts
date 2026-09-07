@@ -241,6 +241,26 @@ export type AddedStrings = {
   missionNoneChosen: string;
   missionSaveScope: string;
   missionsUnavailable: string;
+
+  /** The volunteer workspace (Phase 2.1). */
+  profileUnavailableTitle: string;
+  profileUnavailableBody: string;
+  readyTitle: string;
+  readyYes: string;
+  readyPausedNote: string;
+  readyMissingTitle: string;
+  readyFixMatching: string;
+  readyFixRegistration: string;
+  readyFixCoordinator: string;
+  wsInvitationsTitle: string;
+  wsInvitationsEmpty: string;
+  wsInvitationExpires: string;
+  wsInvitationLapsed: string;
+  wsInvitationAccepted: string;
+  wsInvitationWaiting: string;
+  wsCommitmentsTitle: string;
+  wsCommitmentsEmpty: string;
+  wsCommittedHours: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -521,6 +541,27 @@ const ADDED: Record<Lang, AddedStrings> = {
     missionSaveScope: "Save this preference",
     missionsUnavailable:
       "Mission teams could not be loaded just now. This is a problem at our end — please try again shortly.",
+
+    profileUnavailableTitle: "We could not load your registration",
+    profileUnavailableBody:
+      "This is a problem at our end, not a sign that your registration is missing. Please try again shortly — do not fill the form in again, or you will end up with two records.",
+    readyTitle: "Ready for invitations",
+    readyYes: "Your details are complete. A coordinator can invite you to suitable work.",
+    readyPausedNote:
+      "You have paused invitations. Nothing will be sent until you turn them back on.",
+    readyMissingTitle: "Still needed before you can be invited",
+    readyFixMatching: "Add this in your matching details above.",
+    readyFixRegistration: "Contact us to update this on your registration.",
+    readyFixCoordinator: "A coordinator will do this — nothing for you to fix.",
+    wsInvitationsTitle: "Open invitations",
+    wsInvitationsEmpty: "No open invitations. You will be emailed if a suitable role comes up.",
+    wsInvitationExpires: "Respond by",
+    wsInvitationLapsed: "This response window has closed",
+    wsInvitationAccepted: "You said yes — waiting on the requester",
+    wsInvitationWaiting: "Awaiting your response",
+    wsCommitmentsTitle: "Current commitments",
+    wsCommitmentsEmpty: "No confirmed commitments yet.",
+    wsCommittedHours: "hours a week promised at your busiest overlap",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -789,6 +830,27 @@ const ADDED: Record<Lang, AddedStrings> = {
     missionSaveScope: "यो प्राथमिकता सुरक्षित गर्नुहोस्",
     missionsUnavailable:
       "अहिले अभियान टोलीहरू लोड गर्न सकिएन। यो हाम्रो तर्फको समस्या हो — केही बेरमा फेरि प्रयास गर्नुहोस्।",
+
+    profileUnavailableTitle: "तपाईंको दर्ता लोड गर्न सकिएन",
+    profileUnavailableBody:
+      "यो हाम्रो तर्फको समस्या हो; तपाईंको दर्ता हराएको होइन। केही बेरमा फेरि प्रयास गर्नुहोस् — फारम फेरि नभर्नुहोस्, नत्र दुईवटा रेकर्ड बन्नेछन्।",
+    readyTitle: "निमन्त्रणाका लागि तयार",
+    readyYes: "तपाईंका विवरण पूरा छन्। संयोजकले उपयुक्त कामका लागि निम्तो दिन सक्छन्।",
+    readyPausedNote:
+      "तपाईंले निमन्त्रणा रोक्नुभएको छ। फेरि नखोलेसम्म केही पठाइने छैन।",
+    readyMissingTitle: "निमन्त्रणा पाउनुअघि अझै चाहिने कुरा",
+    readyFixMatching: "माथिको मिलान विवरणमा यो थप्नुहोस्।",
+    readyFixRegistration: "दर्तामा यो अद्यावधिक गर्न हामीलाई सम्पर्क गर्नुहोस्।",
+    readyFixCoordinator: "यो संयोजकले गर्नेछन् — तपाईंले केही गर्नु पर्दैन।",
+    wsInvitationsTitle: "खुला निमन्त्रणाहरू",
+    wsInvitationsEmpty: "कुनै खुला निमन्त्रणा छैन। उपयुक्त काम आएमा इमेल गरिनेछ।",
+    wsInvitationExpires: "जवाफ दिनुहोस्",
+    wsInvitationLapsed: "जवाफको अवधि सकियो",
+    wsInvitationAccepted: "तपाईंले स्वीकार गर्नुभयो — अनुरोधकर्ताको प्रतीक्षामा",
+    wsInvitationWaiting: "तपाईंको जवाफको प्रतीक्षामा",
+    wsCommitmentsTitle: "हालका प्रतिबद्धताहरू",
+    wsCommitmentsEmpty: "अझै पुष्टि भएको प्रतिबद्धता छैन।",
+    wsCommittedHours: "सबैभन्दा व्यस्त समयमा प्रति हप्ता वाचा गरिएका घण्टा",
   },
 };
 
