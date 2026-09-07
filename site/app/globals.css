@@ -1,6 +1,6 @@
 /* ==========================================================================
    Help Rebuild Nepal — design tokens and component styles.
-   Ported from the approved prototype; values are the design's, not invented.
+   Shared foundations for readable, responsive coordination tools.
    ========================================================================== */
 
 .matching-panel { margin: 24px 0; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
@@ -157,6 +157,32 @@ body {
 
 html[lang="ne"] body {
   font-family: var(--font-deva), var(--font-body);
+}
+
+/* Keep the site shell intact while improving contrast on content surfaces. */
+main {
+  --muted-2: #5c666f;
+  --faint: #5c666f;
+  --faint-2: #5c666f;
+  --field-border: #858f97;
+  --radius: 8px;
+  --radius-sm: 6px;
+  min-width: 0;
+  line-height: 1.6;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html[lang="ne"] main :is(.h1, .h2, .h3, .card__title, .fsection__title, .need-card__title) {
+  font-family: var(--font-deva), var(--font-body);
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+html[lang="ne"] main :is(.field__label, .badge, .eyebrow, .eyebrow--label) {
+  letter-spacing: 0;
 }
 
 a {
@@ -350,7 +376,7 @@ textarea:focus-visible {
   font-size: clamp(26px, 3.2vw, 34px);
   line-height: 1.1;
   letter-spacing: -0.8px;
-  margin: 0 0 6px;
+  margin: 0 0 12px;
 }
 
 .h1--form {
@@ -409,9 +435,9 @@ textarea:focus-visible {
 }
 
 .intro {
-  font-size: 15px;
+  font-size: 16px;
   color: var(--muted);
-  margin: 0 0 24px;
+  margin: 0 0 32px;
   max-width: 70ch;
   line-height: 1.55;
 }
@@ -654,7 +680,9 @@ textarea:focus-visible {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 24px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .card--pad {
@@ -688,8 +716,8 @@ textarea:focus-visible {
 }
 
 .card__body {
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.6;
   color: var(--muted);
   max-width: 52ch;
   margin: 0 auto 20px;
@@ -697,7 +725,7 @@ textarea:focus-visible {
 
 .grid {
   display: grid;
-  gap: 16px;
+  gap: 24px;
 }
 
 .grid--160 {
@@ -1186,15 +1214,20 @@ textarea:focus-visible {
 
 .form-rail__pips {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
   gap: 6px;
 }
 
 .pip {
-  min-width: 30px;
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  flex: none;
   text-align: center;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   padding: 5px 7px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
@@ -1236,6 +1269,32 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
+.form-rail__actions button {
+  min-height: 44px;
+}
+
+.page--form[data-kind="need"] {
+  --green: var(--navy);
+  --green-dark: var(--navy-dark);
+  --green-tint: var(--navy-tint);
+}
+
+.form-mode-note {
+  padding: 16px 20px;
+  margin: 0 0 24px;
+  border-left: 3px solid var(--green);
+  background: var(--green-tint);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.form-field-slot {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
 .linkish {
   color: var(--green);
 }
@@ -1255,7 +1314,7 @@ textarea:focus-visible {
 
 .form-sections {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .fsection {
@@ -1267,7 +1326,7 @@ textarea:focus-visible {
 
 .fsection__toggle {
   width: 100%;
-  padding: 15px 22px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1287,7 +1346,8 @@ textarea:focus-visible {
 .fsection__title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 15.5px;
+  font-size: 17px;
+  text-align: left;
 }
 
 .fsection__hint {
@@ -1336,10 +1396,10 @@ textarea:focus-visible {
 }
 
 .fsection__body {
-  padding: 4px 22px 22px;
+  padding: 24px;
   display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   border-top: 1px solid var(--line-2);
 }
 
@@ -1351,15 +1411,13 @@ textarea:focus-visible {
 }
 
 .field__label {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 1.1px;
-  text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink-2);
 }
 
 .field__note {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--faint);
 }
 
@@ -1369,7 +1427,7 @@ textarea:focus-visible {
 .field__error {
   font-size: 12px;
   font-weight: 500;
-  color: var(--red-dot, #c90026);
+  color: var(--red-dark);
 }
 
 .field[data-invalid="true"] .input,
@@ -1386,6 +1444,9 @@ textarea:focus-visible {
   border-radius: var(--radius-sm);
   background: var(--surface);
   width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  font-size: 16px;
 }
 
 .textarea {
@@ -1406,13 +1467,26 @@ textarea:focus-visible {
   border: 1px solid var(--field-border);
   border-radius: var(--radius-sm);
   padding: 8px 11px;
-  font-size: 13px;
+  min-height: 44px;
+  font-size: 14px;
   cursor: pointer;
   background: var(--surface);
 }
 
 .checkchip:hover {
   border-color: var(--green);
+}
+
+.checkchip:has(input:checked),
+.radiorow:has(input:checked) {
+  background: var(--green-tint);
+  border-color: var(--green);
+}
+
+.checkchip:focus-within,
+.radiorow:focus-within {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .checkchip input {
@@ -1436,7 +1510,8 @@ textarea:focus-visible {
   border: 1px solid var(--field-border);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
-  font-size: 13.5px;
+  min-height: 48px;
+  font-size: 14px;
   cursor: pointer;
   background: var(--surface);
 }
@@ -1460,7 +1535,7 @@ textarea:focus-visible {
 
 .panel {
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 24px;
 }
 
 .panel--donate {
@@ -1569,7 +1644,7 @@ textarea:focus-visible {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 24px;
   display: flex;
   flex-wrap: wrap;
   gap: 18px;
@@ -1599,88 +1674,141 @@ textarea:focus-visible {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 16px 18px;
+  padding: 24px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.filterbar__field {
+  flex: 1 1 160px;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.filterbar .footer__link {
+  color: var(--green);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .filterbar .select {
-  width: auto;
-  min-width: 150px;
-  font-size: 13.5px;
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
   padding: 10px 12px;
 }
 
 .filterbar__count {
-  margin-left: auto;
+  flex-basis: 100%;
+  margin: 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   font-family: var(--font-mono);
   font-size: 12px;
   color: var(--muted-2);
 }
 
-.needtable {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.needtable thead tr {
-  display: grid;
-  grid-template-columns: 1.1fr 1.5fr 0.8fr 1fr 0.8fr 0.8fr;
-  gap: 12px;
-  padding: 13px 20px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-2);
-}
-
-.needtable th {
-  padding: 0;
-  text-align: left;
-  font-weight: 600;
-  min-width: 0;
-}
-
-.needtable td {
-  display: block;
-}
-
-.needtable__col {
+.needs-sort {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+  gap: 12px;
+  margin: 0 0 20px;
+  font-size: 14px;
   color: var(--muted);
 }
 
-.needtable__col:hover {
-  color: var(--ink);
+.needs-sort .select {
+  width: auto;
+  max-width: 100%;
 }
 
-.needtable__arrow {
-  font-size: 10px;
-  color: #c3cad0;
+.needs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.needtable th[aria-sort="ascending"] .needtable__arrow,
-.needtable th[aria-sort="descending"] .needtable__arrow {
-  color: var(--ink);
+.needs-grid > li {
+  min-width: 0;
 }
 
-.needtable__empty {
-  padding: 64px 24px;
-  text-align: center;
+.need-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-@media (max-width: 860px) {
-  .needtable thead {
-    display: none;
-  }
+.need-card__title {
+  font: 600 21px / 1.4 var(--font-display);
+  letter-spacing: -0.3px;
+  margin: 0 0 12px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.need-card__location {
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+}
+
+.need-card__org {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+.need-card__skills {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.need-card__skills li {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink-2);
+  background: var(--surface-2);
+  font-size: 13px;
+}
+
+.need-card__facts {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.need-card__facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 16px;
+}
+
+.need-card__facts dt { color: var(--muted); }
+.need-card__facts dd { margin: 0; font-weight: 500; }
+.need-card__action { margin-top: auto; }
+
+@media (max-width: 760px) {
+  .needs-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* --------------------------------------------------------- Need detail */
@@ -1733,6 +1861,11 @@ textarea:focus-visible {
 .badge--urgent {
   background: var(--red-tint);
   color: var(--red-2);
+}
+
+.badge--pending {
+  background: var(--amber-bg);
+  color: var(--amber-ink);
 }
 
 /* Inline-flex so it can sit beside a link inside a table cell, unlike the
@@ -2648,7 +2781,8 @@ html[data-reveal="on"] [data-reveal][data-revealed="true"] {
 .combobox__option {
   padding: 8px 10px;
   border-radius: var(--radius-xs);
-  font-size: 14px;
+  min-height: 44px;
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -2875,4 +3009,50 @@ html[data-reveal="on"] [data-reveal][data-revealed="true"] {
 .pmdrf-panel__inner {
   overflow: hidden;
   min-height: 0;
+}
+
+/* Content controls stay usable at narrow widths and at browser zoom. The
+   header layout remains in its existing, separate responsive rules above. */
+main :is(.btn, .qfilter, .upload__remove, .dialog__close) {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+main :is(.input, .select, .textarea)::placeholder { opacity: 1; }
+main :is(.fact, .row, .notice, .profilehead, .panel, .callout) { overflow-wrap: anywhere; }
+main .badge { white-space: normal; }
+main :is(.fact__v, .row > *, .profilehead > *) { min-width: 0; }
+
+@media (max-width: 640px) {
+  main { --gutter: 16px; }
+  .page { padding-top: 28px; padding-bottom: 48px; }
+  .page--form .lede { margin-bottom: 24px; }
+  .intro { margin-bottom: 24px; }
+  .grid, .needs-grid { gap: 16px; }
+  .grid, .detail__cols, .band__inner { grid-template-columns: minmax(0, 1fr); }
+  .card, .card--pad, .panel, .submitbar, .profilehead, .callout,
+  .detail__head, .detail__main, .detail__side { padding: 20px; }
+  .card--flush { padding: 0; }
+  .card--empty, .card--empty-lg { padding: 32px 20px; }
+  .form-rail { position: static; padding: 12px 16px; gap: 8px 12px; }
+  .form-rail__pips { order: 3; flex-basis: 100%; padding: 3px; }
+  .form-rail__actions { gap: 12px; }
+  .fsection__toggle { padding: 16px; gap: 10px; flex-wrap: wrap; }
+  .fsection__title { flex: 1; }
+  .fsection__hint { flex-basis: 100%; order: 4; margin-left: 26px; text-align: left; }
+  .fsection__hint:empty { display: none; }
+  .fsection__body { padding: 20px 16px; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+  .form-field-slot { grid-column: 1 / -1 !important; }
+  .checkchip { max-width: 100%; }
+  .filterbar { padding: 20px; gap: 16px; }
+  .filterbar__field { flex-basis: 100%; }
+  .filterbar .btn, .submitbar > .btn { width: 100%; }
+  .needs-sort > label { flex-basis: 100%; }
+  .needs-sort .select { flex: 1; }
+  .need-card__action .btn { width: 100%; }
+  .need-card__title { font-size: 20px; }
+  .profilehead { align-items: flex-start; gap: 16px; }
+  .profilehead > * { max-width: 100%; }
+  .fact, .row { flex-direction: column; gap: 4px; }
+  .fact__v { text-align: left; }
 }

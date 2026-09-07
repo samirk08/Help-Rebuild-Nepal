@@ -15,6 +15,7 @@ import {
   type SubmissionKind,
 } from "@/lib/api";
 import { validateIntake, type FieldError } from "@/lib/intake-schema";
+import { FORM_SECTION_ORDER, WORK_MODE_FIELD, hiddenIntakeFields } from "@/lib/form-visibility";
 import { translator } from "@/lib/i18n";
 import { confirmationPath } from "@/lib/routes";
 import { ORGANIZE_OPTIONS, PMDRF_URL } from "@/lib/site-data";
@@ -46,7 +47,19 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
   const extra = added(lang);
   const { showToast } = useToast();
   const isVolunteer = mode === "volunteer";
-  const sections = isVolunteer ? VOLUNTEER_SECTIONS : NEED_SECTIONS;
+  const kind = isVolunteer ? "volunteer" : "need";
+  const sections = useMemo(() => {
+    const source = isVolunteer ? VOLUNTEER_SECTIONS : NEED_SECTIONS;
+    return FORM_SECTION_ORDER[kind].map((n) => source.find((section) => section.n === n)!);
+  }, [isVolunteer, kind]);
+  const [workMode, setWorkMode] = useState("");
+  const hiddenFields = useMemo(
+    () => hiddenIntakeFields(kind, { [WORK_MODE_FIELD[kind]]: workMode }),
+    [kind, workMode]
+  );
+  const visibleSections = sections.filter((section) =>
+    section.fields.some((field) => !hiddenFields.has(fieldKey(section.n, field.label)))
+  );
 
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(sections.map((s, i) => [s.n, i < INITIALLY_OPEN]))
@@ -70,6 +83,8 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
    */
   const idempotencyKey = useRef(newIdempotencyKey());
 
+  const sectionTitle = (section: EnhancedSection) =>
+    tr(isVolunteer && section.n === "05" ? "Where you can work" : section.title);
   const toggle = (n: string) => setOpen((prev) => ({ ...prev, [n]: !prev[n] }));
   const setAll = (value: boolean) =>
     setOpen(Object.fromEntries(sections.map((s) => [s.n, value])));
@@ -95,11 +110,15 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
     setFilled(next);
   }, [revision]);
 
-  const bump = () => setRevision((r) => r + 1);
+  const bump = () => {
+    const modeControl = formRef.current?.elements.namedItem(WORK_MODE_FIELD[kind]);
+    if (modeControl instanceof HTMLSelectElement) setWorkMode(modeControl.value);
+    setRevision((r) => r + 1);
+  };
 
-  const errorByField = useMemo(
-    () => new Map(errors.map((problem) => [problem.field, messageFor(problem, extra)])),
-    [errors, extra]
+  const visibleErrors = errors.filter((problem) => !hiddenFields.has(problem.field));
+  const errorByField = new Map(
+    visibleErrors.map((problem) => [problem.field, messageFor(problem, extra)])
   );
 
   const copy = useMemo(
@@ -107,14 +126,14 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       kicker: isVolunteer ? "I can help" : "I need support",
       title: isVolunteer ? "Register your skills, time and resources" : "Tell us exactly what you need",
       intro: isVolunteer
-        ? "The more you tell us, the easier it is for a municipality to find you. Only your name, skill and district are required."
-        : "The clearer the request, the faster it gets filled. A verifier checks it before it appears on the board, and you can update or close it at any time.",
+        ? extra.formVolunteerIntro
+        : extra.formNeedIntro,
       consent: isVolunteer
         ? "I agree to my details being shared with verified requesters, government agencies and partner organizations so they can coordinate relief and reconstruction."
         : "I confirm this request is genuine and that I am authorised to make it on behalf of the organization named above.",
       cta: isVolunteer ? "Create my profile" : "Submit request for review",
     }),
-    [isVolunteer]
+    [isVolunteer, extra.formVolunteerIntro, extra.formNeedIntro]
   );
 
   /**
@@ -246,7 +265,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
   }
 
   return (
-    <div className="page page--form">
+    <div className="page page--form" data-kind={kind}>
       <p className="eyebrow" style={{ marginBottom: 12 }}>
         {tr(copy.kicker)}
       </p>
@@ -255,10 +274,16 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
         {tr(copy.intro)}
       </p>
 
+      {hiddenFields.size > 0 ? (
+        <p className="form-mode-note" role="status">
+          {isVolunteer ? extra.formRemoteVolunteer : extra.formRemoteNeed}
+        </p>
+      ) : null}
+
       <div className="form-rail">
         <span className="form-rail__label">{t.progressLabel}</span>
         <div className="form-rail__pips">
-          {sections.map((section) => (
+          {visibleSections.map((section, index) => (
             <button
               key={section.n}
               type="button"
@@ -268,10 +293,10 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
               aria-controls={`section-${section.n}`}
               onClick={() => toggle(section.n)}
             >
-              {section.n}
+              {String(index + 1).padStart(2, "0")}
               <span className="visually-hidden">
                 {": "}
-                {tr(section.title)}
+                {sectionTitle(section)}
                 {filled[section.n] ? `, ${extra.sectionFilled}` : ""}
               </span>
             </button>
@@ -291,13 +316,13 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
         </div>
       </div>
 
-      {errors.length > 0 ? (
+      {visibleErrors.length > 0 ? (
         <div className="notice notice--warn" role="alert" tabIndex={-1}>
           <strong>{extra.errorSummaryTitle}</strong>
           <ul style={{ margin: "8px 0 0", paddingLeft: 20 }}>
-            {errors.map((problem) => (
+            {visibleErrors.map((problem) => (
               <li key={`${problem.field}-${problem.code}`}>
-                {labelFor(problem.field, sections, tr)}: {messageFor(problem, extra)}
+                {problem.field === "consent" ? extra.formConsentLabel : labelFor(problem.field, sections, tr)}: {messageFor(problem, extra)}
               </li>
             ))}
           </ul>
@@ -340,12 +365,13 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
         </div>
       ) : null}
 
-      {/* Validation stays on so the consent checkbox is genuinely required. */}
-      <form ref={formRef} onSubmit={handleSubmit} onChange={bump} onClick={bump}>
+      {/* Shared validation includes consent and opens collapsed fields before
+          focusing errors; native validation cannot focus an inert accordion. */}
+      <form ref={formRef} noValidate onSubmit={handleSubmit} onChange={bump} onClick={bump}>
         <input type="hidden" name="__form_version" value="2" />
         <div className="form-sections">
           {sections.map((section) => (
-            <section className="fsection" key={section.n}>
+            <section className="fsection" key={section.n} hidden={!visibleSections.includes(section)}>
               <h2 style={{ margin: 0 }}>
                 <button
                   type="button"
@@ -354,10 +380,10 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
                   aria-controls={`section-${section.n}`}
                   onClick={() => toggle(section.n)}
                 >
-                  <span className="fsection__n">{section.n}</span>
-                  <span className="fsection__title">{tr(section.title)}</span>
+                  <span className="fsection__n">{String(visibleSections.indexOf(section) + 1).padStart(2, "0")}</span>
+                  <span className="fsection__title">{sectionTitle(section)}</span>
                   {/* Always rendered: its margin-left:auto is what pushes the chevron right. */}
-                  <span className="fsection__hint">{section.hint ? tr(section.hint) : ""}</span>
+                  <span className="fsection__hint">{isVolunteer && section.n === "03" ? tr("Optional") : section.hint ? tr(section.hint) : ""}</span>
                   <span className="fsection__chevron" aria-hidden="true">
                     ▾
                   </span>
@@ -374,19 +400,30 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
               >
                 <div className="fsection__panel-inner">
                   <div className="fsection__body">
-                    {section.fields.map((field) => (
-                      <FormFieldView
-                        key={field.label}
-                        field={field}
-                        sectionN={section.n}
-                        lang={lang}
-                        tr={tr}
-                        onFilesChange={(name, files) => {
-                          pendingFiles.current[name] = files;
-                        }}
-                        error={errorByField.get(fieldKey(section.n, field.label))}
-                      />
-                    ))}
+                    {section.fields.map((field) => {
+                      const fieldName = fieldKey(section.n, field.label);
+                      const hidden = hiddenFields.has(fieldName);
+                      return (
+                        <fieldset
+                          key={field.label}
+                          className="form-field-slot"
+                          style={{ gridColumn: field.span }}
+                          hidden={hidden}
+                          disabled={hidden}
+                        >
+                          <FormFieldView
+                            field={field}
+                            sectionN={section.n}
+                            lang={lang}
+                            tr={tr}
+                            onFilesChange={(name, files) => {
+                              pendingFiles.current[name] = files;
+                            }}
+                            error={hidden ? undefined : errorByField.get(fieldName)}
+                          />
+                        </fieldset>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -468,7 +505,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
                 {errorByField.get("consent")}
               </span>
             ) : null}
-            <button type="submit" className="btn btn--dark" disabled={submitting}>
+            <button type="submit" className={`btn ${isVolunteer ? "btn--green" : "btn--navy"}`} disabled={submitting}>
               {tr(copy.cta)} <span aria-hidden="true">→</span>
             </button>
           </section>

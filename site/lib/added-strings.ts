@@ -25,6 +25,19 @@ export type AddedStrings = {
   uploadRejectedSize: string;
   uploadRejectedCount: string;
   sectionFilled: string;
+  formRemoteVolunteer: string;
+  formRemoteNeed: string;
+  formVolunteerIntro: string;
+  formNeedIntro: string;
+  formConsentLabel: string;
+  needsSortBy: string;
+  needsAscending: string;
+  needsDescending: string;
+  needsNewest: string;
+  needsWorkMode: string;
+  needsTiming: string;
+  needsPeople: string;
+  needsConfirmed: string;
 
   reliefNav: string;
   reliefTitle: string;
@@ -279,6 +292,19 @@ const ADDED: Record<Lang, AddedStrings> = {
     uploadRejectedSize: "larger than 10 MB",
     uploadRejectedCount: "over the 8 file limit",
     sectionFilled: "has entries",
+    formRemoteVolunteer: "Remote work selected. Travel and deployment questions are hidden. You can still offer equipment, resources or logistics support.",
+    formRemoteNeed: "Remote work selected. On-site accommodation, food, transport and equipment questions are hidden. Keep the location of the community receiving support.",
+    formVolunteerIntro: "Share your skills and availability so the coordination team can find suitable requests. Your name, email, phone number and consent are required; other details are optional.",
+    formNeedIntro: "Describe the task and who it will help. The coordination team reviews your request before it appears on the needs board.",
+    formConsentLabel: "Consent",
+    needsSortBy: "Sort by",
+    needsAscending: "Ascending",
+    needsDescending: "Descending",
+    needsNewest: "Date posted",
+    needsWorkMode: "Work mode",
+    needsTiming: "Start / duration",
+    needsPeople: "People needed",
+    needsConfirmed: "confirmed",
 
     reliefNav: "Relief items",
     reliefTitle: "Relief items",
@@ -578,6 +604,19 @@ const ADDED: Record<Lang, AddedStrings> = {
     uploadRejectedSize: "१० MB भन्दा ठूलो",
     uploadRejectedCount: "८ फाइलको सीमा नाघ्यो",
     sectionFilled: "मा प्रविष्टि छ",
+    formRemoteVolunteer: "दूरबाट काम गर्ने विकल्प छानिएको छ। यात्रा र स्थलगत परिचालनका प्रश्नहरू लुकाइएका छन्। तपाईंले अझै उपकरण, स्रोतसाधन वा व्यवस्थापन सहयोग दिन सक्नुहुन्छ।",
+    formRemoteNeed: "दूरबाट काम गर्ने विकल्प छानिएको छ। स्थलगत बसोबास, खाना, यातायात र उपकरणका प्रश्नहरू लुकाइएका छन्। सहयोग पाउने समुदायको स्थान भने उल्लेख गर्नुहोस्।",
+    formVolunteerIntro: "समन्वय टोलीले उपयुक्त अनुरोध खोज्न सकोस् भनेर आफ्नो सीप र उपलब्धता बताउनुहोस्। नाम, इमेल, फोन नम्बर र सहमति अनिवार्य छन्; अन्य विवरण वैकल्पिक हुन्।",
+    formNeedIntro: "गर्नुपर्ने काम र त्यसले कसलाई सहयोग गर्छ बताउनुहोस्। आवश्यकता सूचीमा देखिनुअघि समन्वय टोलीले तपाईंको अनुरोध समीक्षा गर्छ।",
+    formConsentLabel: "सहमति",
+    needsSortBy: "क्रम मिलाउनुहोस्",
+    needsAscending: "बढ्दो क्रममा",
+    needsDescending: "घट्दो क्रममा",
+    needsNewest: "पोस्ट गरिएको मिति",
+    needsWorkMode: "काम गर्ने तरिका",
+    needsTiming: "सुरु / अवधि",
+    needsPeople: "चाहिने व्यक्ति",
+    needsConfirmed: "पुष्टि भएका",
 
     reliefNav: "राहत सामग्री",
     reliefTitle: "राहत सामग्री",

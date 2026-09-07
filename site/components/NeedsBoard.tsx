@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import ExampleNeedDialog from "@/components/ExampleNeedDialog";
+import NeedCard from "@/components/NeedCard";
 import { added } from "@/lib/added-strings";
 import type { Dict, Lang } from "@/lib/content";
 import { SKILLS } from "@/lib/content";
@@ -18,7 +19,6 @@ import {
   type PublicNeedRow,
 } from "@/lib/public-needs";
 import { screenPath } from "@/lib/routes";
-import { NEED_COLUMNS } from "@/lib/site-data";
 
 const PROVINCES = [
   "Koshi",
@@ -37,7 +37,7 @@ type Sort = { col: number; asc: boolean };
  *
  * Filtering happens on the server (a plain GET form, so a filtered view is a
  * shareable URL and works without JavaScript); sorting is client-side over the
- * rows already fetched, which is what the column headers were always wired for.
+ * rows already fetched. The same controls and task cards work on small screens.
  */
 export default function NeedsBoard({
   lang,
@@ -60,19 +60,18 @@ export default function NeedsBoard({
   const [sort, setSort] = useState<Sort>({ col: 0, asc: true });
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const onSort = (i: number) =>
-    setSort((prev) => ({ col: i, asc: prev.col === i ? !prev.asc : true }));
-
   const sorted = useMemo(() => {
     const keyed = needs.map((need) => ({
       need,
       keys: [
         needLocation(need),
-        needSummary(need),
+        need.whatToDo || needSummary(need),
         need.peopleNeeded ?? 0,
         // Sort urgency by real severity, not alphabetically — "Immediate"
         // must not sort below "Upcoming" on a board people scan in a crisis.
-        URGENCY_OPTIONS.findIndex((u) => u.value === need.urgency),
+        URGENCY_OPTIONS.findIndex((u) => u.value === need.urgency) < 0
+          ? URGENCY_OPTIONS.length
+          : URGENCY_OPTIONS.findIndex((u) => u.value === need.urgency),
         need.status,
         need.createdAt,
       ] as Array<string | number>,
@@ -176,101 +175,42 @@ export default function NeedsBoard({
         </p>
       </form>
 
-      <div className="card card--flush">
-        <table className="needtable">
-          <caption className="visually-hidden">{t.needsTitle}</caption>
-          <thead>
-            <tr>
-              {NEED_COLUMNS.map((label, i) => {
-                const active = sort.col === i;
-                return (
-                  <th
-                    key={label}
-                    scope="col"
-                    aria-sort={active ? (sort.asc ? "ascending" : "descending") : "none"}
-                  >
-                    <button
-                      type="button"
-                      className="reset-button needtable__col"
-                      onClick={() => onSort(i)}
-                    >
-                      <span>{tr(label)}</span>
-                      <span className="needtable__arrow" aria-hidden="true">
-                        {active ? (sort.asc ? "↑" : "↓") : "↕"}
-                      </span>
-                    </button>
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {unavailable ? (
-              <tr>
-                <td colSpan={NEED_COLUMNS.length} className="needtable__empty">
-                  <p className="card__title card__title--lg">{a.boardUnavailableTitle}</p>
-                  <p className="card__body">{a.boardUnavailable}</p>
-                </td>
-              </tr>
-            ) : sorted.length === 0 ? (
-              <tr>
-                <td colSpan={NEED_COLUMNS.length} className="needtable__empty">
-                  <p className="card__title card__title--lg">{t.needsEmptyTitle}</p>
-                  <p className="card__body">{t.needsEmptyBody}</p>
-                  <div className="btn-row" style={{ justifyContent: "center" }}>
-                    <Link href={screenPath(lang, "post")} className="btn btn--navy btn--sm">
-                      {t.postCta}
-                    </Link>
-                    <button
-                      type="button"
-                      className="btn btn--outline btn--sm"
-                      onClick={() => setDialogOpen(true)}
-                    >
-                      {t.seeExample}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              sorted.map((need) => (
-                <tr key={need.id}>
-                  <td>{needLocation(need)}</td>
-                  <td>
-                    <Link href={`${screenPath(lang, "needs")}/${need.id}`}>
-                      {tr(needSummary(need))}
-                    </Link>
-                    {need.communityReported ? (
-                      <span className="badge badge--muted" style={{ marginLeft: 8 }}>
-                        {a.needsCommunityReported}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td>
-                    {need.peopleNeeded == null
-                      ? "—"
-                      : `${need.committed}/${need.peopleNeeded}`}
-                  </td>
-                  <td>{need.urgency ? tr(need.urgency) : "—"}</td>
-                  <td>{tr(statusLabel(need.status))}</td>
-                  <td>
-                    <Link href={`${screenPath(lang, "needs")}/${need.id}`}>{a.needsViewNeed} →</Link>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {unavailable ? (
+        <div className="card card--empty-lg">
+          <h2 className="card__title card__title--lg">{a.boardUnavailableTitle}</h2>
+          <p className="card__body">{a.boardUnavailable}</p>
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="card card--empty-lg">
+          <h2 className="card__title card__title--lg">{t.needsEmptyTitle}</h2>
+          <p className="card__body">{t.needsEmptyBody}</p>
+          <div className="btn-row" style={{ justifyContent: "center" }}>
+            <Link href={screenPath(lang, "post")} className="btn btn--navy btn--sm">{t.postCta}</Link>
+            <button type="button" className="btn btn--outline btn--sm" onClick={() => setDialogOpen(true)}>{t.seeExample}</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="needs-sort">
+            <label htmlFor="needs-sort">{a.needsSortBy}</label>
+            <select id="needs-sort" className="select" value={sort.col} onChange={(event) => setSort({ col: Number(event.target.value), asc: Number(event.target.value) !== 5 })}>
+              {[tr("Location"), tr("Need"), a.needsPeople, tr("Urgency"), tr("Status"), a.needsNewest].map((label, i) => <option key={i} value={i}>{label}</option>)}
+            </select>
+            <button type="button" className="btn btn--outline btn--sm" onClick={() => setSort((prev) => ({ ...prev, asc: !prev.asc }))}>
+              <span aria-hidden="true">{sort.asc ? "↑" : "↓"}</span> {sort.asc ? a.needsAscending : a.needsDescending}
+            </button>
+          </div>
+          <ul className="needs-grid" aria-label={t.needsTitle}>
+            {sorted.map((need) => <li key={need.id}><NeedCard need={need} lang={lang} /></li>)}
+          </ul>
+        </>
+      )}
 
       {dialogOpen ? (
         <ExampleNeedDialog lang={lang} t={t} onClose={() => setDialogOpen(false)} />
       ) : null}
     </div>
   );
-}
-
-function statusLabel(status: string): string {
-  return STATUS_OPTIONS.find((s) => s.value === status)?.label ?? status;
 }
 
 function Select({
@@ -289,8 +229,8 @@ function Select({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label className="visually-hidden" htmlFor={`filter-${name}`}>
+    <div className="filterbar__field">
+      <label className="field__label" htmlFor={`filter-${name}`}>
         {tr(label)}
       </label>
       <select className="select" id={`filter-${name}`} name={name} defaultValue={value ?? ""}>
