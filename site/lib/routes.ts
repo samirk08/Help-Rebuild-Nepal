@@ -79,6 +79,22 @@ export function navItems(lang: Lang): Array<{ id: string; label: string; href: s
   return items;
 }
 
+/** The compact header groups existing destinations without changing URLs. */
+export function navGroups(lang: Lang) {
+  const a = added(lang);
+  const items = navItems(lang);
+  return [
+    { id: "get-involved", label: a.navGetInvolved, screens: ["needs", "relief", "missions", "networks"] },
+    { id: "our-progress", label: a.navProgress, screens: ["projects", "tracker"] },
+  ].map(({ screens, ...group }) => ({
+    ...group,
+    items: screens.map((id) => {
+      const item = items.find((entry) => entry.id === id)!;
+      return id === "networks" ? { ...item, label: a.navSkillNetworks } : item;
+    }),
+  }));
+}
+
 /**
  * Whether a nav entry is the active one for the current pathname.
  * Home only matches exactly; every other route also matches its children.

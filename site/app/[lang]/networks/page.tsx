@@ -79,11 +79,6 @@ export default async function NetworksPage({ params }: { params: Promise<{ lang:
             )}
           </div>
         ))}
-
-        <div className="network--new">
-          <h2 className="network__name">{t.createNetwork}</h2>
-          <p className="network__body">{t.createNetworkBody}</p>
-        </div>
       </div>
     </div>
   );

@@ -3,12 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { added } from "@/lib/added-strings";
 import type { Lang } from "@/lib/content";
-import { localePath, swapLangPath } from "@/lib/i18n";
-import { isActivePath, navItems } from "@/lib/routes";
+import { dict, localePath, swapLangPath } from "@/lib/i18n";
+import { isActivePath, navGroups, navItems, screenPath } from "@/lib/routes";
 
 /**
  * Publishes the sticky header's real height as `--header-h` so the form rail
@@ -41,12 +41,77 @@ export default function Header({ lang }: { lang: Lang }) {
   useHeaderHeight();
 
   const home = localePath(lang);
-  const items = navItems(lang);
+  const a = added(lang);
+  const groups = navGroups(lang);
+  const profile = navItems(lang).find((item) => item.id === "profile")!;
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
+
+  const closeMenus = () => {
+    setOpenGroup(null);
+    setMobileOpen(false);
+  };
+
+  useEffect(() => {
+    setOpenGroup(null);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const close = () => {
+      setOpenGroup(null);
+      setMobileOpen(false);
+    };
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) close();
+    };
+    // Closing at the same breakpoint used by CSS prevents hidden focus and
+    // stale mobile state when a phone rotates or the window is resized.
+    const desktop = window.matchMedia("(min-width: 1051px)");
+    const resize = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && headerRef.current?.contains(active)) {
+        if (!desktop.matches && active.closest(".header__nav")) mobileToggleRef.current?.focus();
+        else if (desktop.matches && active === mobileToggleRef.current) {
+          headerRef.current?.querySelector<HTMLButtonElement>(".header__group-toggle")?.focus();
+        }
+      }
+      close();
+    };
+    document.addEventListener("pointerdown", outside);
+    desktop.addEventListener("change", resize);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      desktop.removeEventListener("change", resize);
+    };
+  }, []);
 
   return (
-    <header className="header">
+    <header
+      className="header"
+      ref={headerRef}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) closeMenus();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") return;
+        if (openGroup) {
+          event.preventDefault();
+          event.stopPropagation();
+          headerRef.current?.querySelector<HTMLButtonElement>(`[aria-controls="header-${openGroup}"]`)?.focus();
+          setOpenGroup(null);
+        } else if (mobileOpen) {
+          event.preventDefault();
+          event.stopPropagation();
+          mobileToggleRef.current?.focus();
+          setMobileOpen(false);
+        }
+      }}
+    >
       <div className="shell header__inner">
-        <Link href={home} className="header__brand" aria-label="Help Rebuild Nepal home">
+        <Link href={home} className="header__brand" aria-label={a.navHome} aria-current={isActivePath(pathname, home, true) ? "page" : undefined} onClick={closeMenus}>
           <Image
             src="/logo.png"
             alt="Help Rebuild Nepal"
@@ -55,46 +120,97 @@ export default function Header({ lang }: { lang: Lang }) {
             className="header__logo"
             priority
           />
-          <span className="header__tagline">{added(lang).headerTagline}</span>
+          <span className="header__tagline">{a.headerTagline}</span>
         </Link>
 
-        <nav className="header__nav" aria-label="Main">
-          {items.map((item) => {
-            const active = isActivePath(pathname, item.href, item.id === "home");
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="header__link"
-                aria-current={active ? "page" : undefined}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+        <button
+          type="button"
+          className="reset-button header__link header__menu-toggle"
+          ref={mobileToggleRef}
+          aria-expanded={mobileOpen}
+          aria-controls="header-navigation"
+          onClick={() => {
+            setMobileOpen((value) => !value);
+            setOpenGroup(null);
+          }}
+        >
+          {a.navMenu} <span className="header__caret" aria-hidden="true" />
+        </button>
+
+        <nav
+          id="header-navigation"
+          className="header__nav"
+          aria-label={a.navMain}
+          data-open={mobileOpen}
+          onBlur={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setOpenGroup(null);
+          }}
+        >
+          <ul className="header__groups">
+            {groups.map((group) => (
+              <li className="header__group" key={group.id}>
+                <button
+                  type="button"
+                  className="reset-button header__link header__group-toggle"
+                  aria-expanded={openGroup === group.id}
+                  aria-controls={`header-${group.id}`}
+                  data-active={group.items.some((item) => isActivePath(pathname, item.href, false))}
+                  onClick={() => setOpenGroup((current) => current === group.id ? null : group.id)}
+                >
+                  {group.label} <span className="header__caret" aria-hidden="true" />
+                </button>
+                <ul className="header__dropdown" id={`header-${group.id}`} hidden={openGroup !== group.id}>
+                  {group.items.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        href={item.href}
+                        className="header__link"
+                        aria-current={isActivePath(pathname, item.href, false) ? "page" : undefined}
+                        onClick={closeMenus}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
         </nav>
 
-        {/* Plain links on purpose. A view transition here was tried and dropped:
-            React 19 stable has no ViewTransition component, and driving the
-            native API by hand left the transition's promises unsettled, so it
-            hung until the browser aborted it. See README. */}
-        <div className="langswitch" role="group" aria-label="Language">
-          <Link
-            href={swapLangPath(pathname, "en")}
-            className="langswitch__btn"
-            aria-current={lang === "en"}
-            hrefLang="en"
-          >
-            EN
+        <div className="header__actions">
+          <Link href={screenPath(lang, "post")} className="btn btn--navy btn--sm header__post" aria-current={isActivePath(pathname, screenPath(lang, "post"), false) ? "page" : undefined} onClick={closeMenus}>
+            {dict(lang).postCta}
           </Link>
           <Link
-            href={swapLangPath(pathname, "np")}
-            className="langswitch__btn langswitch__btn--np"
-            aria-current={lang === "np"}
-            hrefLang="ne"
+            href={profile.href}
+            className="header__link header__profile"
+            aria-current={isActivePath(pathname, profile.href, false) ? "page" : undefined}
+            onClick={closeMenus}
           >
-            नेपाली
+            {profile.label}
           </Link>
+          {/* Language links preserve the current page. */}
+          <div className="langswitch" role="group" aria-label={a.navLanguage}>
+            <Link
+              href={swapLangPath(pathname, "en")}
+              className="langswitch__btn"
+              aria-current={lang === "en"}
+              hrefLang="en"
+              onClick={closeMenus}
+            >
+              EN
+            </Link>
+            <Link
+              href={swapLangPath(pathname, "np")}
+              className="langswitch__btn langswitch__btn--np"
+              aria-current={lang === "np"}
+              hrefLang="ne"
+              onClick={closeMenus}
+            >
+              नेपाली
+            </Link>
+          </div>
         </div>
       </div>
     </header>
