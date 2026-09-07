@@ -190,7 +190,7 @@ Supabase/Vercel account and can't be scripted from here:
    project URL, anon key and service role key from Project Settings -> API.
 2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once,
    then each numbered migration beside it in order (`002-public-board.sql`
-   through `014-requester-workspace.sql`). Every migration is safe to
+   through `015-invitation-attempts.sql`). Every migration is safe to
    re-run, so running the whole set again on an existing project is fine.
    Admin -> Diagnostics reports which ones this deployment actually has;
    a migration file existing in the repository is not evidence it has run.
