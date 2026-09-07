@@ -211,6 +211,36 @@ export type AddedStrings = {
   valueNotCollected: string;
   needClosedTitle: string;
   needClosedBody: string;
+
+  /** Mission teams (migration 013). */
+  missionsNav: string;
+  missionsTitle: string;
+  missionsIntro: string;
+  missionsPickLimit: string;
+  missionsSelected: string;
+  missionJoin: string;
+  missionLeave: string;
+  missionOpen: string;
+  missionMembers: string;
+  missionLead: string;
+  missionNextCheckIn: string;
+  missionPurpose: string;
+  missionCurrentTask: string;
+  missionNotSetYet: string;
+  missionOnlyLabel: string;
+  missionOnlyHint: string;
+  missionRegisterFirst: string;
+  missionSignInToJoin: string;
+  missionBack: string;
+  missionCapReached: string;
+  missionSourceEmail: string;
+  missionSourceAdmin: string;
+  missionPaused: string;
+  missionClosed: string;
+  missionYourMissions: string;
+  missionNoneChosen: string;
+  missionSaveScope: string;
+  missionsUnavailable: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -459,6 +489,38 @@ const ADDED: Record<Lang, AddedStrings> = {
     needClosedTitle: "This request is no longer taking offers of help",
     needClosedBody:
       "It has been filled or completed. The board lists requests that still need people.",
+
+    missionsNav: "Missions",
+    missionsTitle: "Mission teams",
+    missionsIntro:
+      "Small teams with a shared purpose. Choosing a mission tells us where you would like to help — you stay eligible for other suitable work unless you say otherwise.",
+    missionsPickLimit: "Choose up to two. The order you pick them in does not matter.",
+    missionsSelected: "of 2 chosen",
+    missionJoin: "Join mission",
+    missionLeave: "Leave mission",
+    missionOpen: "Open team",
+    missionMembers: "members",
+    missionLead: "Team lead",
+    missionNextCheckIn: "Next check-in",
+    missionPurpose: "Purpose",
+    missionCurrentTask: "Current task",
+    missionNotSetYet: "Not set yet — a coordinator will add this.",
+    missionOnlyLabel: "Only invite me to needs within my missions",
+    missionOnlyHint:
+      "Off by default. Leave it off to stay part of the wider Help Rebuild Nepal network, and change it whenever you like.",
+    missionRegisterFirst: "Register as a volunteer to choose a mission.",
+    missionSignInToJoin: "Already registered? Sign in to choose your missions.",
+    missionBack: "All missions",
+    missionCapReached: "You have chosen two missions. Leave one to choose another.",
+    missionSourceEmail: "Recorded from your email reply",
+    missionSourceAdmin: "Recorded by a coordinator",
+    missionPaused: "This team is paused",
+    missionClosed: "This team has finished its work",
+    missionYourMissions: "Your missions",
+    missionNoneChosen: "You have not chosen a mission yet.",
+    missionSaveScope: "Save this preference",
+    missionsUnavailable:
+      "Mission teams could not be loaded just now. This is a problem at our end — please try again shortly.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -695,6 +757,38 @@ const ADDED: Record<Lang, AddedStrings> = {
     needClosedTitle: "यो अनुरोधले अब सहयोगका प्रस्ताव लिँदैन",
     needClosedBody:
       "यो पूरा भइसक्यो वा सम्पन्न भयो। बोर्डमा अझै मानिस चाहिने अनुरोधहरू देखिन्छन्।",
+
+    missionsNav: "अभियानहरू",
+    missionsTitle: "अभियान टोलीहरू",
+    missionsIntro:
+      "साझा उद्देश्य भएका साना टोलीहरू। अभियान छान्नुले तपाईं कहाँ सहयोग गर्न चाहनुहुन्छ भन्ने जनाउँछ — तपाईंले नभनेसम्म अन्य उपयुक्त कामका लागि पनि योग्य रहनुहुन्छ।",
+    missionsPickLimit: "दुईवटासम्म छान्नुहोस्। छान्ने क्रमले केही फरक पार्दैन।",
+    missionsSelected: "मध्ये २ छानिएको",
+    missionJoin: "अभियानमा सामेल हुनुहोस्",
+    missionLeave: "अभियान छाड्नुहोस्",
+    missionOpen: "टोली खोल्नुहोस्",
+    missionMembers: "सदस्यहरू",
+    missionLead: "टोली नेतृत्व",
+    missionNextCheckIn: "अर्को भेटघाट",
+    missionPurpose: "उद्देश्य",
+    missionCurrentTask: "हालको कार्य",
+    missionNotSetYet: "अझै तोकिएको छैन — संयोजकले थप्नेछन्।",
+    missionOnlyLabel: "मलाई मेरा अभियानभित्रका आवश्यकताका लागि मात्र निम्तो दिनुहोस्",
+    missionOnlyHint:
+      "पूर्वनिर्धारित रूपमा बन्द। व्यापक नेटवर्कमा रहन यसलाई बन्द राख्नुहोस्; जुनसुकै बेला बदल्न सकिन्छ।",
+    missionRegisterFirst: "अभियान छान्न स्वयंसेवकका रूपमा दर्ता गर्नुहोस्।",
+    missionSignInToJoin: "पहिल्यै दर्ता गर्नुभएको छ? अभियान छान्न साइन इन गर्नुहोस्।",
+    missionBack: "सबै अभियान",
+    missionCapReached: "तपाईंले दुई अभियान छान्नुभयो। अर्को छान्न एउटा छाड्नुहोस्।",
+    missionSourceEmail: "तपाईंको इमेल जवाफबाट अभिलेख गरिएको",
+    missionSourceAdmin: "संयोजकद्वारा अभिलेख गरिएको",
+    missionPaused: "यो टोली रोकिएको छ",
+    missionClosed: "यो टोलीले आफ्नो काम सम्पन्न गरेको छ",
+    missionYourMissions: "तपाईंका अभियानहरू",
+    missionNoneChosen: "तपाईंले अझै अभियान छान्नुभएको छैन।",
+    missionSaveScope: "यो प्राथमिकता सुरक्षित गर्नुहोस्",
+    missionsUnavailable:
+      "अहिले अभियान टोलीहरू लोड गर्न सकिएन। यो हाम्रो तर्फको समस्या हो — केही बेरमा फेरि प्रयास गर्नुहोस्।",
   },
 };
 

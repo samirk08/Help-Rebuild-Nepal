@@ -190,7 +190,7 @@ Supabase/Vercel account and can't be scripted from here:
    project URL, anon key and service role key from Project Settings -> API.
 2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once,
    then each numbered migration beside it in order (`002-public-board.sql`
-   through `012-migration-ledger-fix.sql`). Every migration is safe to
+   through `013-missions.sql`). Every migration is safe to
    re-run, so running the whole set again on an existing project is fine.
    Admin -> Diagnostics reports which ones this deployment actually has;
    a migration file existing in the repository is not evidence it has run.
@@ -239,6 +239,28 @@ the submission already holds so a second request cannot reset them.
 one idempotency key and resends it unchanged on retry, so a dropped response
 resolves to the row that already exists. The previous approach compared the
 last 25 rows in JavaScript, which two simultaneous requests both pass.
+
+### Mission teams
+
+Nine mission teams (migration 013), seeded with titles only. Purpose, current
+task, lead and next check-in are deliberately empty: a mission page that shows
+an invented "current task" sends a volunteer to work that does not exist, so
+each field says "not set yet" until a coordinator fills it in.
+
+A volunteer chooses **at most two**, and that cap is a database trigger, not a
+form check — a limit enforced only in the browser holds until someone opens two
+tabs. Selection order carries no meaning; nothing downstream ranks them.
+
+Missions are deliberately separate from the skill networks in migration 009. A
+skill network is a professional community — you are an engineer whether or not
+you are working on anything. A mission is a capped, reversible statement of
+interest in one piece of work. `mission_members` is the source of truth, and a
+trigger keeps `matching_profiles.mission_ids` / `.mission_only` in step so the
+matching engine sees changes without a second write path.
+
+Choosing a mission does **not** narrow who gets invited to what. Only the
+explicit "only invite me to needs within my missions" switch does that, and it
+is off by default and reversible in one click.
 
 ### Auth email prerequisites
 
