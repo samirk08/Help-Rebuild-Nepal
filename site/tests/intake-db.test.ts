@@ -16,6 +16,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const db = new PGlite();
 const migration = readFileSync("supabase/011-intake-integrity.sql", "utf8");
+const ledgerFix = readFileSync("supabase/012-migration-ledger-fix.sql", "utf8");
 
 before(async () => {
   await db.exec(
@@ -31,7 +32,9 @@ before(async () => {
   );
   await db.exec(readFileSync("supabase/002-public-board.sql", "utf8"));
   await db.exec(readFileSync("supabase/003-service-role-grants.sql", "utf8"));
+  await db.exec(readFileSync("supabase/004-accounts.sql", "utf8"));
   await db.exec(migration);
+  await db.exec(ledgerFix);
 });
 
 after(async () => {
@@ -51,9 +54,37 @@ async function insertVolunteer(key: string | null, name = "Asha Rai"): Promise<s
   );
 }
 
-test("the migration is safely re-runnable", async () => {
+test("an unapplied optional migration is not reported as a broken deployment", async () => {
+  const { rows } = await db.query<{ migration: string; applied: boolean; critical: boolean }>(
+    "select migration, applied, critical from migration_state where applied = false"
+  );
+
+  // 008 and friends are features. Nothing here may claim intake is failing —
+  // the page used to say "public forms are likely returning errors right now"
+  // whenever any row failed, which was untrue and trained readers to ignore it.
+  assert.ok(rows.length > 0, "fixture should leave some migrations unapplied");
+  for (const row of rows) {
+    assert.equal(row.critical, false, `${row.migration} should not be critical here`);
+  }
+
+  // The ones intake genuinely depends on are marked critical and are applied.
+  assert.equal(
+    await scalar("select critical from migration_state where migration='011'"),
+    true
+  );
+});
+
+test("the migration set is safely re-runnable, in order, more than once", async () => {
+  // Running the whole set again on an up-to-date project is what the README
+  // tells people to do. 011 and 012 both define `migration_state`, and 012's
+  // is wider, so a plain CREATE OR REPLACE in 011 failed here with "cannot
+  // drop columns from view" the moment 012 had been applied.
   await db.exec(migration);
+  await db.exec(ledgerFix);
   await db.exec(migration);
+  await db.exec(ledgerFix);
+  // The ledger still has 012's shape after 011 ran last-but-one.
+  assert.equal(await scalar("select critical from migration_state where migration='011'"), true);
   assert.equal(
     await scalar(
       "select count(*) from information_schema.columns " +
@@ -161,6 +192,12 @@ test("the migration ledger reports applied migrations without writing anything",
   assert.equal(applied.get("schema"), true);
   assert.equal(applied.get("002"), true);
   assert.equal(applied.get("011"), true);
+  assert.equal(applied.get("012"), true);
+  // Migration 004 creates `admin_users`. The first version of this ledger
+  // looked for `admin_allowlist` and reported an applied migration as missing,
+  // which made the diagnostics page contradict itself on one screen. Every
+  // migration this fixture runs must read as applied, or the name is wrong.
+  assert.equal(applied.get("004"), true, "004 must not be a false negative");
   // Migrations this fixture deliberately does not run are reported as missing
   // rather than assumed present because their file exists in the repository.
   assert.equal(applied.get("010"), false);
