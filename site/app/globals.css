@@ -3056,3 +3056,43 @@ main :is(.fact__v, .row > *, .profilehead > *) { min-width: 0; }
   .fact, .row { flex-direction: column; gap: 4px; }
   .fact__v { text-align: left; }
 }
+
+/* Three-step need intake (components/NeedIntakeForm.tsx). A numbered rail
+   rather than a progress bar: there are exactly three steps and naming them
+   tells someone what is still coming, which a percentage does not. */
+.n3-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  list-style: none;
+  margin: 22px 0 20px;
+  padding: 0;
+}
+.n3-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  min-width: 0;
+}
+.n3-steps__n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.n3-steps li[aria-current="step"] {
+  color: var(--navy);
+  font-weight: 600;
+}
+.n3-steps li[aria-current="step"] .n3-steps__n {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}

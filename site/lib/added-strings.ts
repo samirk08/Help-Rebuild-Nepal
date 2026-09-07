@@ -274,6 +274,49 @@ export type AddedStrings = {
   wsCommitmentsTitle: string;
   wsCommitmentsEmpty: string;
   wsCommittedHours: string;
+
+  /** The three-step need intake (Phase 3.1). */
+  n3StepNeed: string;
+  n3StepContact: string;
+  n3StepReview: string;
+  n3Intro: string;
+  n3Type: string;
+  n3TypeHint: string;
+  n3Title: string;
+  n3TitleHint: string;
+  n3Detail: string;
+  n3DetailHint: string;
+  n3District: string;
+  n3Municipality: string;
+  n3MunicipalityHint: string;
+  n3WorkMode: string;
+  n3Urgency: string;
+  n3Organization: string;
+  n3OrganizationHint: string;
+  n3Person: string;
+  n3Email: string;
+  n3Phone: string;
+  n3ContactHint: string;
+  n3Photos: string;
+  n3Consent: string;
+  n3ReviewTitle: string;
+  n3ReviewIntro: string;
+  n3NotAnswered: string;
+  n3Back: string;
+  n3Next: string;
+  n3Submit: string;
+  n3SaveDraft: string;
+  n3DraftSaved: string;
+  n3DraftFound: string;
+  n3DraftRestore: string;
+  n3DraftDiscard: string;
+  n3AssistTitle: string;
+  n3AssistBody: string;
+  n3AssistCta: string;
+  n3AssistBack: string;
+  n3AssistSubmit: string;
+  n3AssistConsent: string;
+  n3RoleNote: string;
 };
 
 const ADDED: Record<Lang, AddedStrings> = {
@@ -588,6 +631,53 @@ const ADDED: Record<Lang, AddedStrings> = {
     wsCommitmentsTitle: "Current commitments",
     wsCommitmentsEmpty: "No confirmed commitments yet.",
     wsCommittedHours: "hours a week promised at your busiest overlap",
+
+    n3StepNeed: "What you need",
+    n3StepContact: "How to reach you",
+    n3StepReview: "Check and send",
+    n3Intro:
+      "Three short steps. A coordinator works out the detail with you afterwards — you do not need to have it all figured out now.",
+    n3Type: "What kind of support?",
+    n3TypeHint: "Pick the closest. We will sort out the detail with you.",
+    n3Title: "In one line, what do you need?",
+    n3TitleHint: "This is what people see on the board. Plain words are best.",
+    n3Detail: "Describe what needs to happen",
+    n3DetailHint:
+      "What is the situation, and what would help? A few sentences is enough.",
+    n3District: "District",
+    n3Municipality: "Municipality or ward",
+    n3MunicipalityHint: "Optional. Helps a volunteer judge the journey.",
+    n3WorkMode: "Where does the work happen?",
+    n3Urgency: "How soon do you need this?",
+    n3Organization: "Your name or organization",
+    n3OrganizationHint: "Whichever you are asking on behalf of.",
+    n3Person: "Contact person",
+    n3Email: "Email",
+    n3Phone: "Phone or WhatsApp",
+    n3ContactHint: "Give at least one. We never publish either of them.",
+    n3Photos: "Photographs or documents",
+    n3Consent:
+      "I confirm this request is genuine and that I may make it on behalf of the people named above.",
+    n3ReviewTitle: "Check this over",
+    n3ReviewIntro: "Nothing is sent until you press the button. You can go back and change anything.",
+    n3NotAnswered: "Not answered",
+    n3Back: "Back",
+    n3Next: "Continue",
+    n3Submit: "Send this request",
+    n3SaveDraft: "Save a draft on this device",
+    n3DraftSaved: "Draft saved on this device. It is not sent to us.",
+    n3DraftFound: "You have an unfinished request saved on this device.",
+    n3DraftRestore: "Pick up where you left off",
+    n3DraftDiscard: "Start fresh",
+    n3AssistTitle: "Would you rather we called you?",
+    n3AssistBody:
+      "Give a name and a number and a coordinator will ring you and fill this in with you. Nothing else is needed now.",
+    n3AssistCta: "Ask us to call instead",
+    n3AssistBack: "Fill in the form myself",
+    n3AssistSubmit: "Ask for a call",
+    n3AssistConsent: "I agree to be contacted about this request.",
+    n3RoleNote:
+      "Skills, headcount and dates are worked out with a coordinator once your request is verified.",
   },
   np: {
     districtPlaceholder: "सबै ७७ जिल्ला खोज्नुहोस्…",
@@ -890,6 +980,52 @@ const ADDED: Record<Lang, AddedStrings> = {
     wsCommitmentsTitle: "हालका प्रतिबद्धताहरू",
     wsCommitmentsEmpty: "अझै पुष्टि भएको प्रतिबद्धता छैन।",
     wsCommittedHours: "सबैभन्दा व्यस्त समयमा प्रति हप्ता वाचा गरिएका घण्टा",
+
+    n3StepNeed: "तपाईंलाई के चाहिन्छ",
+    n3StepContact: "सम्पर्क कसरी गर्ने",
+    n3StepReview: "जाँचेर पठाउनुहोस्",
+    n3Intro:
+      "तीन छोटा चरण। विवरण पछि संयोजकले तपाईंसँग मिलाउनेछन् — अहिले सबै कुरा तयार हुनुपर्दैन।",
+    n3Type: "कस्तो प्रकारको सहयोग?",
+    n3TypeHint: "नजिकको छान्नुहोस्। विवरण हामी तपाईंसँग मिलाउनेछौं।",
+    n3Title: "एक वाक्यमा, तपाईंलाई के चाहिन्छ?",
+    n3TitleHint: "बोर्डमा मानिसले यही देख्छन्। सरल शब्द राम्रो हुन्छ।",
+    n3Detail: "के हुनुपर्छ, वर्णन गर्नुहोस्",
+    n3DetailHint: "अवस्था कस्तो छ र के गर्दा सहयोग पुग्छ? केही वाक्य नै पर्याप्त छ।",
+    n3District: "जिल्ला",
+    n3Municipality: "नगरपालिका वा वडा",
+    n3MunicipalityHint: "ऐच्छिक। स्वयंसेवकलाई यात्रा अनुमान गर्न सजिलो हुन्छ।",
+    n3WorkMode: "काम कहाँ हुन्छ?",
+    n3Urgency: "कति चाँडो चाहिन्छ?",
+    n3Organization: "तपाईंको नाम वा संस्था",
+    n3OrganizationHint: "जसको तर्फबाट अनुरोध गर्दै हुनुहुन्छ।",
+    n3Person: "सम्पर्क व्यक्ति",
+    n3Email: "इमेल",
+    n3Phone: "फोन वा WhatsApp",
+    n3ContactHint: "कम्तीमा एउटा दिनुहोस्। हामी कहिल्यै सार्वजनिक गर्दैनौं।",
+    n3Photos: "फोटो वा कागजात",
+    n3Consent:
+      "यो अनुरोध साँचो हो र माथि उल्लिखित व्यक्तिको तर्फबाट गर्न म अधिकृत छु भनी पुष्टि गर्दछु।",
+    n3ReviewTitle: "एकपटक जाँच्नुहोस्",
+    n3ReviewIntro: "बटन नथिचेसम्म केही पठाइँदैन। फर्केर जुनसुकै कुरा बदल्न सक्नुहुन्छ।",
+    n3NotAnswered: "उत्तर दिइएको छैन",
+    n3Back: "पछाडि",
+    n3Next: "अगाडि बढ्नुहोस्",
+    n3Submit: "यो अनुरोध पठाउनुहोस्",
+    n3SaveDraft: "यही यन्त्रमा मस्यौदा सुरक्षित गर्नुहोस्",
+    n3DraftSaved: "मस्यौदा यही यन्त्रमा सुरक्षित भयो। हामीलाई पठाइएको छैन।",
+    n3DraftFound: "यही यन्त्रमा अधुरो अनुरोध सुरक्षित छ।",
+    n3DraftRestore: "जहाँ छाड्नुभयो त्यहींबाट सुरु गर्नुहोस्",
+    n3DraftDiscard: "नयाँ सुरु गर्नुहोस्",
+    n3AssistTitle: "हामीले फोन गरौं?",
+    n3AssistBody:
+      "नाम र नम्बर दिनुहोस्, संयोजकले फोन गरेर तपाईंसँगै यो भर्नेछन्। अहिले अरू केही चाहिँदैन।",
+    n3AssistCta: "बरु हामीलाई फोन गर्न भन्नुहोस्",
+    n3AssistBack: "म आफैं फारम भर्छु",
+    n3AssistSubmit: "फोनको लागि अनुरोध",
+    n3AssistConsent: "यो अनुरोधबारे मलाई सम्पर्क गर्न म सहमत छु।",
+    n3RoleNote:
+      "सीप, कति जना र मिति तपाईंको अनुरोध प्रमाणित भएपछि संयोजकसँग मिलाइन्छ।",
   },
 };
 

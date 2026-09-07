@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { chipFieldKeys } from "@/lib/form-schema";
 import {
   MAX_BODY_BYTES,
+  N3,
+  isNeedV3,
   validateIntake,
   validateReliefOffer,
   UNMATCHED_SENTINEL,
@@ -104,6 +106,15 @@ const COLUMN_FIELDS: Record<
     province: "s02-province",
     urgency: "s08-how-urgent-is-this",
   },
+};
+
+/** The same mapping for the three-step form's own keys (lib/intake-schema.ts). */
+const NEED_V3_COLUMNS: (typeof COLUMN_FIELDS)["need"] = {
+  orgOrName: N3.organization,
+  phone: N3.phone,
+  email: N3.email,
+  district: N3.district,
+  urgency: N3.urgency,
 };
 
 const SKILLS_FIELD = "s03-skills-required";
@@ -223,15 +234,25 @@ export async function POST(request: Request) {
   const validated = validateIntake(kind, body.fields);
   if (!validated.ok) return fieldErrors(validated.errors);
 
-  const normalized = normalizeChipFields(kind, validated.fields);
+  const rawFields = body.fields as Record<string, unknown>;
+  const threeStep = kind === "need" && isNeedV3(rawFields);
+
+  const normalized = threeStep
+    ? { ...validated.fields }
+    : normalizeChipFields(kind, validated.fields);
+
   // Record the form version without treating it as proof of qualifications.
   // Older open browser tabs remain legacy submissions.
-  const rawFields = body.fields as Record<string, unknown>;
-  if (rawFields?.__form_version === "2") normalized.__form_version = 2;
+  if (threeStep) normalized.__form_version = 3;
+  else if (rawFields?.__form_version === "2") normalized.__form_version = 2;
   else delete normalized.__form_version;
   delete normalized.idempotencyKey;
 
-  const columns = COLUMN_FIELDS[kind];
+  // The three-step form separates email from phone. The old one ran them
+  // together in a single "Phone / email" box, which is why no need ever had a
+  // usable `contact_email` — and why the matching engine, which requires one
+  // before it will introduce a requester, could never do so for a real need.
+  const columns = threeStep ? NEED_V3_COLUMNS : COLUMN_FIELDS[kind];
   const key = idempotencyKeyFor(kind, body.idempotencyKey, normalized, now);
 
   const { data, error } = await supabaseAdmin()

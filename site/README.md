@@ -313,6 +313,12 @@ npm test             # compiles tests/ then runs node --test
 npm run build        # next build
 ```
 
+`npm test` runs the files one at a time (`--test-concurrency=1`). Three of them
+start an in-memory Postgres through PGlite, and running those in parallel makes
+them fight over memory: the same suite takes about 4 seconds serially and over
+80 in parallel, on a machine sitting at 28% CPU the whole time. Remove the flag
+and the wall time grows with every database test added.
+
 `npm test` needs no Supabase project and sends no mail. Everything with a rule
 in it — intake validation, the claim rules, upload policy and tickets, the
 publication rule — is a pure module tested against fakes (`tests/helpers.ts`).

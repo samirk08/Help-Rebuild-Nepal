@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Help Rebuild Nepal · Phases 0–2 shipped</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Design source: the Help Rebuild Nepal app's own tokens, lifted from
+   site/app/globals.css — same greens, navy, red, rules and type scale, so this
+   report reads as part of the product rather than a generic dashboard. */
+:root{
+  --bg:#f6f7f8; --surface:#fff; --surface-2:#fbfcfc;
+  --ink:#12171c; --ink-2:#3d474f; --muted:#5c666f; --faint:#98a2ab;
+  --line:#e2e6ea; --line-2:#eef1f3; --track:#eef1f3;
+  --green:#14663c; --green-dark:#0e4a2b; --green-tint:#f1f7f3; --green-line:#d7e6dd;
+  --navy:#0a1d4d; --navy-tint:#f2f5fa; --navy-tint-line:#d8e0ec;
+  --red:#c90026; --red-dark:#9c1f25; --red-tint:#fdeceb; --red-line:#dd8b90;
+  --amber:#e0a11b; --amber-bg:#fdf8ea; --amber-line:#e6d5a8; --amber-ink:#6b5713;
+  --display:'Archivo',system-ui,sans-serif; --body:'Public Sans',Helvetica,sans-serif;
+  --radius:6px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1216; --surface:#161b21; --surface-2:#1b2128;
+    --ink:#eef2f5; --ink-2:#c3ccd4; --muted:#94a1ac; --faint:#6f7c87;
+    --line:#28313a; --line-2:#222a32; --track:#242d36;
+    --green:#5fbf8b; --green-dark:#8ad4ac; --green-tint:#12251b; --green-line:#255c3c;
+    --navy:#8fb0e8; --navy-tint:#141c2c; --navy-tint-line:#2a3b5a;
+    --red:#ff7b8e; --red-dark:#ff9aa8; --red-tint:#2a1519; --red-line:#63303a;
+    --amber:#e8b84b; --amber-bg:#241d0d; --amber-line:#4d3f1c; --amber-ink:#e8cf90;
+  }
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.6 var(--body);
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px; margin:0 auto; padding:40px 22px 90px; min-width:0}
+h1,h2,h3,h4{font-family:var(--display); line-height:1.2; margin:0; font-weight:600}
+h1{font-size:clamp(30px,5vw,46px); letter-spacing:-1.2px}
+h2{font-size:clamp(21px,3vw,27px); letter-spacing:-.5px}
+h3{font-size:17px}
+p{margin:10px 0 0}
+a{color:var(--green)}
+code{font:500 13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; background:var(--track); padding:2px 6px; border-radius:4px; overflow-wrap:anywhere}
+
+/* ---- masthead ---- */
+.mast{border-top:4px solid var(--red); background:var(--surface); border:1px solid var(--line); border-top-width:4px; border-radius:var(--radius); padding:30px 30px 26px; margin-bottom:26px}
+.eyebrow{font-size:11px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; color:var(--muted); margin:0 0 12px}
+.mast p.lede{font-size:17px; color:var(--ink-2); max-width:62ch}
+.stamp{display:inline-flex; align-items:center; gap:8px; margin-top:18px; background:var(--green-tint); border:1px solid var(--green-line); color:var(--green); border-radius:100px; padding:7px 15px; font-size:13px; font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ---- phase rail ---- */
+.rail{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; margin:26px 0 0}
+.ph{border:1px solid var(--line); background:var(--surface-2); border-radius:5px; padding:12px 10px; min-width:0; text-align:center}
+.ph b{display:block; font-family:var(--display); font-size:19px}
+.ph span{display:block; font-size:10px; color:var(--muted); margin-top:4px; overflow-wrap:anywhere}
+.ph.done{background:var(--green-tint); border-color:var(--green-line); color:var(--green)}
+.ph.next{background:var(--navy-tint); border-color:var(--navy-tint-line); color:var(--navy)}
+@media(max-width:640px){.rail{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* ---- generic blocks ---- */
+section{margin-top:44px}
+.sub{color:var(--muted); font-size:15px; max-width:66ch; margin-top:8px}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px; min-width:0}
+.grid{display:grid; gap:16px; margin-top:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:820px){.g2,.g3{grid-template-columns:minmax(0,1fr)}}
+
+/* ---- action list ---- */
+.todo{background:var(--amber-bg); border:1px solid var(--amber-line); border-radius:var(--radius); padding:24px 26px}
+.todo h2{color:var(--amber-ink)}
+.todo ol{margin:14px 0 0; padding-left:22px}
+.todo li{margin:10px 0; color:var(--ink-2)}
+.todo li b{color:var(--ink)}
+
+/* ---- before/after ---- */
+.ba{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:0; border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-top:14px}
+.ba>div{padding:16px 18px; min-width:0}
+.ba .was{background:var(--red-tint); border-right:1px solid var(--line)}
+.ba .now{background:var(--green-tint)}
+.ba h4{font-size:10px; letter-spacing:1.4px; text-transform:uppercase; margin-bottom:7px}
+.ba .was h4{color:var(--red-dark)} .ba .now h4{color:var(--green)}
+.ba p{margin:0; font-size:14px; color:var(--ink-2)}
+@media(max-width:700px){.ba{grid-template-columns:minmax(0,1fr)} .ba .was{border-right:0;border-bottom:1px solid var(--line)}}
+
+/* ---- table ---- */
+.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); margin-top:18px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; min-width:520px; font-size:14px}
+th{text-align:left; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); font-weight:600; background:var(--surface-2); padding:12px 16px; border-bottom:1px solid var(--line); white-space:nowrap}
+td{padding:13px 16px; border-bottom:1px solid var(--line-2); vertical-align:top; color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+td b{color:var(--ink)}
+.pill{display:inline-block; font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px; white-space:nowrap}
+.pill.m{background:var(--green-tint); color:var(--green); border:1px solid var(--green-line)}
+.pill.o{background:var(--navy-tint); color:var(--navy); border:1px solid var(--navy-tint-line)}
+
+/* ---- numbers ---- */
+.nums{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-top:18px}
+.num{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; min-width:0}
+.num b{display:block; font-family:var(--display); font-size:30px; letter-spacing:-1px; line-height:1.1}
+.num span{display:block; font-size:12px; color:var(--muted); margin-top:6px}
+.num .delta{color:var(--green); font-size:12px; font-weight:600; margin-top:3px}
+@media(max-width:700px){.nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---- mermaid ---- */
+.mermaid{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-top:18px; overflow-x:auto; text-align:center}
+
+/* ---- bug cards ---- */
+.bug{border-left:3px solid var(--red); padding-left:16px; margin-top:22px}
+.bug h3{font-size:16px}
+.bug .how{font-size:13px; color:var(--muted); margin-top:6px}
+.quote{border-left:2px solid var(--line); padding-left:14px; margin:12px 0 0; font-size:14px; color:var(--muted); font-style:italic}
+
+.foot{margin-top:56px; padding-top:20px; border-top:1px solid var(--line); font-size:12px; color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <p class="eyebrow">Help Rebuild Nepal · Platform build</p>
+    <h1>Three phases done.<br>The unsafe parts are closed.</h1>
+    <p class="lede">Phases 0, 1 and 2 of the implementation plan are built, tested and deployed. This is what changed, what broke along the way, and the four things still waiting on you.</p>
+    <span class="stamp"><span class="dot"></span>Live on www.helprebuildnepal.com</span>
+
+    <div class="rail">
+      <div class="ph done"><b>0</b><span>Guardrails</span></div>
+      <div class="ph done"><b>1</b><span>Protect data</span></div>
+      <div class="ph done"><b>2</b><span>Missions</span></div>
+      <div class="ph next"><b>3</b><span>Intake</span></div>
+      <div class="ph"><b>4</b><span>Matching</span></div>
+      <div class="ph"><b>5</b><span>Relief</span></div>
+      <div class="ph"><b>6</b><span>Quality</span></div>
+    </div>
+  </header>
+
+  <div class="nums">
+    <div class="num"><b>117</b><span>automated tests</span><span class="delta">from 33</span></div>
+    <div class="num"><b>5</b><span>PRs merged</span><span class="delta">1 awaiting you</span></div>
+    <div class="num"><b>3</b><span>migrations applied</span><span class="delta">011 · 012 · 013</span></div>
+    <div class="num"><b>4</b><span>bugs found &amp; fixed</span><span class="delta">3 were pre-existing</span></div>
+  </div>
+
+  <section>
+    <div class="todo">
+      <h2>What still needs you</h2>
+      <ol>
+        <li><b>Merge PR #18</b> — the last piece of Phase 2. Code only, no migration. CI is green.</li>
+        <li><b>Delete your test volunteer registration.</b> It is a real row: it counts on the public tracker and in the mission and network member numbers. Admin → Volunteers.</li>
+        <li><b>Confirm the Resend key rotation finished</b> — new key saved in Supabase SMTP <em>and</em> the old one deleted in Resend.</li>
+        <li><b>Try the volunteer journey end to end</b> on the live site: register → claim with the emailed code → pick a mission → check your profile shows it.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>The volunteer journey, as it stands</h2>
+    <p class="sub">Green is built and deployed. Blue is next. Grey is later phases.</p>
+    <pre class="mermaid">
+flowchart TD
+  A["Register<br/>public form"] --> B["Claim account<br/>emailed 6-digit code"]
+  B --> C["Profile<br/>your answers, your status"]
+  C --> D["Matching details<br/>skills, hours, dates, pause"]
+  C --> E["Choose up to 2 missions"]
+  D --> F["Ready for invitations?<br/>only what is missing"]
+  E --> F
+  F --> G["Invitation from a coordinator"]
+  G --> H["Accept or decline"]
+  H --> I["Both sides confirm"]
+  I --> J["Work, then outcome feedback"]
+
+  classDef done fill:#f1f7f3,stroke:#14663c,color:#0e4a2b;
+  classDef next fill:#f2f5fa,stroke:#0a1d4d,color:#0a1d4d;
+  classDef later fill:#f6f7f8,stroke:#c3ccd4,color:#5c666f;
+  class A,B,C,D,E,F done;
+  class G,H next;
+  class I,J later;
+    </pre>
+    <p class="sub">Everything up to “ready for invitations” now works. The invitation engine itself already exists and is tested — Phase 4 is about the coordinator tools that drive it, and the outcome loop at the end.</p>
+  </section>
+
+  <section>
+    <h2>Phase 1 — what was actually unsafe</h2>
+    <p class="sub">Each of these looked like a safeguard and was not.</p>
+
+    <div class="card" style="margin-top:18px">
+      <h3>Anyone holding a submission id could take your account</h3>
+      <div class="ba">
+        <div class="was"><h4>Was</h4><p>An id plus a matching email created an account marked <code>email_confirm: true</code> — a mailbox verified that nobody had proved control of. Those ids travel in URLs, browser history and forwarded links.</p></div>
+        <div class="now"><h4>Now</h4><p>Nothing is linked until a one-time code sent to that mailbox comes back. The 24-hour window is gone, so someone returning to an old registration can claim it instead of registering twice.</p></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>An HTML file renamed <code>photo.png</code> was stored and linked</h3>
+      <div class="ba">
+        <div class="was"><h4>Was</h4><p>Uploads were authorised by “does a row with this id exist?”, which is not authorisation. The file type came from the extension — a value the caller chooses.</p></div>
+        <div class="now"><h4>Now</h4><p>A session or a signed ticket is required, and the first 32 bytes of the stored object decide its real type. Quotas count what the submission already holds.</p></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Public pages invented the answers people had not given</h3>
+      <div class="ba">
+        <div class="was"><h4>Was</h4><p>A missing urgency rendered as <b>“Immediate”</b>. A missing headcount rendered as <b>4</b>. A filled request still showed “Verified” and still collected offers of help.</p></div>
+        <div class="now"><h4>Now</h4><p>Unanswered says “Not specified”. One shared publication rule across board, detail, counts and projects. A failed read says it failed instead of showing an encouraging zero.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Phase 2 — mission teams and a real workspace</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Nine missions, capped at two</h3>
+        <p>Housing · Health camps · Mental health · Flood resilience · WASH · Operations &amp; IT · Story &amp; advocacy · Situation Room · Temporary shelter.</p>
+        <p>The two-mission cap is a <b>database trigger</b> that locks the row before counting, not a form check — a browser limit holds until someone opens two tabs.</p>
+        <p>Purpose, lead and current task are seeded <b>blank</b>, as you asked. Each says “not set yet” rather than inventing work that does not exist.</p>
+      </div>
+      <div class="card">
+        <h3>Choosing a mission does not narrow your invitations</h3>
+        <p>Interest is not a filter. Only the explicit <em>“only invite me to needs within my missions”</em> switch changes scope — off by default, reversible in one click, and it does not remove you from the missions.</p>
+        <p>Missions are deliberately separate from skill networks. A network says you are an engineer; a mission says you want to work on housing. Merging them would let your profession silently enrol you in a team.</p>
+      </div>
+      <div class="card">
+        <h3>“Ready for invitations”</h3>
+        <p>Lists <b>only what is missing</b>, and says who fixes each item — you, or a coordinator. Not a percentage: there is no meaningful “62% ready”, and a score invites gaming the number instead of filling the gap.</p>
+        <p>A test asserts this agrees with the matching engine. A page that calls you ready while every role comes back “needs clarification” is worse than no page.</p>
+      </div>
+      <div class="card">
+        <h3>Open invitations and commitments</h3>
+        <p>What is waiting on you, and what you have already agreed to.</p>
+        <p>Committed hours use <b>peak overlap</b>, not the sum. Two jobs in different months do not add up — saying they did would tell someone they are full when they are free, and quietly stop invitations they could have accepted.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Four bugs found along the way</h2>
+    <p class="sub">Three of these pre-dated this work. The interesting thing is what they have in common.</p>
+
+    <div class="bug">
+      <h3>“Join network” always sent you back to the registration form</h3>
+      <p>You reported this one. The button, the API route and the permission check all existed and were correct — <b>nothing referenced them</b>. Every card rendered a hardcoded link to the form, so one-click join never existed for anyone.</p>
+      <p class="how">Found by: you, using the site.</p>
+    </div>
+
+    <div class="bug">
+      <h3>Mission fields the engine read but nothing could write</h3>
+      <p>The matching engine already used <code>mission_ids</code> and <code>mission_only</code>. No table held missions and no form wrote those columns. Same shape as the join bug, one layer down.</p>
+      <p class="how">Found by: reading the engine before building on it.</p>
+    </div>
+
+    <div class="bug">
+      <h3>Diagnostics told you your forms were broken when they were not</h3>
+      <p>My bug. The ledger looked for a table called <code>admin_allowlist</code>; it is called <code>admin_users</code>. The page contradicted itself on one screen, and a missing optional feature was reported as “public forms are likely returning errors”.</p>
+      <p class="how">Found by: you, screenshotting the page.</p>
+    </div>
+
+    <div class="bug">
+      <h3>A database blip told registered people to register again</h3>
+      <p>A failed read returned “no registration”, which renders as <em>“You have not registered yet”</em> with a link to the form. Filling it in produces a second row for the same person — the exact duplicate the claim flow exists to prevent.</p>
+      <p class="how">Found by: the plan naming it as a rule, then checking whether the code obeyed.</p>
+    </div>
+
+    <div class="card" style="margin-top:26px; background:var(--navy-tint); border-color:var(--navy-tint-line)">
+      <h3>What they had in common</h3>
+      <p>Typecheck passed. Every test passed. The build passed. <b>Working code that nobody calls is still valid code</b>, so none of those could see it — the defect was in the wiring, and nothing checked wiring.</p>
+      <p>There is now a test that fails when a component talks to the backend and no page renders it. I verified it by reverting the fix and watching it fail, because a regression test that only passes against the fix is worth nothing.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Something worth knowing about the automated PRs</h2>
+    <p class="sub">Seven arrived from a bot while this was in progress. Four were taken, three declined.</p>
+    <p><b>All seven showed green checks — and the checks never ran your tests.</b> They were Vercel builds only. That is how a test file that does not compile and a branch whose build fails were both reported as passing. There is now a real CI workflow running typecheck, tests and build on every PR.</p>
+    <p>The one I most wanted to decline proposed a recursion guard that would have made two different oversized payloads produce the <em>same</em> idempotency key — silently discarding the second person's registration as a duplicate. Losing a registration is worse than the crash it prevented.</p>
+  </section>
+
+  <section>
+    <h2>Pull requests</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>What</th><th>Tests</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>6</b></td><td>Protect submitted data, stop public pages inventing values</td><td>76</td><td><span class="pill m">Merged</span></td></tr>
+          <tr><td><b>14</b></td><td>Fix the migration ledger reporting applied migrations as missing</td><td>77</td><td><span class="pill m">Merged</span></td></tr>
+          <tr><td><b>15</b></td><td>Integrate useful automated PRs, make CI actually run the tests</td><td>90</td><td><span class="pill m">Merged</span></td></tr>
+          <tr><td><b>16</b></td><td>Let a registered volunteer actually join a network</td><td>93</td><td><span class="pill m">Merged</span></td></tr>
+          <tr><td><b>17</b></td><td>Add mission teams, and let a volunteer choose one</td><td>108</td><td><span class="pill m">Merged</span></td></tr>
+          <tr><td><b>18</b></td><td>Finish Phase 2: tell a volunteer where they stand</td><td>117</td><td><span class="pill o">Awaiting you</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What is deliberately not done</h2>
+    <div class="grid g3">
+      <div class="card">
+        <h3>Volunteer contact-sharing controls</h3>
+        <p>Contact details are already exchanged only at both-party confirmation, which is the coordination step the plan requires — so the privacy guarantee holds today. A volunteer-level opt-out is new policy plus a migration, and belongs with Phase 4.</p>
+      </div>
+      <div class="card">
+        <h3>Single-need reads during an outage</h3>
+        <p>One need page still 404s if the database is unreachable, rather than saying “unavailable”. The list surfaces the plan named are covered; this one is honest about being a gap.</p>
+      </div>
+      <div class="card">
+        <h3>Distributed rate limiting</h3>
+        <p>The limiter is in-process per instance: real against one script in a loop, useless against a distributed flood. The size limits, option allowlist, upload quotas and idempotency key all hold regardless.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Phase 3, when you want it</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>A three-step need intake</h3>
+        <p>The request form is currently nine sections. Phase 3 cuts it to <b>need</b>, <b>contact</b>, <b>review</b> — with detailed role requirements moved into the verification step where a coordinator fills them in, rather than demanded from someone in a crisis.</p>
+        <p>Plus a phone/WhatsApp-assisted path that records who helped and that consent was given.</p>
+      </div>
+      <div class="card">
+        <h3>A workspace for the person who asked for help</h3>
+        <p>Right now a requester submits and hears nothing. Phase 3 gives them a verified link to see status, answer questions, update the request, confirm or decline a proposed volunteer, and say whether the support actually met the need.</p>
+        <p>With version numbers, so an edit cannot silently overwrite a newer coordinator update.</p>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Help Rebuild Nepal · Phases 0–2 · Styled with the app's own design tokens from <code>site/app/globals.css</code>. Select any text or element on this page to annotate it and send feedback back.</p>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.esm.min.mjs";
+
+  // Render Mermaid in a theme that matches the page, and re-render when the
+  // viewer flips it — Mermaid never restyles an already-rendered SVG.
+  const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const paint = document.createElement("canvas").getContext("2d");
+  function toRgba(color) {
+    paint.clearRect(0, 0, 1, 1);
+    paint.fillStyle = "#000";
+    paint.fillStyle = color;
+    paint.fillRect(0, 0, 1, 1);
+    return paint.getImageData(0, 0, 1, 1).data;
+  }
+  function compositeRgba(fg, bg) {
+    const fa = fg[3] / 255, ba = bg[3] / 255;
+    const a = fa + ba * (1 - fa);
+    if (a === 0) return [0, 0, 0, 0];
+    return [
+      (fg[0] * fa + bg[0] * ba * (1 - fa)) / a,
+      (fg[1] * fa + bg[1] * ba * (1 - fa)) / a,
+      (fg[2] * fa + bg[2] * ba * (1 - fa)) / a,
+      a * 255,
+    ];
+  }
+  function pageIsDark() {
+    const root = document.documentElement;
+    const rootBg = toRgba(getComputedStyle(root).backgroundColor);
+    const bodyBg = document.body ? toRgba(getComputedStyle(document.body).backgroundColor) : [0, 0, 0, 0];
+    const [r, g, b, a] = compositeRgba(bodyBg, rootBg);
+    if (a > 0) return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5;
+    const cs = getComputedStyle(root).colorScheme;
+    if (cs.includes("dark") && !cs.includes("light")) return true;
+    if (cs.includes("light") && !cs.includes("dark")) return false;
+    return darkQuery.matches;
+  }
+
+  const diagrams = [...document.querySelectorAll(".mermaid")].map((el) => ({ el, src: el.textContent }));
+  let applied, rendering = false, queued = false;
+  function queueRender() { queued = true; if (!rendering) void render(); }
+  async function render() {
+    rendering = true;
+    try {
+      while (queued) {
+        queued = false;
+        const theme = pageIsDark() ? "dark" : "default";
+        if (theme === applied) continue;
+        mermaid.initialize({ startOnLoad: false, theme, securityLevel: "strict" });
+        for (const { el, src } of diagrams) { el.removeAttribute("data-processed"); el.textContent = src; }
+        try { await mermaid.run({ nodes: diagrams.map((d) => d.el) }); }
+        catch (error) { console.error("Mermaid diagram render failed:", error); return; }
+        applied = theme;
+      }
+    } finally { rendering = false; if (queued) queueRender(); }
+  }
+  if (document.readyState === "complete") queueRender();
+  else window.addEventListener("load", queueRender, { once: true });
+  const observer = new MutationObserver(queueRender);
+  for (const el of [document.documentElement, document.body]) {
+    if (el) observer.observe(el, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
+  }
+  document.addEventListener("change", queueRender, true);
+  darkQuery.addEventListener("change", queueRender);
+</script>
+</body>
+</html>
