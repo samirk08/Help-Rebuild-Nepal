@@ -2787,13 +2787,21 @@ textarea:focus-visible {
 .footer__links {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  /* The gap is absorbed into the links' own padding below, so the rhythm is
+     unchanged while each link becomes big enough to hit with a thumb. */
+  gap: 0;
   align-items: flex-start;
 }
 
+/* 13.5px text in a column is a ~16px tall tap target — under the 24px WCAG
+   2.5.8 minimum, and unpleasant on a phone regardless of what the guideline
+   permits. The padding grows the target without moving anything visually. */
 .footer__link {
   font-size: 13.5px;
   color: var(--dark-text);
+  display: block;
+  padding: 4px 0;
+  min-height: 24px;
 }
 
 .footer__link:hover {

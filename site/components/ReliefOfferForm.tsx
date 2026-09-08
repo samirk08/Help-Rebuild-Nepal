@@ -236,6 +236,7 @@ export default function ReliefOfferForm({
                   {extra.reliefWhereGoods}
                 </label>
                 <Combobox
+                  id="relief-where"
                   name="relief-where"
                   options={districtOptions(lang)}
                   placeholder={extra.districtPlaceholder}
