@@ -23,6 +23,7 @@ test("remote volunteers keep resources, availability and their base; stale deplo
     "s05-preferred-districts": "Kathmandu", "s04-maximum-single-deployment": "2 weeks",
     "s04-hours-per-week": "5–15", "s06-resources": ["Equipment", "Vehicle"],
     "s06-details": "Equipment delivery can be arranged.", "s01-where-you-are-based": "Kathmandu",
+    "s03-primary-skill": "Engineering (structural / civil)",
   };
   const result = validateIntake("volunteer", fields);
   assert.ok(result.ok);

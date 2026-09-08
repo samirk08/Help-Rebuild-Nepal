@@ -162,3 +162,33 @@ test("unknown keys never reach storage", () => {
   assert.equal("n3-injected" in result.fields, false);
   assert.equal("s04-how-many-people" in result.fields, false);
 });
+
+test("a posted need has to be written, not padded to the minimum", () => {
+  // The detail box has a 20-character floor, which "aaaaaaaaaaaaaaaaaaaa"
+  // clears. Both fields are what a coordinator reads to decide whether to
+  // verify, so both have to be real writing.
+  const junkTitle = codes(validateNeedV3(full({ [N3.title]: "aaaaaa" })));
+  assert.deepEqual(junkTitle, [`${N3.title}:not_meaningful`]);
+
+  const junkDetail = codes(validateNeedV3(full({ [N3.detail]: "x".repeat(40) })));
+  assert.deepEqual(junkDetail, [`${N3.detail}:not_meaningful`]);
+
+  // And an organisation name.
+  assert.deepEqual(
+    codes(validateNeedV3(full({ [N3.organization]: "...." }))),
+    [`${N3.organization}:not_meaningful`]
+  );
+});
+
+test("a real request in Nepali is not mistaken for junk", () => {
+  assert.equal(
+    validateNeedV3(
+      full({
+        [N3.title]: "छाना मर्मत चाहियो",
+        [N3.detail]: "वडा ७ का ९६ घरधुरीको छाना अर्को वर्षा अघि मर्मत हुनुपर्नेछ।",
+        [N3.organization]: "मेलम्ची नगरपालिका",
+      })
+    ).ok,
+    true
+  );
+});
