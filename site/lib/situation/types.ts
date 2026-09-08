@@ -160,7 +160,16 @@ export type ItemNeedRow = {
   requester: string;
   detail: string;
   created_at: string;
+  /**
+   * Four quantities since migration 018, because they mean different things.
+   * `pledged` is what has been offered, `received` is what arrived, and
+   * `remaining` is what someone still has to find — which is the only one the
+   * queue should ever act on.
+   */
   pledged: number;
+  received: number;
+  remaining: number;
+  status: string;
 };
 
 export type QueueQuery = {

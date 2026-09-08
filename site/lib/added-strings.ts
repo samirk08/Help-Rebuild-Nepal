@@ -135,6 +135,22 @@ export type AddedStrings = {
   networkSignInLink: string;
   projectsCoordinator: string;
   projectsNoCoordinator: string;
+  projectsLead: string;
+  projectsMilestones: string;
+  projectsLatestUpdate: string;
+  projectsNoUpdate: string;
+  projectsOutcome: string;
+  projectsOutcomeConfirmed: string;
+  projectsOutcomeUnconfirmed: string;
+  projectsHouseholds: string;
+  reliefReceived: string;
+  reliefArranged: string;
+  reliefStillNeeded: string;
+  reliefClosed: string;
+  reliefClosedBody: string;
+  reliefDeliveryWindow: string;
+  reliefDeliveryAddress: string;
+  reliefNothingArrived: string;
 
   profileSignedOutTitle: string;
   profileSignedOutBody: string;
@@ -535,6 +551,23 @@ const ADDED: Record<Lang, AddedStrings> = {
     networkSignInLink: "Sign in to join with one click",
     projectsCoordinator: "Coordinator",
     projectsNoCoordinator: "Not yet assigned",
+    projectsLead: "Lead",
+    projectsMilestones: "Milestones",
+    projectsLatestUpdate: "Latest update",
+    projectsNoUpdate: "No update posted yet",
+    projectsOutcome: "What came of it",
+    projectsOutcomeConfirmed: "Confirmed by the organisation that asked",
+    projectsOutcomeUnconfirmed: "Not yet confirmed by the requester",
+    projectsHouseholds: "Households reached",
+    reliefReceived: "Received",
+    reliefArranged: "Arranged",
+    reliefStillNeeded: "Still needed",
+    reliefClosed: "This request is closed",
+    reliefClosedBody:
+      "It is not taking new offers. The record stays here so what happened is still readable.",
+    reliefDeliveryWindow: "Deliveries accepted",
+    reliefDeliveryAddress: "Deliver to",
+    reliefNothingArrived: "Nothing has arrived yet",
 
     profileSignedOutTitle: "Your volunteer profile",
     profileSignedOutBody:
@@ -940,6 +973,23 @@ const ADDED: Record<Lang, AddedStrings> = {
     networkSignInLink: "एक क्लिकमा जोडिन साइन इन गर्नुहोस्",
     projectsCoordinator: "संयोजक",
     projectsNoCoordinator: "अझै तोकिएको छैन",
+    projectsLead: "नेतृत्व",
+    projectsMilestones: "मुख्य चरणहरू",
+    projectsLatestUpdate: "पछिल्लो अपडेट",
+    projectsNoUpdate: "अझै कुनै अपडेट छैन",
+    projectsOutcome: "के भयो",
+    projectsOutcomeConfirmed: "अनुरोध गर्ने संस्थाबाट पुष्टि भएको",
+    projectsOutcomeUnconfirmed: "अनुरोधकर्ताबाट अझै पुष्टि भएको छैन",
+    projectsHouseholds: "पुगेका घरधुरी",
+    reliefReceived: "प्राप्त",
+    reliefArranged: "मिलाइएको",
+    reliefStillNeeded: "अझै आवश्यक",
+    reliefClosed: "यो अनुरोध बन्द भइसकेको छ",
+    reliefClosedBody:
+      "यसले नयाँ प्रस्ताव लिँदैन। के भयो भन्ने अभिलेख यहीँ रहन्छ।",
+    reliefDeliveryWindow: "डेलिभरी लिइने समय",
+    reliefDeliveryAddress: "डेलिभरी ठेगाना",
+    reliefNothingArrived: "अझै केही आइपुगेको छैन",
 
     profileSignedOutTitle: "तपाईंको स्वयंसेवक प्रोफाइल",
     profileSignedOutBody:

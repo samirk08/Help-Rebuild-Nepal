@@ -222,6 +222,9 @@ test("failed emails and underpledged near item needs appear; fully pledged ones 
           detail: "Sheets for 14 houses",
           created_at: "2026-09-01T09:00:00.000Z",
           pledged: 2,
+          received: 0,
+          remaining: 8,
+          status: "requested",
         },
         {
           id: "aa000000-0000-4000-8000-000000000004",
@@ -232,7 +235,11 @@ test("failed emails and underpledged near item needs appear; fully pledged ones 
           requester: "Ward office",
           detail: "Rice",
           created_at: "2026-09-01T09:00:00.000Z",
+          // Fully arranged, so nothing is outstanding and it leaves the queue.
           pledged: 50,
+          received: 50,
+          remaining: 0,
+          status: "closed",
         },
       ],
     })

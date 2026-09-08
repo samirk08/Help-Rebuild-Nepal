@@ -227,10 +227,14 @@ export function deriveQueueItems(sources: QueueSources): DerivedItem[] {
 
   const nearUntil = now + ITEM_NEAR_DAYS * 86400000;
   for (const item of sources.itemNeeds) {
-    if (item.pledged >= item.quantity) continue;
+    // `remaining` counts what has arrived and what a coordinator has actually
+    // arranged. Offers nobody accepted are leads, not supply — before migration
+    // 018 this loop compared against them, so a request with 200 tarpaulins
+    // offered and none delivered dropped off the queue entirely.
+    if (item.status !== "requested" || item.remaining <= 0) continue;
     const needed = Date.parse(`${item.needed_by.slice(0, 10)}T00:00:00.000Z`);
     if (!Number.isFinite(needed) || needed > nearUntil) continue;
-    const remaining = item.quantity - item.pledged;
+    const remaining = item.remaining;
     const subject = `${item.category}: ${remaining} still needed in ${named(item.district)}`;
     items.push({
       key: itemKey("item_unpledged", item.id),

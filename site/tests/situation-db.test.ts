@@ -45,6 +45,7 @@ before(async () => {
     "010-matching-engine.sql",
     "014-requester-workspace.sql",
     "015-invitation-attempts.sql",
+    "018-relief-delivery.sql",
   ]) {
     await db.exec(readFileSync(`supabase/${file}`, "utf8"));
   }
@@ -102,9 +103,12 @@ async function sourcesFromDb(now: string): Promise<QueueSources> {
   const events = (await db.query("select id, submission_id, actor, event, detail, created_at from request_events")).rows as Array<EventRow>;
   const outbox = (await db.query("select id, invitation_id, kind, status, last_error, created_at from matching_email_outbox"))
     .rows as Array<OutboxRow>;
+  // The same view lib/situation/data.ts reads, so the queue is exercised
+  // against the real four quantities rather than a pledged total.
   const itemNeeds = (await db.query(
-    "select n.id, n.category, n.quantity, n.district, n.needed_by, n.requester, n.detail, n.created_at, coalesce(p.pledged,0) as pledged " +
-      "from item_needs n left join item_need_pledged p on p.item_need_id = n.id"
+    "select n.id, n.category, n.quantity, n.district, n.needed_by, n.requester, n.detail, n.created_at, " +
+      "g.pledged, g.received, g.remaining, g.status " +
+      "from item_needs n join item_need_progress g on g.item_need_id = n.id"
   )).rows as Array<ItemNeedRow>;
 
   const stringify = <T extends { created_at?: unknown }>(rows: T[]) =>

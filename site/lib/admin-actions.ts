@@ -155,7 +155,13 @@ export async function promoteToProject(formData: FormData) {
   const { error } = await supabaseAdmin()
     .from("projects")
     .insert({ need_id: needId, coordinator: coordinator || null });
-  if (error) throw new Error(error.message);
+
+  // Migration 019 made `need_id` unique. A double-submitted promotion used to
+  // produce two projects for one need — two cards on the public page describing
+  // the same work, diverging from then on. Landing back on the page that now
+  // shows the project is the right outcome for someone who clicked twice, so
+  // this is not surfaced as an error.
+  if (error && error.code !== "23505") throw new Error(error.message);
 
   revalidatePath(`/admin/needs/${needId}`);
 }

@@ -8,9 +8,12 @@ import { supabaseAdmin } from "./supabase";
  * components (the offer form), and pulling the service-role Supabase client
  * into a client bundle is exactly the mistake this separation prevents.
  *
- * Only verified item needs are published. An unverified request for goods is
- * how you end up with a warehouse of things nobody asked for — the same
- * reasoning already written into the relief copy.
+ * Everything here reads `item_needs_public` (migration 018) rather than
+ * `item_needs`. That view already filters to verified rows and carries the
+ * four quantities, and — the reason it exists — it does not have the
+ * recipient's name, phone or email in it at all. A `select *` against the base
+ * table publishes a ward officer's mobile number; a `select *` against this one
+ * cannot.
  */
 
 type ItemNeedRow = {
@@ -25,14 +28,28 @@ type ItemNeedRow = {
   verified: boolean;
   detail: string;
   detail_np: string;
+  status: string;
+  delivery_window: string | null;
+  delivery_address: string | null;
+  pledged: number | string | null;
+  committed: number | string | null;
+  received: number | string | null;
+  remaining: number | string | null;
 };
 
-function toItemNeed(row: ItemNeedRow, pledged: number): ItemNeed {
+/** Aggregates come back as bigint where the driver hands them over as strings. */
+const count = (value: number | string | null | undefined): number => Number(value ?? 0) || 0;
+
+function toItemNeed(row: ItemNeedRow): ItemNeed {
   return {
     id: row.id,
     category: row.category,
     quantity: row.quantity,
-    pledged,
+    pledged: count(row.pledged),
+    committed: count(row.committed),
+    received: count(row.received),
+    remaining: count(row.remaining),
+    status: row.status,
     district: row.district,
     municipality: row.municipality,
     ward: row.ward ?? undefined,
@@ -41,20 +58,18 @@ function toItemNeed(row: ItemNeedRow, pledged: number): ItemNeed {
     verified: row.verified,
     detail: row.detail,
     detailNp: row.detail_np,
+    deliveryWindow: row.delivery_window ?? undefined,
+    deliveryAddress: row.delivery_address ?? undefined,
   };
-}
-
-/** Verified pledged quantities, from the derived view rather than a counter. */
-async function pledgedByNeed(): Promise<Map<string, number>> {
-  const { data } = await supabaseAdmin().from("item_need_pledged").select("item_need_id, pledged");
-  return new Map((data ?? []).map((r) => [r.item_need_id as string, Number(r.pledged) || 0]));
 }
 
 export async function listItemNeeds(): Promise<ItemNeed[]> {
   const { data, error } = await supabaseAdmin()
-    .from("item_needs")
+    .from("item_needs_public")
     .select("*")
-    .eq("verified", true)
+    // Closed requests stay readable at their own URL — that is the record of
+    // what happened — but they do not belong on a board of things to do.
+    .eq("status", "requested")
     .order("needed_by", { ascending: true });
 
   if (error) {
@@ -62,21 +77,18 @@ export async function listItemNeeds(): Promise<ItemNeed[]> {
     return [];
   }
 
-  const pledged = await pledgedByNeed();
-  return (data ?? []).map((row) => toItemNeed(row as ItemNeedRow, pledged.get(row.id) ?? 0));
+  return (data ?? []).map((row) => toItemNeed(row as ItemNeedRow));
 }
 
 export async function getItemNeed(id: string): Promise<ItemNeed | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
 
   const { data } = await supabaseAdmin()
-    .from("item_needs")
+    .from("item_needs_public")
     .select("*")
     .eq("id", id)
-    .eq("verified", true)
     .maybeSingle();
 
   if (!data) return null;
-  const pledged = await pledgedByNeed();
-  return toItemNeed(data as ItemNeedRow, pledged.get(data.id) ?? 0);
+  return toItemNeed(data as ItemNeedRow);
 }

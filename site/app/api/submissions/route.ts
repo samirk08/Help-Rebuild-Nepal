@@ -15,6 +15,7 @@ import {
 } from "@/lib/intake-schema";
 import { INTAKE_BUDGET, callerKey, consume } from "@/lib/rate-limit";
 import { EXAMPLE_ITEM_NEED } from "@/lib/relief";
+import { canAcceptPledge } from "@/lib/relief-delivery";
 import { supabaseAdmin } from "@/lib/supabase";
 import { issueUploadTicket } from "@/lib/upload-tickets";
 
@@ -30,6 +31,10 @@ const LANGS = new Set(["en", "np"]);
 
 /** Postgres unique_violation — the idempotency index doing its job. */
 const UNIQUE_VIOLATION = "23505";
+// Postgres `raise exception` without an explicit SQLSTATE. Every guard in
+// migration 018 lands here, carrying a message written to be read by the
+// person who hit it.
+const RAISED_EXCEPTION = "P0001";
 
 /**
  * How long an identical submission with no client key is treated as the same
@@ -350,11 +355,11 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
     // An offer must target a need that is real and still able to receive one.
     // Previously any uuid was accepted, so supply could be pledged against a
     // closed or non-existent request and counted toward filling it.
-    const [{ data: need }, { data: pledged }] = await Promise.all([
-      supabaseAdmin().from("item_needs").select("id, category, quantity").eq("id", itemNeedId).maybeSingle(),
+    const [{ data: need }, { data: progress }] = await Promise.all([
+      supabaseAdmin().from("item_needs").select("id, category, quantity, status").eq("id", itemNeedId).maybeSingle(),
       supabaseAdmin()
-        .from("item_need_pledged")
-        .select("pledged")
+        .from("item_need_progress")
+        .select("quantity, status, pledged, committed, received")
         .eq("item_need_id", itemNeedId)
         .maybeSingle(),
     ]);
@@ -369,21 +374,28 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
       ]);
     }
 
-    // `item_needs` has no lifecycle column yet, so "closed" is expressed the
-    // only way the current schema can express it: confirmed pledges already
-    // cover the quantity asked for. Taking more here would show supply against
-    // a need that is met and leave the offerer waiting for a collection that
-    // is never arranged. The richer `requested → … → closed` stages, and the
-    // deadline case, belong to the supplies work in Phase 5.
-    const already = Number(pledged?.pledged ?? 0);
-    if (Number.isFinite(need.quantity) && already >= need.quantity) {
-      return fieldErrors([
-        {
-          field: "relief-target",
-          code: "invalid_option",
-          message: "That item need is already met and is not taking new offers.",
-        },
-      ]);
+    // Migration 018 refuses a closed or fully allocated request at the trigger,
+    // so this cannot be the only place the rule lives. It is here to produce a
+    // sentence the donor can act on instead of a raised exception, and it reads
+    // the same view the trigger computes from — `canAcceptPledge` states the
+    // rule once, in lib/relief-delivery.ts.
+    //
+    // The progress row is absent only if migration 018 has not been run; the
+    // request is then treated as live, exactly as it was before the stages
+    // existed.
+    if (progress) {
+      const verdict = canAcceptPledge({
+        status: String(progress.status ?? "requested"),
+        quantity: Number(progress.quantity ?? 0),
+        pledged: Number(progress.pledged ?? 0),
+        committed: Number(progress.committed ?? 0),
+        received: Number(progress.received ?? 0),
+      });
+      if (!verdict.ok) {
+        return fieldErrors([
+          { field: "relief-target", code: "invalid_option", message: verdict.reason },
+        ]);
+      }
     }
     // A matched offer inherits its category from the need it targets — the form
     // does not ask again — so look it up rather than trust a client value that
@@ -419,6 +431,15 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
       if (existing) {
         return NextResponse.json({ ok: true, persisted: true, id: existing.id, duplicate: true });
       }
+    }
+    // `pledges_guard_demand` raises when the request closed between the check
+    // above and this insert — the race the trigger's row lock exists to catch.
+    // Returning a 500 for it would tell the donor the site is broken when in
+    // fact their offer was simply a few seconds too late.
+    if (error.code === RAISED_EXCEPTION) {
+      return fieldErrors([
+        { field: "relief-target", code: "invalid_option", message: error.message },
+      ]);
     }
     console.error("pledges insert failed", error);
     return NextResponse.json({ error: "Could not save offer", code: error.code ?? null }, { status: 500 });

@@ -2079,6 +2079,46 @@ textarea:focus-visible {
   background: var(--purple);
 }
 
+/* Two quantities in one bar: what has arrived, then what is merely arranged
+   behind it. They are drawn in source order left to right, so the solid green
+   always starts at zero and the hatched section continues from where it ends —
+   a relief request that has received nothing must never look filled. */
+.meter--stacked {
+  display: flex;
+  overflow: hidden;
+}
+
+.meter--stacked .meter__fill {
+  border-radius: 0;
+}
+
+.meter--stacked .meter__fill:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.meter--stacked .meter__fill:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.meter__fill--pending {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--track),
+    var(--track) 3px,
+    var(--green-tint, var(--track-2)) 3px,
+    var(--green-tint, var(--track-2)) 6px
+  );
+}
+
+.factlist--tight {
+  gap: 7px;
+}
+
+.factlist--tight .fact {
+  padding-bottom: 6px;
+  font-size: 13px;
+}
+
 .notice--warn {
   border-color: var(--red-line);
   background: var(--red-tint);

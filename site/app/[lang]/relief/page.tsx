@@ -83,7 +83,8 @@ export default async function ReliefPage({ params }: { params: Promise<{ lang: s
               <tr>
                 <th scope="col">{tr(t.reliefItem)}</th>
                 <th scope="col">{tr(t.reliefQuantity)}</th>
-                <th scope="col">{tr(t.reliefPledged)}</th>
+                <th scope="col">{tr(t.reliefReceived)}</th>
+                <th scope="col">{tr(t.reliefStillNeeded)}</th>
                 <th scope="col">{tr(t.reliefLocation)}</th>
                 <th scope="col">{tr(t.reliefNeededBy)}</th>
               </tr>
@@ -99,7 +100,11 @@ export default async function ReliefPage({ params }: { params: Promise<{ lang: s
                       </Link>
                     </td>
                     <td>{formatQuantity(need, lang)}</td>
-                    <td>{need.pledged}</td>
+                    {/* Received, not pledged. A column of offers reads as
+                        progress, and a board of promised-but-undelivered goods
+                        is how the search for real supply stops. */}
+                    <td>{need.received}</td>
+                    <td>{need.remaining}</td>
                     <td>
                       {need.municipality} · {need.district}
                     </td>
