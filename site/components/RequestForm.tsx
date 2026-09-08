@@ -71,6 +71,22 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
   const [revision, setRevision] = useState(0);
   const [errors, setErrors] = useState<FieldError[]>([]);
   const [attachments, setAttachments] = useState<AttachmentState | null>(null);
+  /**
+   * A draft is kept on the device only, never sent.
+   *
+   * This form is nine sections long. Someone filling it in on a phone with a
+   * bad connection should not lose it to a dropped tab — but a half-written
+   * registration is not something to store on our side without being asked,
+   * because nobody has consented to anything at that point.
+   *
+   * `seed` is applied by remounting the form: the controls here are
+   * uncontrolled, so a restored answer has to arrive as a defaultValue rather
+   * than be written into the DOM afterwards. Writing it in afterwards is what
+   * left the district box visibly empty while its hidden input held a value.
+   */
+  const [seed, setSeed] = useState<Record<string, string[]> | null>(null);
+  const [draftOffer, setDraftOffer] = useState(false);
+  const [formKey, setFormKey] = useState(0);
   const formRef = useRef<HTMLFormElement>(null);
   // Files live here, not in component state — a picked File never needs to
   // trigger a re-render of the form around it, only to be here when submit runs.
@@ -109,13 +125,61 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       if (typeof value === "string" && value.trim() !== "") next[match[1]] = true;
     }
     setFilled(next);
+    // Saved on the same signal that recomputes progress, so what is stored is
+    // always what the form currently holds.
+    if (revision > 0) saveDraft();
   }, [revision]);
+
+  const draftKey = `hrn:draft:${kind}:v1`;
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(draftKey)) setDraftOffer(true);
+    } catch {
+      // Private browsing or storage disabled. Drafts are a convenience.
+    }
+  }, [draftKey]);
+
+  /**
+   * Everything typed so far, minus the files, which cannot be stored.
+   *
+   * Values are collected as lists: a chip group holds several answers, and
+   * keeping one per field would silently drop every skill but the last.
+   */
+  function captureDraft(): Record<string, string[]> {
+    const form = formRef.current;
+    const draft: Record<string, string[]> = {};
+    if (!form) return draft;
+    for (const [key, value] of new FormData(form).entries()) {
+      if (typeof value !== "string" || value.trim() === "") continue;
+      (draft[key] ??= []).push(value);
+    }
+    return draft;
+  }
+
+  function saveDraft() {
+    try {
+      window.localStorage.setItem(draftKey, JSON.stringify(captureDraft()));
+    } catch {
+      // Storage full or unavailable. Losing a draft is not worth an error
+      // message on top of whatever the person is already dealing with.
+    }
+  }
+
+  function clearDraft() {
+    try {
+      window.localStorage.removeItem(draftKey);
+    } catch {
+      // Nothing to clean up.
+    }
+  }
 
   const bump = () => {
     const modeControl = formRef.current?.elements.namedItem(WORK_MODE_FIELD[kind]);
     if (modeControl instanceof HTMLSelectElement) setWorkMode(modeControl.value);
     setRevision((r) => r + 1);
   };
+
 
   const visibleErrors = errors.filter((problem) => !hiddenFields.has(problem.field));
   const errorByField = new Map(
@@ -200,6 +264,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
 
     try {
       const result = await submitRequest(kind, lang, new FormData(formEl), idempotencyKey.current);
+      clearDraft();
 
       const files = Object.values(pendingFiles.current).flat();
       if (result.id && files.length > 0) {
@@ -330,6 +395,48 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
         </div>
       ) : null}
 
+      {/* Offered rather than applied automatically: someone returning to start
+          a different registration should not silently inherit the last one. */}
+      {draftOffer && !attachments ? (
+        <div className="notice" role="status" style={{ marginBottom: 16 }}>
+          <strong>{isVolunteer ? extra.draftFoundRegistration : extra.n3DraftFound}</strong>
+          <div style={{ display: "flex", gap: 12, marginTop: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn btn--dark btn--sm"
+              onClick={() => {
+                try {
+                  const saved = window.localStorage.getItem(draftKey);
+                  if (saved) {
+                    setSeed(JSON.parse(saved) as Record<string, string[]>);
+                    // Remounting is what makes the restored answers appear: the
+                    // controls are uncontrolled, so they only read a default
+                    // when they are first created.
+                    setFormKey((k) => k + 1);
+                    setRevision((r) => r + 1);
+                  }
+                } catch {
+                  // A corrupt draft is not worth an error; it is discarded.
+                }
+                setDraftOffer(false);
+              }}
+            >
+              {extra.n3DraftRestore}
+            </button>
+            <button
+              type="button"
+              className="reset-button linkish"
+              onClick={() => {
+                clearDraft();
+                setDraftOffer(false);
+              }}
+            >
+              {extra.n3DraftDiscard}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {attachments ? (
         <div className="notice notice--warn" role="status" style={{ marginBottom: 16 }}>
           <strong>{extra.attachTitle}</strong>
@@ -368,7 +475,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
 
       {/* Shared validation includes consent and opens collapsed fields before
           focusing errors; native validation cannot focus an inert accordion. */}
-      <form ref={formRef} noValidate onSubmit={handleSubmit} onChange={bump} onClick={bump}>
+      <form key={formKey} ref={formRef} noValidate onSubmit={handleSubmit} onChange={bump} onClick={bump}>
         <input type="hidden" name="__form_version" value="2" />
         <div className="form-sections">
           {sections.map((section) => (
@@ -421,6 +528,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
                               pendingFiles.current[name] = files;
                             }}
                             error={hidden ? undefined : errorByField.get(fieldName)}
+                            defaultValue={seed?.[fieldName]}
                           />
                         </fieldset>
                       );

@@ -65,7 +65,21 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
   const [submitting, setSubmitting] = useState(false);
   const [assisted, setAssisted] = useState(false);
   const [draftOffer, setDraftOffer] = useState(false);
-  const [attachments, setAttachments] = useState<UploadOutcome[] | null>(null);
+  /**
+   * A saved request whose photos did not all land.
+   *
+   * The request itself has already succeeded, so nothing here may read as "your
+   * request failed" — the only remaining decision is about the files. Carrying
+   * the submission id and ticket is what makes a retry possible at all: without
+   * them the only way to attach a missed photo was to fill the whole form in
+   * again, which is how a lost photo became a duplicate request.
+   */
+  const [attachments, setAttachments] = useState<{
+    submissionId: string;
+    ticket?: string;
+    results: UploadOutcome[];
+    retrying: boolean;
+  } | null>(null);
 
   const files = useRef<File[]>([]);
   const idempotencyKey = useRef(newIdempotencyKey());
@@ -189,7 +203,12 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
         const summary = await uploadDocuments(saved.id, files.current, saved.uploadTicket);
         if (summary.failed > 0) {
           // The request is saved either way; only the photos need another go.
-          setAttachments(summary.results);
+          setAttachments({
+            submissionId: saved.id,
+            ticket: saved.uploadTicket,
+            results: summary.results,
+            retrying: false,
+          });
           setSubmitting(false);
           return;
         }
@@ -207,6 +226,27 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
       showToast(a.submitError);
       setSubmitting(false);
     }
+  }
+
+  /** Re-uploads only the files that failed, against the request that exists. */
+  async function retryAttachments() {
+    if (!attachments || attachments.retrying) return;
+    setAttachments({ ...attachments, retrying: true });
+
+    const failed = attachments.results.filter((r) => r.status === "failed").map((r) => r.file);
+    const summary = await uploadDocuments(attachments.submissionId, failed, attachments.ticket);
+
+    const merged = attachments.results.map((previous) =>
+      previous.status === "uploaded"
+        ? previous
+        : summary.results.find((r) => r.file === previous.file) ?? previous
+    );
+
+    if (merged.every((r) => r.status === "uploaded")) {
+      router.push(confirmationPath(lang, "need", attachments.submissionId));
+      return;
+    }
+    setAttachments({ ...attachments, results: merged, retrying: false });
   }
 
   const Err = ({ field }: { field: string }) =>
@@ -270,20 +310,36 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
           <strong>{a.attachTitle}</strong>
           <p style={{ margin: "6px 0 10px" }}>{a.attachIntro}</p>
           <ul style={{ margin: "0 0 12px", paddingLeft: 20 }}>
-            {attachments.map((outcome) => (
+            {attachments.results.map((outcome) => (
               <li key={`${outcome.file.name}-${outcome.file.size}`}>
                 {outcome.file.name} —{" "}
-                {outcome.status === "uploaded" ? a.attachUploaded : a.attachFailed}
+                {/* The reason, not just "failed": "larger than the 10MB limit"
+                    tells someone what to do, and "failed" does not. */}
+                {outcome.status === "uploaded"
+                  ? a.attachUploaded
+                  : `${a.attachFailed}${outcome.message ? `: ${outcome.message}` : ""}`}
               </li>
             ))}
           </ul>
-          <button
-            type="button"
-            className="reset-button linkish"
-            onClick={() => router.push(confirmationPath(lang, "need"))}
-          >
-            {a.attachContinue}
-          </button>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className="btn btn--dark btn--sm"
+              onClick={retryAttachments}
+              disabled={attachments.retrying}
+            >
+              {attachments.retrying ? a.attachRetrying : a.attachRetry}
+            </button>
+            <button
+              type="button"
+              className="reset-button linkish"
+              onClick={() =>
+                router.push(confirmationPath(lang, "need", attachments.submissionId))
+              }
+            >
+              {a.attachContinue}
+            </button>
+          </div>
         </div>
       ) : null}
 

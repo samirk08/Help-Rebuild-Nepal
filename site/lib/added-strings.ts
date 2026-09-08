@@ -221,6 +221,7 @@ export type AddedStrings = {
   attachContinue: string;
   attachUploaded: string;
   attachFailed: string;
+  attachAllDone: string;
 
   /** The two-step, mailbox-verified account claim. */
   claimCodeStepTitle: string;
@@ -335,6 +336,8 @@ export type AddedStrings = {
   n3SaveDraft: string;
   n3DraftSaved: string;
   n3DraftFound: string;
+  /** The same offer on the volunteer form, where "request" is the wrong noun. */
+  draftFoundRegistration: string;
   n3DraftRestore: string;
   n3DraftDiscard: string;
   n3AssistTitle: string;
@@ -641,6 +644,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     errNeedFullyOffered:
       "That request already has offers covering the full quantity. A coordinator is arranging them — please check back if they fall through.",
 
+    attachAllDone: "All files attached.",
     attachTitle: "Your request was saved. Some files were not attached.",
     attachIntro:
       "You do not need to fill the form in again. Retry the files below, or continue without them and send them to us later.",
@@ -767,6 +771,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     n3SaveDraft: "Save a draft on this device",
     n3DraftSaved: "Draft saved on this device. It is not sent to us.",
     n3DraftFound: "You have an unfinished request saved on this device.",
+    draftFoundRegistration: "You have an unfinished registration saved on this device.",
     n3DraftRestore: "Pick up where you left off",
     n3DraftDiscard: "Start fresh",
     n3AssistTitle: "Would you rather we called you?",
@@ -1069,6 +1074,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     errNeedFullyOffered:
       "त्यो अनुरोधका लागि पूरा परिमाण बराबरका प्रस्तावहरू आइसकेका छन्। संयोजकले तिनको व्यवस्था मिलाउँदै हुनुहुन्छ — ती नमिलेमा फेरि हेर्नुहोला।",
 
+    attachAllDone: "सबै फाइल संलग्न भए।",
     attachTitle: "तपाईंको अनुरोध सुरक्षित भयो। केही फाइल संलग्न हुन सकेनन्।",
     attachIntro:
       "फारम फेरि भर्नुपर्दैन। तलका फाइल पुनः प्रयास गर्नुहोस्, वा तिनीहरूविना अगाडि बढेर पछि पठाउनुहोस्।",
@@ -1194,6 +1200,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     n3SaveDraft: "यही यन्त्रमा मस्यौदा सुरक्षित गर्नुहोस्",
     n3DraftSaved: "मस्यौदा यही यन्त्रमा सुरक्षित भयो। हामीलाई पठाइएको छैन।",
     n3DraftFound: "यही यन्त्रमा अधुरो अनुरोध सुरक्षित छ।",
+    draftFoundRegistration: "यही यन्त्रमा अधुरो दर्ता सुरक्षित छ।",
     n3DraftRestore: "जहाँ छाड्नुभयो त्यहींबाट सुरु गर्नुहोस्",
     n3DraftDiscard: "नयाँ सुरु गर्नुहोस्",
     n3AssistTitle: "हामीले फोन गरौं?",

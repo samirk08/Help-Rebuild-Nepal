@@ -54,3 +54,30 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+
+      # Loads every public page against the build that was just produced.
+      # `next build` proves the bundle exists and a unit test proves a function
+      # is right; neither one renders a page, so a server component that throws
+      # on a null read is invisible to both.
+      #
+      # Not end-to-end: the credentials are placeholders, so nothing here shows
+      # a form saving. It shows that every page degrades rather than breaks with
+      # the database unreachable — which is what a misconfigured deployment
+      # actually looks like. A real end-to-end run belongs in the staging pilot
+      # (docs/RELEASE.md).
+      - name: Smoke test
+        run: |
+          npm run start &
+          # Polled with curl rather than a helper package: fetching a
+          # dependency mid-job to wait for a port is a second thing that can
+          # fail, and it would fail as "smoke test broken".
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://127.0.0.1:3000/en && break
+            sleep 1
+          done
+          node scripts/smoke.mjs
+        env:
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
