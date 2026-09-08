@@ -147,6 +147,12 @@ to work that does not exist. `lib/env.ts` refuses any recipient not listed in
 message rather than retrying it. **`docs/RELEASE.md` is the checklist**: run it
 before anything writes to real people.
 
+**Outbound mail is English only**, by decision — one wording of each message to
+review and be accountable for, in `lib/mail-copy.ts`. The site itself stays
+bilingual: pages, form errors and confirmation screens all follow the language
+someone registered in, and a link inside a message lands on the page in that
+language.
+
 **Logs are JSON, not prose.** `lib/log.ts` — `logError` / `logWarn` / `logInfo`
 with a stable `event` name, so an incident is filtered rather than grepped.
 `/api/health` returns 503 when the database is unreachable, the queue is stuck,

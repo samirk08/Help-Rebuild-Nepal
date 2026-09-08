@@ -16,17 +16,18 @@ import {
 import type { FieldError } from "../lib/intake-schema";
 
 /**
- * Whether this platform actually speaks Nepali.
+ * Whether this platform speaks Nepali where it is supposed to, and English
+ * where it is supposed to.
  *
- * It very nearly did not. Every email it sends — including the invitation, the
- * one message that asks a person to commit their time — was hard-coded English,
- * and one of the three intake forms showed the server's raw English validation
- * text in a toast. A volunteer could fill in the Nepali form, choose Nepali
- * answers, read Nepali confirmation screens, and then be written to in English
- * at the exact moment something was being asked of them.
+ * Two rules, and they point in opposite directions on purpose:
  *
- * None of that was visible to a typecheck, a build or any existing test,
- * because English is a perfectly valid string.
+ * Outbound mail is English only. That is a decision — one wording of each
+ * message to review, correct and be accountable for, rather than two.
+ *
+ * Everything a person reads on the site is not. One of the three intake forms
+ * used to put the server's raw English validation text into a toast, so a
+ * Nepali reader offering tarpaulins was told "That item need is already fully
+ * allocated". Nothing caught it, because English is a perfectly valid string.
  */
 
 const DEVANAGARI = /[ऀ-ॿ]/;
@@ -49,67 +50,56 @@ const introduction = {
   startDate: "2026-10-01",
   endDate: "2026-10-14",
   hoursPerWeek: 12,
-  otherPartyLabel: "अनुरोधकर्ता",
+  otherPartyLabel: "Requester",
   otherPartyName: "Melamchi Ward 7",
   otherPartyEmail: "ward7@example.np",
 };
 
-test("every message this platform sends exists in Nepali", () => {
+test("every message this platform sends is in English", () => {
+  // A decision, not an oversight: one wording of each message to review,
+  // correct and be accountable for, rather than two. The site itself stays
+  // bilingual — pages, form errors and confirmation screens all follow the
+  // language someone registered in.
   const messages = [
-    invitationMail("np", invitation),
-    introductionMail("np", introduction),
-    clarificationMail("np", "के तपाईं भदौ १०–२३ खाली हुनुहुन्छ?", "https://example.org/np/questions/abc"),
+    invitationMail(invitation),
+    introductionMail(introduction),
+    clarificationMail("Are you free 10-23 Sep?", "https://example.org/np/questions/abc"),
   ];
 
   for (const mail of messages) {
-    assert.ok(DEVANAGARI.test(mail.subject), `subject is not in Nepali: ${mail.subject}`);
-    assert.ok(DEVANAGARI.test(mail.text), `body is not in Nepali: ${mail.text.slice(0, 80)}`);
-  }
-});
-
-test("the English messages are still English", () => {
-  // The point is one language per message, chosen from the recipient's
-  // registration — not a bilingual wall that doubles every email and makes the
-  // part that matters harder to find.
-  for (const mail of [
-    invitationMail("en", invitation),
-    introductionMail("en", { ...introduction, otherPartyLabel: "Requester" }),
-    clarificationMail("en", "Are you free 10-23 Sep?", "https://example.org/en/questions/abc"),
-  ]) {
-    assert.ok(!DEVANAGARI.test(mail.subject));
-    assert.ok(!DEVANAGARI.test(mail.text));
+    assert.ok(!DEVANAGARI.test(mail.subject), `subject is not English: ${mail.subject}`);
+    assert.ok(!DEVANAGARI.test(mail.text), `body is not English: ${mail.text.slice(0, 80)}`);
   }
 });
 
 test("an invitation carries the facts a person needs to decide", () => {
-  // A translated message that dropped the dates or the link would be worse
-  // than the English one it replaced.
-  for (const lang of ["en", "np"] as const) {
-    const mail = invitationMail(lang, invitation);
-    for (const fact of [
-      invitation.roleTitle,
-      invitation.startDate,
-      invitation.endDate,
-      String(invitation.hoursPerWeek),
-      invitation.district,
-      invitation.requesterEmail,
-      invitation.responseUrl,
-      invitation.reasons[0],
-    ]) {
-      assert.ok(mail.text.includes(fact), `${lang} invitation is missing ${fact}`);
-    }
+  const mail = invitationMail(invitation);
+  for (const fact of [
+    invitation.roleTitle,
+    invitation.startDate,
+    invitation.endDate,
+    String(invitation.hoursPerWeek),
+    invitation.district,
+    invitation.requesterEmail,
+    invitation.responseUrl,
+    invitation.reasons[0],
+  ]) {
+    assert.ok(mail.text.includes(fact), `the invitation is missing ${fact}`);
   }
 });
 
 test("an introduction names the other party and how to reach them", () => {
-  for (const lang of ["en", "np"] as const) {
-    const mail = introductionMail(lang, introduction);
-    assert.ok(mail.text.includes(introduction.otherPartyEmail));
-    assert.ok(mail.text.includes(introduction.otherPartyName));
-  }
+  const mail = introductionMail(introduction);
+  assert.ok(mail.text.includes(introduction.otherPartyEmail));
+  assert.ok(mail.text.includes(introduction.otherPartyName));
+  assert.equal(otherPartyLabel("requester"), "Requester");
+  assert.equal(anonymousParty("volunteer"), "an HRN volunteer");
 });
 
-test("the language comes from the registration, and anything unexpected is English", () => {
+test("the link still lands on the page in the reader's own language", () => {
+  // The message is English; the page it points at is not necessarily. Sending
+  // a Nepali registrant to the English page would discard a translation that
+  // already exists.
   assert.equal(langOf({ lang: "np" }), "np");
   assert.equal(langOf({ lang: "en" }), "en");
   // A row read as untyped JSON, a legacy row, a missing column: none of these
@@ -118,17 +108,9 @@ test("the language comes from the registration, and anything unexpected is Engli
   assert.equal(langOf({}), "en");
   assert.equal(langOf(null), "en");
   assert.equal(langOf({ lang: "NP" }), "en");
-});
 
-test("a link inside a message goes to the language the message is written in", () => {
   assert.equal(mailPath("np", "/questions/abc"), "/np/questions/abc");
   assert.equal(mailPath("en", "opportunities/abc"), "/en/opportunities/abc");
-});
-
-test("both sides of an introduction are labelled in their own language", () => {
-  assert.ok(DEVANAGARI.test(otherPartyLabel("np", "volunteer")));
-  assert.ok(DEVANAGARI.test(anonymousParty("np", "requester")));
-  assert.equal(otherPartyLabel("en", "requester"), "Requester");
 });
 
 test("every validation code has a Nepali message", () => {
