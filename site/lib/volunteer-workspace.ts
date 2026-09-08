@@ -1,6 +1,7 @@
 import { readinessFor, type Readiness } from "./matching/readiness";
 import type { Profile, Submission } from "./matching/types";
 import { supabaseAdmin } from "./supabase";
+import { errorFields, logError } from "./log";
 
 /**
  * The volunteer's own view of where they stand: what is still outstanding,
@@ -109,7 +110,7 @@ export async function loadWorkspace(
   // volunteer. The page hides the whole panel rather than reporting a fault
   // they cannot act on.
   if (invitationRes.error || commitmentRes.error) {
-    console.error("workspace read failed", invitationRes.error ?? commitmentRes.error);
+    logError("workspace_read_failed", errorFields(invitationRes.error ?? commitmentRes.error));
     return { readiness, invitations: [], commitments: [], committedHours: 0, available: false };
   }
 

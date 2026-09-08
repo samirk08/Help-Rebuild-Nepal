@@ -6,6 +6,7 @@ import { MAX_MISSIONS, type MissionSource } from "./missions";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
 import type { ActionState } from "./matching/validation";
+import { errorFields, logError } from "./log";
 
 /**
  * Joining, leaving and scoping mission teams.
@@ -127,7 +128,7 @@ export async function joinMission(_state: ActionState, form: FormData): Promise<
       }
       if (error.code === "23505") return { success: "You are already part of this mission." };
       if (error.code === "23503") throw new Error("No mission with that name.");
-      console.error("joinMission failed", error);
+      logError("joinmission_failed", errorFields(error));
       throw new Error("Could not join this mission. Please try again.");
     }
 
@@ -151,7 +152,7 @@ export async function leaveMission(_state: ActionState, form: FormData): Promise
       .eq("mission_id", missionId);
 
     if (error) {
-      console.error("leaveMission failed", error);
+      logError("leavemission_failed", errorFields(error));
       throw new Error("Could not leave this mission. Please try again.");
     }
 
@@ -193,7 +194,7 @@ export async function setMissionOnly(_state: ActionState, form: FormData): Promi
       .eq("volunteer_id", volunteerId);
 
     if (error) {
-      console.error("setMissionOnly failed", error);
+      logError("setmissiononly_failed", errorFields(error));
       throw new Error("Could not save that preference. Please try again.");
     }
 

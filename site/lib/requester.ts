@@ -2,6 +2,7 @@ import { N3 } from "./intake-schema";
 import { canAcceptInterest, isPublicStatus } from "./publication";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
+import { errorFields, logError } from "./log";
 
 /**
  * The requester's own view of the request they filed.
@@ -155,7 +156,7 @@ export async function getRequesterView(): Promise<RequesterState> {
   if (error) {
     // Not "you have no request". Telling someone who filed one that they did
     // not is how a second request gets filed for the same problem.
-    console.error("requester view read failed", error);
+    logError("requester_view_read_failed", errorFields(error));
     return { state: "unavailable", email };
   }
   if (!data) return { state: "no-request", email };

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/admin-auth";
 import { DOCUMENTS_BUCKET, supabaseAdmin } from "@/lib/supabase";
 import { supabaseServerClient } from "@/lib/supabase-server";
+import { errorFields, logError } from "@/lib/log";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
       size_bytes: size,
     });
     if (error) {
-      console.error("bug attachment insert failed", error);
+      logError("bug_attachment_insert_failed", errorFields(error));
       return NextResponse.json({ error: "Could not record the image" }, { status: 500 });
     }
     return NextResponse.json({ ok: true });
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
     .createSignedUploadUrl(objectPath);
 
   if (error || !data) {
-    console.error("bug createSignedUploadUrl failed", error);
+    logError("bug_createsigneduploadurl_failed", errorFields(error));
     return NextResponse.json({ error: "Could not prepare upload" }, { status: 500 });
   }
 

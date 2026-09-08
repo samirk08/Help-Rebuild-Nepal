@@ -8,6 +8,7 @@ import { added } from "@/lib/added-strings";
 import { isLang, translator } from "@/lib/i18n";
 import { screenPath } from "@/lib/routes";
 import { supabaseAdmin } from "@/lib/supabase";
+import { logError, thrownFields } from "@/lib/log";
 
 type Kind = "volunteer" | "need" | "relief-offer";
 
@@ -53,7 +54,7 @@ async function claimableSubmissionId(reference: string): Promise<string | null> 
     // short reference select another person's registration.
     return data?.length === 1 ? data[0].id : null;
   } catch (error) {
-    console.error("claimable volunteer lookup failed", error);
+    logError("claimable_volunteer_lookup_failed", thrownFields(error));
     return null;
   }
 }

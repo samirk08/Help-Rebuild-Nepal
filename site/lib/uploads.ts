@@ -1,5 +1,6 @@
 import { DOCUMENTS_BUCKET } from "./storage-constants";
 import { supabaseBrowserClient } from "./supabase-browser";
+import { logError, thrownFields } from "./log";
 
 /**
  * Uploads picked files straight to Supabase Storage, once a submission row
@@ -111,7 +112,11 @@ async function uploadOne(
 
     return { file, status: "uploaded" };
   } catch (err) {
-    console.error("Document upload failed", file.name, err);
+    // The filename is the user's, so it is logged by size and type rather
+    // than by name: an uploaded document can be called anything.
+    logError("document_upload_failed", {
+      size_bytes: file.size, mime: file.type || null, ...thrownFields(err),
+    });
     return { file, status: "failed", message: "The upload did not finish. Try again." };
   }
 }

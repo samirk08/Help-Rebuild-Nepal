@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { normalizedEmail } from "@/lib/account-claim";
 import { EMAIL_BUDGET, callerKey, consume } from "@/lib/rate-limit";
 import { supabaseServerClient } from "@/lib/supabase-server";
+import { logError } from "@/lib/log";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
 
   // Logged, not returned: a provider outage is worth knowing about, but the
   // caller learns nothing about whether the address has an account either way.
-  if (error) console.error("password reset send failed", error.message);
+  if (error) logError("password_reset_send_failed", { error_message: error.message });
 
   return NextResponse.json({ ok: true });
 }

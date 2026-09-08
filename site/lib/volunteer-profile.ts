@@ -3,6 +3,7 @@ import { fieldKey, VOLUNTEER_SECTIONS } from "./form-schema";
 import { PUBLISHED_STATUSES } from "./public-needs";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
+import { errorFields, logError } from "./log";
 
 /**
  * The read layer behind /[lang]/profile.
@@ -94,7 +95,7 @@ export async function getVolunteerProfile(): Promise<VolunteerProfile> {
     // Not "no registration". That wording sent a registered person back to the
     // form during an outage, producing a second row for the same human — the
     // exact duplicate the claim flow exists to prevent.
-    console.error("volunteer profile read failed", error);
+    logError("volunteer_profile_read_failed", errorFields(error));
     return { state: "unavailable", email };
   }
   if (!data) return { state: "no-registration", email };

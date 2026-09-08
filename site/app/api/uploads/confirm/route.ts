@@ -5,6 +5,7 @@ import { DOCUMENTS_BUCKET, supabaseAdmin } from "@/lib/supabase";
 import { SIGNATURE_BYTES, checkStoredObject } from "@/lib/upload-policy";
 import { verifyUploadTicket } from "@/lib/upload-tickets";
 import { currentVolunteer } from "@/lib/volunteer-auth";
+import { errorFields, logError, thrownFields } from "@/lib/log";
 
 /** Postgres unique_violation: this exact object is already recorded. */
 const UNIQUE_VIOLATION = "23505";
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
     // this decidable rather than a read-then-write race.
     if (error.code === UNIQUE_VIOLATION) return NextResponse.json({ ok: true, duplicate: true });
 
-    console.error("documents insert failed", error);
+    logError("documents_insert_failed", errorFields(error));
     return NextResponse.json({ error: "Could not record the upload" }, { status: 500 });
   }
 
@@ -140,7 +141,7 @@ async function inspectObject(
     .list(folder, { search: name, limit: 100 });
 
   if (listError) {
-    console.error("storage list failed", listError);
+    logError("storage_list_failed", errorFields(listError));
     return { exists: false, size: null, header: null };
   }
 
@@ -156,7 +157,7 @@ async function inspectObject(
     .createSignedUrl(path, 60);
 
   if (signError || !signed?.signedUrl) {
-    console.error("signed url for verification failed", signError);
+    logError("signed_url_for_verification_failed", errorFields(signError));
     return { exists: true, size, header: null };
   }
 
@@ -168,7 +169,7 @@ async function inspectObject(
     const buffer = await response.arrayBuffer();
     return { exists: true, size, header: new Uint8Array(buffer).slice(0, SIGNATURE_BYTES) };
   } catch (err) {
-    console.error("header fetch failed", err);
+    logError("header_fetch_failed", thrownFields(err));
     return { exists: true, size, header: null };
   }
 }

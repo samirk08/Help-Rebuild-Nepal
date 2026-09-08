@@ -2,6 +2,7 @@ import { DEMO_COUNTS, TRACKER_LABELS } from "./content";
 import { ok, unavailable, type ReadResult } from "./publication";
 import { DEMAND, EXPERTISE, LOCATIONS } from "./site-data";
 import { supabaseAdmin } from "./supabase";
+import { errorFields, logError } from "./log";
 
 export type Metric = { label: string; value: number };
 
@@ -47,7 +48,7 @@ export async function trackerMetrics(demo: boolean): Promise<ReadResult<Metric[]
   // damaging thing this page can say.
   const failure = [totalRead, remoteRead, offeringRead].find((read) => read.error);
   if (failure?.error) {
-    console.error("trackerMetrics failed", failure.error);
+    logError("trackermetrics_failed", errorFields(failure.error));
     return unavailable(failure.error.code ?? "read_failed");
   }
 
@@ -111,7 +112,7 @@ export async function skillBreakdown(demo: boolean): Promise<ReadResult<Breakdow
     .select("skill, volunteers");
 
   if (error) {
-    console.error("skillBreakdown failed", error);
+    logError("skillbreakdown_failed", errorFields(error));
     return unavailable(error.code ?? "read_failed");
   }
 
@@ -180,7 +181,7 @@ export async function originBreakdown(demo: boolean): Promise<ReadResult<Breakdo
   // the design's zeroed table, which is indistinguishable from "nobody has
   // registered yet" — and a failed query is not evidence of that.
   if (error) {
-    console.error("originBreakdown failed", error);
+    logError("originbreakdown_failed", errorFields(error));
     return unavailable(error.code ?? "read_failed");
   }
 
@@ -225,7 +226,7 @@ export async function demandTotals(demo: boolean): Promise<ReadResult<Metric[]>>
   ]);
 
   if (totals.error) {
-    console.error("demandTotals failed", totals.error);
+    logError("demandtotals_failed", errorFields(totals.error));
     return unavailable(totals.error.code ?? "read_failed");
   }
 

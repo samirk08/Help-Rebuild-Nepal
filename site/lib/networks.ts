@@ -2,6 +2,7 @@ import { fieldKey } from "./form-schema";
 import { NETWORKS } from "./site-data";
 import { supabaseAdmin } from "./supabase";
 import { currentVolunteer } from "./volunteer-auth";
+import { errorFields, logError } from "./log";
 
 /**
  * Network membership (migration 009).
@@ -43,7 +44,7 @@ export async function addMember(userId: string, network: string): Promise<{ erro
     );
 
   if (error) {
-    console.error("network join failed", error);
+    logError("network_join_failed", errorFields(error));
     return { error: "insert_failed" };
   }
   return { error: null };

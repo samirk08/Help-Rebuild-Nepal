@@ -1,5 +1,6 @@
 import { ok, unavailable, type ReadResult } from "../publication";
 import { supabaseAdmin } from "../supabase";
+import { errorFields, logError } from "../log";
 
 /**
  * Whether outbound mail is actually moving.
@@ -64,7 +65,7 @@ export async function workerHealth(now: number = Date.now()): Promise<ReadResult
   // this panel can say.
   const failure = [outbox, events, runs].find((read) => read.error);
   if (failure?.error) {
-    console.error("workerHealth failed", failure.error);
+    logError("workerhealth_failed", errorFields(failure.error));
     return unavailable(failure.error.code ?? "read_failed");
   }
 

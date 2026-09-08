@@ -8,6 +8,7 @@ import { BUG_SEVERITIES, BUG_STATUSES } from "./bug-constants";
 import { DOCUMENTS_BUCKET } from "./storage-constants";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
+import { errorFields, logError } from "./log";
 
 /**
  * Bug reports filed from the dashboard.
@@ -95,7 +96,7 @@ export async function listBugs(status?: string): Promise<BugReport[]> {
 
   const { data, error } = await query;
   if (error) {
-    console.error("listBugs failed", error);
+    logError("listbugs_failed", errorFields(error));
     return [];
   }
 
@@ -180,7 +181,7 @@ export async function createBug(formData: FormData): Promise<{ id?: string; erro
     .single();
 
   if (error) {
-    console.error("createBug failed", error);
+    logError("createbug_failed", errorFields(error));
     return { error: error.message };
   }
 

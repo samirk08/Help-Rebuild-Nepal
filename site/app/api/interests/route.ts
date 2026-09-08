@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { OPEN_NEED_STATUSES } from "@/lib/matching/types";
 import { supabaseAdmin } from "@/lib/supabase";
 import { currentVolunteer } from "@/lib/volunteer-auth";
+import { errorFields, logError } from "@/lib/log";
 
 const MAX = { name: 120, contact: 200, message: 2000 };
 
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    console.error("interests insert failed", error);
+    logError("interests_insert_failed", errorFields(error));
     return NextResponse.json({ error: "Could not record interest" }, { status: 500 });
   }
 

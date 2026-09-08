@@ -124,6 +124,19 @@ columns in it. `project_public_progress` is the same idea for projects: it
 carries milestone counts and the latest non-internal update, and no task
 assignees.
 
+**Staging cannot email real volunteers.** A pilot has to send real mail to be a
+real test, so `MATCHING_EMAIL_ENABLED` gets set on staging — and at that moment
+a deployment pointed at a copy of production data can invite an actual person
+to work that does not exist. `lib/env.ts` refuses any recipient not listed in
+`MATCHING_TEST_RECIPIENTS` outside production, and the worker cancels the
+message rather than retrying it. **`docs/RELEASE.md` is the checklist**: run it
+before anything writes to real people.
+
+**Logs are JSON, not prose.** `lib/log.ts` — `logError` / `logWarn` / `logInfo`
+with a stable `event` name, so an incident is filtered rather than grepped.
+`/api/health` returns 503 when the database is unreachable, the queue is stuck,
+or the worker has stopped; point an uptime monitor at it.
+
 **Accessibility is measured, not assumed.** `scripts/a11y-audit.mjs` drives a
 real browser at a real viewport and reports tap-target sizes, horizontal
 overflow and controls with no accessible name — the things a static check

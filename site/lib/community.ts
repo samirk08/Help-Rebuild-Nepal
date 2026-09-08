@@ -2,6 +2,7 @@ import { PRIMARY_SKILL_KEY } from "./networks";
 import { isPublicProject, ok, unavailable, type ReadResult } from "./publication";
 import { NETWORKS } from "./site-data";
 import { supabaseAdmin } from "./supabase";
+import { errorFields, logError } from "./log";
 
 /**
  * Read models for the two "the database should not just sit there" pages:
@@ -132,7 +133,7 @@ export async function listProjects(): Promise<ReadResult<PublicProject[]>> {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("listProjects failed", error);
+    logError("listprojects_failed", errorFields(error));
     return unavailable(error.code ?? "read_failed");
   }
 

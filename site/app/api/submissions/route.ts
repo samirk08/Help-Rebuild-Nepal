@@ -18,6 +18,7 @@ import { EXAMPLE_ITEM_NEED } from "@/lib/relief";
 import { canAcceptPledge } from "@/lib/relief-delivery";
 import { supabaseAdmin } from "@/lib/supabase";
 import { issueUploadTicket } from "@/lib/upload-tickets";
+import { errorFields, logError } from "@/lib/log";
 
 type Body = {
   kind?: unknown;
@@ -320,7 +321,7 @@ export async function POST(request: Request) {
     // migration (42703) from a key that cannot bypass RLS (42501), and without
     // it a failing form is indistinguishable from any other outage to anyone
     // without Vercel log access. The code names a fault, never any data.
-    console.error("submissions insert failed", error);
+    logError("submissions_insert_failed", errorFields(error));
     return NextResponse.json(
       { error: "Could not save submission", code: error.code ?? null },
       { status: 500 }
@@ -458,7 +459,7 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
         { field: "relief-target", code: "need_closed", message: REFUSAL_TEXT.need_closed },
       ]);
     }
-    console.error("pledges insert failed", error);
+    logError("pledges_insert_failed", errorFields(error));
     return NextResponse.json({ error: "Could not save offer", code: error.code ?? null }, { status: 500 });
   }
 

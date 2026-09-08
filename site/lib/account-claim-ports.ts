@@ -2,6 +2,7 @@ import { addMember, networkForSkill, PRIMARY_SKILL_KEY } from "./networks";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
 import type { ClaimPorts, ClaimSubmission } from "./account-claim";
+import { errorFields, logError } from "./log";
 
 /**
  * The real implementations of the claim ports, wired to Supabase.
@@ -27,7 +28,7 @@ export async function supabaseClaimPorts(): Promise<ClaimPorts> {
         .maybeSingle();
 
       if (error) {
-        console.error("claim submission lookup failed", error);
+        logError("claim_submission_lookup_failed", errorFields(error));
         return null;
       }
       if (!data) return null;
@@ -50,7 +51,7 @@ export async function supabaseClaimPorts(): Promise<ClaimPorts> {
         // code is what creates it. Nothing is linked until it is proven.
         options: { shouldCreateUser: true },
       });
-      if (error) console.error("claim code send failed", error.message);
+      if (error) logError("claim_code_send_failed", { error_message: error.message });
       return !error;
     },
 
@@ -62,7 +63,7 @@ export async function supabaseClaimPorts(): Promise<ClaimPorts> {
 
     async setPassword(userId: string, password: string): Promise<boolean> {
       const { error } = await admin.auth.admin.updateUserById(userId, { password });
-      if (error) console.error("claim password set failed", error.message);
+      if (error) logError("claim_password_set_failed", { error_message: error.message });
       return !error;
     },
 
@@ -80,7 +81,7 @@ export async function supabaseClaimPorts(): Promise<ClaimPorts> {
         .maybeSingle();
 
       if (error) {
-        console.error("claim link failed", error);
+        logError("claim_link_failed", errorFields(error));
         return false;
       }
       return Boolean(data);
