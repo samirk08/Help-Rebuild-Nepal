@@ -56,23 +56,21 @@ test("a request for nothing does not divide by zero", () => {
   assert.equal(committedPercent(need({ quantity: 0 })), 0);
 });
 
-test("a closed or fully allocated request refuses an offer, and says why", () => {
+test("a closed or fully allocated request refuses an offer, and says which", () => {
   assert.equal(canAcceptPledge({ ...need(), status: "requested" }).ok, true);
 
-  const closed = canAcceptPledge({ ...need(), status: "closed" });
-  assert.equal(closed.ok, false);
-  assert.match(closed.ok === false ? closed.reason : "", /closed/i);
+  const code = (n: Parameters<typeof canAcceptPledge>[0]) => {
+    const verdict = canAcceptPledge(n);
+    return verdict.ok ? null : verdict.code;
+  };
 
-  const allocated = canAcceptPledge({ ...need({ committed: 200 }), status: "requested" });
-  assert.equal(allocated.ok, false);
-  assert.match(allocated.ok === false ? allocated.reason : "", /fully allocated/i);
+  assert.equal(code({ ...need(), status: "closed" }), "need_closed");
+  assert.equal(code({ ...need({ committed: 200 }), status: "requested" }), "need_allocated");
 
-  // Fully offered but nothing arranged: still refused, but with a different
-  // sentence, because the reason a donor is being turned away is different and
-  // the request may well come back to them.
-  const offered = canAcceptPledge({ ...need({ pledged: 200 }), status: "requested" });
-  assert.equal(offered.ok, false);
-  assert.match(offered.ok === false ? offered.reason : "", /check back/i);
+  // Fully offered but nothing arranged is a different refusal: the request may
+  // well come back to this donor if the arranged deliveries fall through, and
+  // the message they get has to say so.
+  assert.equal(code({ ...need({ pledged: 200 }), status: "requested" }), "need_fully_offered");
 });
 
 test("an unverified offer can only be cancelled", () => {

@@ -25,7 +25,7 @@ export async function getMatchingProfile(id: string): Promise<{ available: boole
 export async function loadMatching(need: Submission) {
   const db = supabaseAdmin();
   const [volunteers, profiles, roles, invitations, matches, allocations, interests] = await Promise.all([
-    collect<Submission>((a,b) => db.from("submissions").select("id,kind,status,org_or_name,contact_email,district,fields,created_at,user_id").eq("kind", "volunteer").order("id").range(a,b)),
+    collect<Submission>((a,b) => db.from("submissions").select("id,kind,status,org_or_name,contact_email,district,fields,created_at,user_id,lang").eq("kind", "volunteer").order("id").range(a,b)),
     collect<Profile>((a,b) => db.from("matching_profiles").select("*").order("volunteer_id").range(a,b)),
     collect<Role>((a,b) => db.from("matching_roles").select("*").eq("need_id", need.id).order("id").range(a,b)),
     collect<Invitation>((a,b) => db.from("matching_invitations").select("id,role_id,need_id,volunteer_id,status,created_at,expires_at,role_revision").order("id").range(a,b)),

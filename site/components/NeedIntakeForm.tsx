@@ -7,6 +7,7 @@ import Combobox from "@/components/Combobox";
 import FileUpload from "@/components/FileUpload";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
+import { messageFor } from "@/lib/form-errors";
 import {
   SubmissionValidationError,
   newIdempotencyKey,
@@ -734,24 +735,3 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
   );
 }
 
-/** The translated message for one validation code. */
-function messageFor(problem: FieldError, a: ReturnType<typeof added>): string {
-  switch (problem.code) {
-    case "required":
-      return a.errRequired;
-    case "too_long":
-      return a.errTooLong;
-    case "too_short":
-      return a.errTooShort;
-    case "invalid_email":
-      return a.errInvalidEmail;
-    case "invalid_phone":
-      return a.errInvalidPhone;
-    case "invalid_option":
-      return a.errInvalidOption;
-    case "consent_required":
-      return a.errConsent;
-    default:
-      return problem.message;
-  }
-}

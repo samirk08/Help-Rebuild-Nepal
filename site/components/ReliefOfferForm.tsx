@@ -6,9 +6,11 @@ import { useRef, useState } from "react";
 import Combobox from "@/components/Combobox";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
+import { messageFor } from "@/lib/form-errors";
 import type { Lang } from "@/lib/content";
 import { districtOptions } from "@/lib/districts";
 import { SubmissionValidationError, newIdempotencyKey, submitRequest } from "@/lib/api";
+import type { FieldError } from "@/lib/intake-schema";
 import { confirmationPath } from "@/lib/routes";
 import {
   EXAMPLE_ITEM_NEED,
@@ -47,6 +49,12 @@ export default function ReliefOfferForm({
   const { showToast } = useToast();
   const [category, setCategory] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Errors were shown as a toast carrying the server's English. A toast is the
+  // wrong shape for "this field is wrong" — it disappears, it is not tied to
+  // the control, and a screen reader never associates the two — and the English
+  // was simply the wrong language for most of the people this form is for.
+  const [errors, setErrors] = useState<FieldError[]>([]);
+  const messages = new Map(errors.map((problem) => [problem.field, messageFor(problem, extra)]));
 
   // The example is offerable so the flow can be walked before anything is live.
   const openNeeds = [...itemNeeds, EXAMPLE_ITEM_NEED];
@@ -60,10 +68,46 @@ export default function ReliefOfferForm({
   const selectedNeed = openNeeds.find((n) => n.id === target);
   const selectedCategory = categoryById(unmatched ? category : (selectedNeed?.category ?? ""));
 
+  /**
+   * Moves the cursor to the control that was refused.
+   *
+   * Without this a keyboard or screen-reader user is told something is wrong
+   * and left wherever they were — usually the submit button, at the bottom,
+   * with the failing field somewhere above and unannounced.
+   */
+  function focusFirstError(list: FieldError[]) {
+    const first = list.find((problem) => problem.field);
+    if (!first) return;
+    const control = document.getElementById(first.field);
+    if (control instanceof HTMLElement) {
+      control.focus();
+      control.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  }
+
+  /** The refusal for one control, in the reader's language, or nothing. */
+  function fieldError(id: string) {
+    const message = messages.get(id);
+    if (!message) return null;
+    return (
+      <span className="field__error" id={`${id}-error`}>
+        {message}
+      </span>
+    );
+  }
+
+  /** aria wiring, matching what FormField already does for the other forms. */
+  function errorProps(id: string) {
+    return messages.has(id)
+      ? { "aria-invalid": true as const, "aria-describedby": `${id}-error` }
+      : {};
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
     setSubmitting(true);
+    setErrors([]);
     try {
       const result = await submitRequest(
         "relief-offer",
@@ -79,7 +123,8 @@ export default function ReliefOfferForm({
       // longer listed. That is a real answer about the request, not an outage,
       // so it is shown rather than reported as "something went wrong".
       if (err instanceof SubmissionValidationError) {
-        showToast(err.errors[0]?.message ?? extra.submitError);
+        setErrors(err.errors);
+        focusFirstError(err.errors);
         setSubmitting(false);
         return;
       }
@@ -110,6 +155,7 @@ export default function ReliefOfferForm({
                 <select
                   className="select"
                   id="relief-target"
+                  {...errorProps("relief-target")}
                   name="relief-target"
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
@@ -127,7 +173,8 @@ export default function ReliefOfferForm({
                   })}
                   <option value={UNMATCHED}>{extra.reliefPickNeedNone}</option>
                 </select>
-              </div>
+                  {fieldError("relief-target")}
+                </div>
 
               {unmatched ? (
                 <div className="field" style={{ gridColumn: "1 / -1" }}>
@@ -145,6 +192,7 @@ export default function ReliefOfferForm({
                   <select
                     className="select"
                     id="relief-category"
+                    {...errorProps("relief-category")}
                     name="relief-category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
@@ -157,6 +205,7 @@ export default function ReliefOfferForm({
                       </option>
                     ))}
                   </select>
+                  {fieldError("relief-category")}
                 </div>
               ) : null}
 
@@ -168,6 +217,7 @@ export default function ReliefOfferForm({
                 <input
                   className="input"
                   id="relief-quantity"
+                  {...errorProps("relief-quantity")}
                   name="relief-quantity"
                   type="number"
                   min={1}
@@ -178,7 +228,8 @@ export default function ReliefOfferForm({
                 {selectedCategory?.newOnly ? (
                   <span className="field__note">{extra.reliefNewOnly}</span>
                 ) : null}
-              </div>
+                  {fieldError("relief-quantity")}
+                </div>
 
               <div className="field">
                 <label className="field__label" htmlFor="relief-where">
@@ -199,11 +250,13 @@ export default function ReliefOfferForm({
                 <input
                   className="input"
                   id="relief-available"
+                  {...errorProps("relief-available")}
                   name="relief-available"
                   type="text"
                   placeholder="DD / MM / YYYY"
                 />
-              </div>
+                  {fieldError("relief-available")}
+                </div>
 
               <div className="field">
                 <label className="field__label" htmlFor="relief-delivery">
@@ -228,12 +281,14 @@ export default function ReliefOfferForm({
                 <input
                   className="input"
                   id="relief-contact"
+                  {...errorProps("relief-contact")}
                   name="relief-contact"
                   type="text"
                   placeholder="+977"
                   required
                 />
-              </div>
+                  {fieldError("relief-contact")}
+                </div>
             </div>
           </section>
 

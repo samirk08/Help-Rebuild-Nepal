@@ -42,6 +42,12 @@ export type Submission = {
   fields: Record<string, unknown>;
   created_at: string;
   user_id?: string | null;
+  /**
+   * The language this person filled the form in. Every message sent to them is
+   * written in it — see lib/mail-copy.ts. 'en' | 'np' by check constraint, but
+   * typed loosely because it is read straight off an untyped row.
+   */
+  lang?: string | null;
 };
 export type RoleConfig = {
   skills: string[];

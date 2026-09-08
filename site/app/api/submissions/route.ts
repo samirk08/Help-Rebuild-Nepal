@@ -37,6 +37,20 @@ const UNIQUE_VIOLATION = "23505";
 const RAISED_EXCEPTION = "P0001";
 
 /**
+ * English fallbacks for the relief refusals.
+ *
+ * The words a donor actually reads come from lib/form-errors.ts, which knows
+ * their language; these exist because `FieldError.message` is part of the
+ * response shape and a non-browser caller reading it deserves a sentence.
+ */
+const REFUSAL_TEXT = {
+  need_unavailable: "That item need is no longer listed.",
+  need_closed: "That item need is closed and is not taking new offers.",
+  need_allocated: "That item need is already fully allocated and is not taking new offers.",
+  need_fully_offered: "That item need already has offers covering the full quantity.",
+} as const;
+
+/**
  * How long an identical submission with no client key is treated as the same
  * submission.
  *
@@ -368,8 +382,8 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
       return fieldErrors([
         {
           field: "relief-target",
-          code: "invalid_option",
-          message: "That item need is no longer listed.",
+          code: "need_unavailable",
+          message: REFUSAL_TEXT.need_unavailable,
         },
       ]);
     }
@@ -393,7 +407,7 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
       });
       if (!verdict.ok) {
         return fieldErrors([
-          { field: "relief-target", code: "invalid_option", message: verdict.reason },
+          { field: "relief-target", code: verdict.code, message: REFUSAL_TEXT[verdict.code] },
         ]);
       }
     }
@@ -437,8 +451,11 @@ async function handleReliefOffer(rawFields: unknown, suppliedKey: unknown, now: 
     // Returning a 500 for it would tell the donor the site is broken when in
     // fact their offer was simply a few seconds too late.
     if (error.code === RAISED_EXCEPTION) {
+      // The trigger fires when the request closed between the check above and
+      // this insert. Which of the two guards raised is not worth parsing out of
+      // the message — both mean the same thing to the donor.
       return fieldErrors([
-        { field: "relief-target", code: "invalid_option", message: error.message },
+        { field: "relief-target", code: "need_closed", message: REFUSAL_TEXT.need_closed },
       ]);
     }
     console.error("pledges insert failed", error);

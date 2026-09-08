@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import FormFieldView from "@/components/FormField";
 import { useToast } from "@/components/ToastProvider";
 import { added } from "@/lib/added-strings";
+import { messageFor } from "@/lib/form-errors";
 import type { Dict, Lang } from "@/lib/content";
 import { NEED_SECTIONS, VOLUNTEER_SECTIONS, fieldKey, type EnhancedSection } from "@/lib/form-schema";
 import {
@@ -513,37 +514,6 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
       </form>
     </div>
   );
-}
-
-/**
- * The translated message for one validation code.
- *
- * The schema's English text is a fallback, not the string shown: these have to
- * be readable in Nepali too, and the code is what carries across languages.
- */
-function messageFor(problem: FieldError, extra: ReturnType<typeof added>): string {
-  switch (problem.code) {
-    case "required":
-      return extra.errRequired;
-    case "too_long":
-      return extra.errTooLong;
-    case "too_short":
-      return extra.errTooShort;
-    case "invalid_email":
-      return extra.errInvalidEmail;
-    case "invalid_phone":
-      return extra.errInvalidPhone;
-    case "invalid_date":
-      return extra.errInvalidDate;
-    case "invalid_option":
-      return extra.errInvalidOption;
-    case "invalid_number":
-      return extra.errInvalidNumber;
-    case "consent_required":
-      return extra.errConsent;
-    default:
-      return problem.message;
-  }
 }
 
 /** The label a person actually saw, so the summary names the field they filled. */

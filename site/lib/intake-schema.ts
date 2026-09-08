@@ -33,7 +33,15 @@ export type FieldError = {
     | "invalid_date"
     | "invalid_option"
     | "invalid_number"
-    | "consent_required";
+    | "consent_required"
+    // Answers about the request rather than about what was typed: the offer is
+    // well-formed, and the request cannot take it. Separate codes because
+    // "check back if the arranged deliveries fall through" and "this is closed"
+    // ask the donor to do different things.
+    | "need_unavailable"
+    | "need_closed"
+    | "need_allocated"
+    | "need_fully_offered";
   /** English fallback. The form maps `code` to a translated string. */
   message: string;
 };

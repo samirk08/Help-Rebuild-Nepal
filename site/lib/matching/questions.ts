@@ -3,6 +3,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 
+import { clarificationMail, langOf, mailPath } from "../mail-copy";
 import { supabaseAdmin } from "../supabase";
 import { supabaseServerClient } from "../supabase-server";
 import { idFrom, textFrom } from "./validation";
@@ -64,7 +65,7 @@ export async function askClarification(_state: ActionState, form: FormData): Pro
 
     const { data: volunteer } = await supabaseAdmin()
       .from("submissions")
-      .select("id, contact_email")
+      .select("id, contact_email, lang")
       .eq("id", volunteerId)
       .eq("kind", "volunteer")
       .maybeSingle();
@@ -101,15 +102,14 @@ export async function askClarification(_state: ActionState, form: FormData): Pro
       throw new Error("Could not record the question. Please try again.");
     }
 
+    // Written in the language they registered in, and pointing at the answer
+    // page in that language — asking someone a question in a language they did
+    // not choose is a good way to get no answer.
     const site = process.env.MATCHING_SITE_URL ?? "";
+    const lang = langOf(volunteer);
     const payload = {
+      ...clarificationMail(lang, question.trim(), `${site}${mailPath(lang, `/questions/${token}`)}`),
       to: volunteer.contact_email,
-      subject: "A quick question about volunteering with Help Rebuild Nepal",
-      text:
-        `${question.trim()}\n\n` +
-        `You can answer here:\n${site}/en/questions/${token}\n\n` +
-        "Answering helps a coordinator work out whether an opportunity suits you. " +
-        "It is not a commitment to anything.",
     };
 
     const queued = await supabaseAdmin()

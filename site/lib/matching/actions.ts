@@ -8,6 +8,7 @@ import { getMatchingProfile, getNeed, loadMatching } from "./data";
 import { cleanTags } from "./catalog";
 import { recommend } from "./engine";
 import { emailConfigured, invitationEmail } from "./email";
+import { anonymousParty, introductionMail, langOf, mailPath, otherPartyLabel } from "../mail-copy";
 import { idFrom, parseFacts, parseRole, textFrom } from "./validation";
 import type { ActionState } from "./validation";
 import type { Role, Submission } from "./types";
@@ -100,8 +101,11 @@ export async function queueMatchingInvitation(_state: ActionState, form: FormDat
     const token = randomBytes(32).toString("hex");
     const site = new URL(process.env.MATCHING_SITE_URL!);
     if (site.protocol !== "https:" && site.hostname !== "localhost") throw new Error("The invitation site must use HTTPS.");
-    const url = new URL(`/en/opportunities/${token}`,site).href;
-    const payload = invitationEmail(entry.role,candidate,v.contact_email!,need.contact_email!,url);
+    // The link goes to the language they registered in, so the page they land
+    // on is written the same way as the email that sent them there.
+    const lang = langOf(v);
+    const url = new URL(mailPath(lang, `/opportunities/${token}`),site).href;
+    const payload = invitationEmail(entry.role,candidate,v.contact_email!,need.contact_email!,url,lang);
     const { error } = await supabaseAdmin().rpc("matching_queue_invitation", {
       p_role:roleId,p_volunteer:volunteerId,p_role_revision:entry.role.revision,p_profile_revision:candidate.profileRevision,
       p_token_hash:createHash("sha256").update(token).digest("hex"),p_snapshot:candidate,p_email:payload,p_actor:who.id,
@@ -130,11 +134,39 @@ export async function confirmMatchingConnection(_state: ActionState, form: FormD
     if (!candidate) throw new Error("Current details need review before this connection can be confirmed.");
     if (!need.matching_contact_approved || !need.contact_email) throw new Error("Requester contact sharing needs confirmation.");
     const v = data.volunteers.find(x => x.id === invite.volunteer_id)!;
-    const common = `You have both agreed to connect for ${role.title}, ${role.config.startDate} to ${role.config.endDate}, ${role.config.hoursPerWeek} hours per week.\n\nPlease contact each other to arrange the work.\n\nHelp Rebuild Nepal`;
+    // Each side is written in its own language: a volunteer who registered in
+    // Nepali and a requester who registered in English are the ordinary case,
+    // and one shared body would have to be wrong for one of them.
+    // An introduction with no address on one side is half a message. Only the
+    // requester's was checked before; the volunteer's went into a template
+    // string, where a missing one would have read as the literal "null".
+    if (!v.contact_email) throw new Error("This volunteer has no email address on file.");
+    const vLang = langOf(v);
+    const rLang = langOf(need);
+    const shared = {
+      roleTitle:role.title, startDate:role.config.startDate,
+      endDate:role.config.endDate, hoursPerWeek:role.config.hoursPerWeek,
+    };
     const result = await db.rpc("matching_confirm", {
       p_invitation:invite.id,p_profile_revision:candidate.profileRevision,p_actor:who.id,
-      p_volunteer_email:{ to:v.contact_email,subject:`Your HRN connection: ${role.title}`,text:`Requester: ${need.org_or_name ?? "HRN requester"} — ${need.contact_email}\n\n${common}` },
-      p_requester_email:{ to:need.contact_email,subject:`Your HRN volunteer: ${role.title}`,text:`Volunteer: ${v.org_or_name ?? "HRN volunteer"} — ${v.contact_email}\n\n${common}` },
+      p_volunteer_email:{
+        ...introductionMail(vLang, {
+          ...shared,
+          otherPartyLabel:otherPartyLabel(vLang,"requester"),
+          otherPartyName:need.org_or_name ?? anonymousParty(vLang,"requester"),
+          otherPartyEmail:need.contact_email,
+        }),
+        to:v.contact_email,
+      },
+      p_requester_email:{
+        ...introductionMail(rLang, {
+          ...shared,
+          otherPartyLabel:otherPartyLabel(rLang,"volunteer"),
+          otherPartyName:v.org_or_name ?? anonymousParty(rLang,"volunteer"),
+          otherPartyEmail:v.contact_email,
+        }),
+        to:need.contact_email,
+      },
     });
     if (result.error) throw new Error(result.error.message);
     refresh(need.id,v.id);
