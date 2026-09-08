@@ -463,7 +463,11 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
                     </div>
 
                     <div className="field">
-                      <span className="field__label">{a.n3District}</span>
+                      {/* A <label> rather than a <span>: this is one control,
+                          so the association has to be real. */}
+                      <label className="field__label" htmlFor={N3.district}>
+                        {a.n3District}
+                      </label>
                       <Combobox
                         name={N3.district}
                         options={districtOptions(lang)}

@@ -19,13 +19,26 @@ export default function Combobox({
   placeholder,
   emptyLabel,
   describedBy,
+  id,
 }: {
   name: string;
   options: Option[];
   placeholder: string;
   emptyLabel: string;
   describedBy?: string;
+  /**
+   * The id a `<label htmlFor>` points at. Defaults to `name`, which is what
+   * every caller was already assuming.
+   *
+   * Without it the label pointed at nothing: the only element carrying `name`
+   * is the hidden input holding the chosen value, and the visible control had
+   * no id at all. A screen reader announced "edit text, blank" where the form
+   * clearly showed "Where you are based" — on the district field of every
+   * intake form on the site.
+   */
+  id?: string;
 }) {
+  const controlId = id ?? name;
   const [enhanced, setEnhanced] = useState(false);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -62,7 +75,13 @@ export default function Combobox({
 
   if (!enhanced) {
     return (
-      <select className="select" name={name} defaultValue="" aria-describedby={describedBy}>
+      <select
+        className="select"
+        id={controlId}
+        name={name}
+        defaultValue=""
+        aria-describedby={describedBy}
+      >
         <option value="">{placeholder}</option>
         {renderGrouped(options)}
       </select>
@@ -129,6 +148,7 @@ export default function Combobox({
       <input type="hidden" name={name} value={value} />
       <input
         ref={inputRef}
+        id={controlId}
         className="input combobox__input"
         type="text"
         role="combobox"

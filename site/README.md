@@ -124,6 +124,24 @@ columns in it. `project_public_progress` is the same idea for projects: it
 carries milestone counts and the latest non-internal update, and no task
 assignees.
 
+**Accessibility is measured, not assumed.** `scripts/a11y-audit.mjs` drives a
+real browser at a real viewport and reports tap-target sizes, horizontal
+overflow and controls with no accessible name — the things a static check
+cannot see. It needs the dev server and a Chrome with remote debugging, so it
+is a manual tool rather than a CI step:
+
+```
+npm run dev
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless --remote-debugging-port=9333 --user-data-dir=/tmp/a11y about:blank
+node scripts/a11y-audit.mjs 320 /en/volunteer /en/request /np/request
+```
+
+Everything statically decidable is held in `tests/accessibility.test.ts`
+instead, so it runs on every pull request. That file exists because a label
+pointing at an id nothing renders is valid TypeScript, valid HTML, and silent:
+the district picker on every intake form had no accessible name for months.
+
 **Access control is the login gate, not Row Level Security.** Every table has
 RLS enabled with zero policies — the service role key
 (`lib/supabase.ts`, server-only) bypasses RLS by design and is what every
