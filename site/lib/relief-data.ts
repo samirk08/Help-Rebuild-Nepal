@@ -1,5 +1,6 @@
 import type { ItemNeed } from "./relief";
 import { supabaseAdmin } from "./supabase";
+import { errorFields, logError } from "./log";
 
 /**
  * Server-side reads for the relief boards.
@@ -73,7 +74,7 @@ export async function listItemNeeds(): Promise<ItemNeed[]> {
     .order("needed_by", { ascending: true });
 
   if (error) {
-    console.error("listItemNeeds failed", error);
+    logError("listitemneeds_failed", errorFields(error));
     return [];
   }
 

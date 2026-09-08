@@ -8,6 +8,7 @@ import { supabaseAdmin } from "../supabase";
 import { supabaseServerClient } from "../supabase-server";
 import { idFrom, textFrom } from "./validation";
 import type { ActionState } from "./validation";
+import { errorFields, logError } from "../log";
 
 /**
  * Asking a volunteer the question the engine could not answer for itself.
@@ -98,7 +99,7 @@ export async function askClarification(_state: ActionState, form: FormData): Pro
       if (error.code === "23505") {
         throw new Error("That question is already outstanding with this volunteer.");
       }
-      console.error("askClarification insert failed", error);
+      logError("askclarification_insert_failed", errorFields(error));
       throw new Error("Could not record the question. Please try again.");
     }
 
@@ -124,7 +125,7 @@ export async function askClarification(_state: ActionState, form: FormData): Pro
         .from("matching_questions")
         .update({ state: "withdrawn" })
         .eq("id", created.id);
-      console.error("clarification outbox insert failed", queued.error);
+      logError("clarification_outbox_insert_failed", errorFields(queued.error));
       throw new Error("Could not queue the email. The question was not asked.");
     }
 

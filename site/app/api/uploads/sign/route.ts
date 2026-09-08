@@ -5,6 +5,7 @@ import { DOCUMENTS_BUCKET, supabaseAdmin } from "@/lib/supabase";
 import { checkFileClaim, MAX_FILES } from "@/lib/upload-policy";
 import { verifyUploadTicket } from "@/lib/upload-tickets";
 import { currentVolunteer } from "@/lib/volunteer-auth";
+import { errorFields, logError } from "@/lib/log";
 
 /**
  * Mints a signed Storage upload URL scoped to one submission's folder.
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (lookupError) {
-    console.error("upload sign lookup failed", lookupError);
+    logError("upload_sign_lookup_failed", errorFields(lookupError));
     return NextResponse.json({ error: "Could not prepare upload" }, { status: 500 });
   }
 
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
     .eq("submission_id", submissionId);
 
   if (existingError) {
-    console.error("upload quota lookup failed", existingError);
+    logError("upload_quota_lookup_failed", errorFields(existingError));
     return NextResponse.json({ error: "Could not prepare upload" }, { status: 500 });
   }
 
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
   const { data, error } = await admin.storage.from(DOCUMENTS_BUCKET).createSignedUploadUrl(path);
 
   if (error || !data) {
-    console.error("createSignedUploadUrl failed", error);
+    logError("createsigneduploadurl_failed", errorFields(error));
     return NextResponse.json({ error: "Could not prepare upload" }, { status: 500 });
   }
 

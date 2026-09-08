@@ -7,6 +7,7 @@ import { ownedRequest } from "./requester";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
 import type { ActionState } from "./matching/validation";
+import { errorFields, logError } from "./log";
 
 /**
  * What a requester may do to their own request.
@@ -55,7 +56,7 @@ async function record(
   });
   // Logged, not thrown. A missing audit line is worth knowing about; failing
   // the person's close or update over it would be worse.
-  if (error) console.error("request event insert failed", error);
+  if (error) logError("request_event_insert_failed", errorFields(error));
 }
 
 /**
@@ -80,7 +81,7 @@ async function guardedUpdate(
     .maybeSingle();
 
   if (error) {
-    console.error("requester update failed", error);
+    logError("requester_update_failed", errorFields(error));
     throw new Error("Could not save that change. Please try again.");
   }
   return Boolean(data);

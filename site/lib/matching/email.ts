@@ -1,4 +1,6 @@
 import { validEmail } from "./catalog";
+import { canDeliverTo, redact } from "../env";
+import { logWarn } from "../log";
 import type { Lang } from "../content";
 import { invitationMail } from "../mail-copy";
 import type { Role, Recommendation } from "./types";
@@ -39,10 +41,30 @@ export function invitationEmail(role: Role, recommendation: Recommendation, reci
   return { ...payload, to: recipient };
 }
 
-/** The caller persists results. A stable outbox UUID is the idempotency key. */
+/**
+ * The caller persists results. A stable outbox UUID is the idempotency key.
+ *
+ * The recipient check is the staging guard, and it lives here rather than in
+ * the worker because this is the single function that actually reaches the
+ * provider. A pilot on staging has to send real mail to be a real test, so
+ * MATCHING_EMAIL_ENABLED gets set there — and at that moment a deployment
+ * pointed at a copy of production data can invite a real volunteer to work
+ * that does not exist. lib/env.ts refuses any recipient not explicitly listed
+ * outside production.
+ */
 export async function sendMatchingEmail(id: string, payload: EmailPayload, request: typeof fetch = fetch): Promise<string> {
   if (!emailConfigured()) throw new Error("Matching email is not enabled.");
   if (!validEmail(payload.to)) throw new Error("Invalid recipient.");
+
+  const verdict = canDeliverTo(payload.to);
+  if (!verdict.allowed) {
+    logWarn("email_recipient_blocked", {
+      outbox_id: id,
+      recipient: redact(payload.to),
+      reason: verdict.reason,
+    });
+    throw new Error(verdict.reason);
+  }
   const response = await request("https://api.resend.com/emails", {
     method:"POST", headers:{ Authorization:`Bearer ${process.env.RESEND_API_KEY}`, "Content-Type":"application/json", "Idempotency-Key":`hrn-matching/${id}` },
     body:JSON.stringify({ from:process.env.MATCHING_FROM_EMAIL, reply_to:process.env.MATCHING_REPLY_TO || process.env.MATCHING_FROM_EMAIL, ...payload }),

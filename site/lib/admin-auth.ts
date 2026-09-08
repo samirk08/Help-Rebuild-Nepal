@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "./supabase";
+import { errorFields, logError } from "./log";
 
 /**
  * Whether a signed-in user may use the coordination dashboard.
@@ -38,9 +39,9 @@ export async function isAdmin(userId: string | undefined | null): Promise<boolea
     // /admin/diagnostics is itself behind this gate — so if it ever happens,
     // the server log is where the reason will be.
     if (error.code === "42P01") {
-      console.error("admin_users is missing — run supabase/004-accounts.sql. Refusing all dashboard access until it exists.");
+      logError("admin_users_is_missing_run_supabase_004_accounts_sql_refusin");
     } else {
-      console.error("admin allowlist check failed", error);
+      logError("admin_allowlist_check_failed", errorFields(error));
     }
     return false;
   }

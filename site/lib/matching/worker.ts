@@ -1,3 +1,5 @@
+import { canDeliverTo, redact } from "../env";
+import { logInfo, logWarn, thrownFields } from "../log";
 import { supabaseAdmin } from "../supabase";
 import { getNeed, loadMatching } from "./data";
 import { recommend } from "./engine";
@@ -18,10 +20,26 @@ export async function processMatchingEmails() {
     if (run) await db.from("worker_runs").update({ finished_at:new Date().toISOString(), error:"claim failed" }).eq("id",run.id);
     throw new Error("Could not claim pending email work.");
   }
-  const counts = { enabled:true, sent:0, failed:0, cancelled:0 };
+  const counts = { enabled:true, sent:0, failed:0, cancelled:0, blocked:0 };
   const jobs = (data ?? []) as Outbox[];
   for (const job of jobs) {
     try {
+      // Checked before anything else, because retrying a recipient this
+      // deployment is not allowed to write to will never succeed — the answer
+      // only changes when configuration does. Cancelled rather than held: a
+      // staging queue quietly filling with undeliverable invitations is a trap
+      // the day someone points production at that database.
+      const verdict = canDeliverTo(job.payload.to);
+      if (!verdict.allowed) {
+        await db.from("matching_email_outbox")
+          .update({ status:"cancelled", last_error:verdict.reason, locked_until:null })
+          .eq("id",job.id).neq("status","sent");
+        logWarn("email_blocked_outside_production", {
+          outbox_id: job.id, kind: job.kind, recipient: redact(job.payload.to),
+        });
+        counts.blocked++; continue;
+      }
+
       // A clarification email belongs to a question, not an invitation
       // (migration 017). It carries no contact details, so none of the
       // invitation-side approval checks apply — it is simply sent.
@@ -63,6 +81,10 @@ export async function processMatchingEmails() {
     } catch(e) {
       const message = e instanceof Error ? e.message : "Email processing failed.";
       const terminal = job.attempts >= 5;
+      logWarn("email_send_failed", {
+        outbox_id: job.id, kind: job.kind, attempts: job.attempts,
+        terminal, ...thrownFields(e),
+      });
       await db.from("matching_email_outbox").update({status:terminal ? "failed" : "pending",last_error:message,locked_until:null,available_at:new Date(Date.now()+Math.min(60,2**job.attempts)*60000).toISOString()}).eq("id",job.id).neq("status","sent");
       counts.failed++;
     }
@@ -75,5 +97,11 @@ export async function processMatchingEmails() {
       failed: counts.failed,
     }).eq("id", run.id);
   }
+  // One line per run, not per message: this is what makes "how much did the
+  // worker actually do today" answerable without reading the outbox.
+  logInfo("email_worker_run", {
+    claimed: jobs.length, sent: counts.sent, failed: counts.failed,
+    cancelled: counts.cancelled, blocked: counts.blocked,
+  });
   return counts;
 }

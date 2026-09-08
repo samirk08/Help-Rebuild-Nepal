@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "./supabase";
 import { currentVolunteer } from "./volunteer-auth";
+import { errorFields, logError } from "./log";
 
 /**
  * Mission teams: the read layer, and the rules about who may change what.
@@ -117,7 +118,7 @@ export async function listMissions(): Promise<Mission[]> {
     .order("sort_order");
 
   if (error) {
-    console.error("listMissions failed", error);
+    logError("listmissions_failed", errorFields(error));
     return [];
   }
 

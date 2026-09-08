@@ -6,6 +6,7 @@ import {
   type ReadResult,
 } from "./publication";
 import { supabaseAdmin } from "./supabase";
+import { errorFields, logError } from "./log";
 
 /**
  * The read layer behind the public needs board and need detail pages.
@@ -243,7 +244,7 @@ export async function listPublicNeeds(
 
   const { data, error } = await query;
   if (error) {
-    console.error("listPublicNeeds failed", error);
+    logError("listpublicneeds_failed", errorFields(error));
     return unavailable(error.code ?? "read_failed");
   }
 

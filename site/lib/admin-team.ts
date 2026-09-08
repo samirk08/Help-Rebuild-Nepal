@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { isAdmin } from "./admin-auth";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
+import { errorFields, logError } from "./log";
 
 /**
  * Admin account management that does not depend on Supabase sending email.
@@ -71,7 +72,7 @@ export async function listTeam(): Promise<TeamMember[]> {
     .order("added_at", { ascending: true });
 
   if (error) {
-    console.error("admin_users read failed", error);
+    logError("admin_users_read_failed", errorFields(error));
     return [];
   }
 
@@ -171,7 +172,7 @@ export async function createAccessLink(
     .upsert({ user_id: userId, email }, { onConflict: "user_id" });
 
   if (grantError) {
-    console.error("admin allowlist grant failed", grantError);
+    logError("admin_allowlist_grant_failed", errorFields(grantError));
     return { error: `Account is ready, but granting dashboard access failed: ${grantError.message}` };
   }
 
@@ -221,7 +222,7 @@ export async function revokeAdmin(
     .maybeSingle();
 
   if (error) {
-    console.error("admin allowlist revoke failed", error);
+    logError("admin_allowlist_revoke_failed", errorFields(error));
     return { error: error.message };
   }
   if (!data) return { error: "That account is not on the list." };
