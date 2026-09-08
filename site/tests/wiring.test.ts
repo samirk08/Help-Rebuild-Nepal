@@ -115,3 +115,42 @@ test("the missions pages call the actions that change membership", () => {
   assert.match(card, /leaveMission/, "joining must be reversible from the same place");
   assert.match(detail, /joinMission|leaveMission/, "the detail page must offer the same action");
 });
+
+test("the relief dashboard can move a delivery through its stages", () => {
+  const page = readFileSync(join(APP, "admin", "(dashboard)", "relief", "page.tsx"), "utf8");
+
+  // Migration 018 without a button to press is the same failure this file was
+  // written for: correct code, complete schema, and no way to reach it.
+  assert.match(page, /advanceDelivery/, "a coordinator must be able to advance a delivery");
+  assert.match(page, /setItemNeedStatus/, "closing and reopening a request must be reachable");
+  assert.match(page, /updateDeliveryDetails/, "delivery arrangements must be editable");
+  assert.match(page, /nextStages/, "only the transitions the database accepts may be offered");
+  assert.match(page, /item_need_progress/, "the four quantities must come from the progress view");
+  assert.match(page, /received/, "received must be shown, not just pledged");
+});
+
+test("the project workspace is reachable and can record an outcome", () => {
+  const needPage = readFileSync(join(APP, "admin", "(dashboard)", "needs", "[id]", "page.tsx"), "utf8");
+  const workspace = readFileSync(join(COMPONENTS, "ProjectWorkspace.tsx"), "utf8");
+
+  assert.match(needPage, /ProjectWorkspace/, "the workspace must be rendered by the need page");
+  assert.match(needPage, /promoteToProject/, "promotion must still be reachable");
+  assert.match(workspace, /recordProjectOutcome/, "completion requires an outcome, so it must be writable");
+  assert.match(workspace, /addProjectTask/);
+  assert.match(workspace, /updateProjectTask/);
+  assert.match(workspace, /addProjectUpdate/);
+  assert.match(workspace, /addProjectOutput/);
+  assert.match(workspace, /updateProject\b/);
+});
+
+test("the public relief and project pages read the redacted views", () => {
+  const data = readFileSync(join("lib", "relief-data.ts"), "utf8");
+  const community = readFileSync(join("lib", "community.ts"), "utf8");
+
+  // The whole protection is that the public read cannot see the private
+  // columns, so reading the base table instead would silently undo it.
+  assert.match(data, /item_needs_public/, "public item needs must come from the redacted view");
+  assert.ok(!/from\("item_needs"\)/.test(data), "the base item_needs table carries private contacts");
+  assert.match(community, /project_public_progress/, "public projects must come from the redacted view");
+  assert.ok(!/from\("projects"\)/.test(community), "the base projects table is not the public shape");
+});

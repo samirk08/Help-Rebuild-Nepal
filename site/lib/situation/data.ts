@@ -162,7 +162,7 @@ export async function loadQueueSources(): Promise<
           .range(from, to),
       false
     ),
-    collect<Omit<ItemNeedRow, "pledged">>(
+    collect<Omit<ItemNeedRow, "pledged" | "received" | "remaining" | "status">>(
       (from, to) =>
         db
           .from("item_needs")
@@ -171,8 +171,17 @@ export async function loadQueueSources(): Promise<
           .range(from, to),
       true
     ),
-    collect<{ item_need_id: string; pledged: number }>(
-      (from, to) => db.from("item_need_pledged").select("item_need_id, pledged").order("item_need_id").range(from, to),
+    // `item_need_progress` rather than `item_need_pledged`: the queue needs to
+    // know what is still missing, and offers nobody has accepted are not
+    // supply. Reading the pledged total alone is how a request with 200
+    // offered and nothing delivered fell off the board.
+    collect<{ item_need_id: string; pledged: number; received: number; remaining: number; status: string }>(
+      (from, to) =>
+        db
+          .from("item_need_progress")
+          .select("item_need_id, pledged, received, remaining, status")
+          .order("item_need_id")
+          .range(from, to),
       true
     ),
     collect<QueueAssignment>(
@@ -194,8 +203,16 @@ export async function loadQueueSources(): Promise<
   if (optionalFailed && optionalFailed.state === "error") return unavailable(optionalFailed.reason);
 
   const needs = valueOrEmpty(allNeeds);
-  const pledgedById = new Map(
-    valueOrEmpty(pledged).map((row) => [row.item_need_id, Number(row.pledged) || 0])
+  const progressById = new Map(
+    valueOrEmpty(pledged).map((row) => [
+      row.item_need_id,
+      {
+        pledged: Number(row.pledged) || 0,
+        received: Number(row.received) || 0,
+        remaining: Number(row.remaining) || 0,
+        status: row.status ?? "requested",
+      },
+    ])
   );
 
   const team: Coordinator[] = valueOrEmpty(coordinators)
@@ -216,7 +233,14 @@ export async function loadQueueSources(): Promise<
     questions: valueOrEmpty(questions),
     itemNeeds: valueOrEmpty(itemNeeds).map((row) => ({
       ...row,
-      pledged: pledgedById.get(row.id) ?? 0,
+      // A need with no progress row has had nothing offered against it, so
+      // everything asked for is still outstanding.
+      ...(progressById.get(row.id) ?? {
+        pledged: 0,
+        received: 0,
+        remaining: row.quantity,
+        status: "requested",
+      }),
     })),
     assignments: valueOrEmpty(assignments),
     coordinators: team,

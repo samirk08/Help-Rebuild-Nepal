@@ -113,6 +113,17 @@ different (they target a specific `item_needs` row) and live in their own
 `pledges` table instead — see the schema file's comments for the rest
 (`documents`, `item_needs`, `matches`, `projects`).
 
+A pledge carries two separate facts, and conflating them is the mistake
+migration 018 exists to correct. `status` says whether we believe the offer is
+real; `stage` (`offered` → `reserved` → `dispatched` → `received`) says where
+the goods are. Only `received` — with the quantity that actually turned up,
+which may be less than was promised — reduces what a request still needs. Read
+the four quantities from `item_need_progress`, never by summing pledges, and
+read anything public from `item_needs_public`, which has no delivery contact
+columns in it. `project_public_progress` is the same idea for projects: it
+carries milestone counts and the latest non-internal update, and no task
+assignees.
+
 **Access control is the login gate, not Row Level Security.** Every table has
 RLS enabled with zero policies — the service role key
 (`lib/supabase.ts`, server-only) bypasses RLS by design and is what every
@@ -191,7 +202,7 @@ Supabase/Vercel account and can't be scripted from here:
    project URL, anon key and service role key from Project Settings -> API.
 2. Paste `supabase/schema.sql` into the Supabase SQL editor and run it once,
    then each numbered migration beside it in order (`002-public-board.sql`
-   through `017-clarifications.sql`). Every migration is safe to
+   through `019-project-outcomes.sql`). Every migration is safe to
    re-run, so running the whole set again on an existing project is fine.
    Admin -> Diagnostics reports which ones this deployment actually has;
    a migration file existing in the repository is not evidence it has run.

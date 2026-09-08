@@ -53,25 +53,58 @@ export type PublicProject = {
   id: string;
   stage: string;
   coordinator: string | null;
+  lead: string | null;
   title: string;
   district: string | null;
   committed: number;
   peopleNeeded: number | null;
+  /** Redacted progress, from migration 019's `project_public_progress`. */
+  summary: string | null;
+  summaryNp: string | null;
+  tasksDone: number;
+  tasksTotal: number;
+  milestonesDone: number;
+  milestonesTotal: number;
+  latestUpdate: string | null;
+  latestUpdateNp: string | null;
+  latestUpdateAt: string | null;
+  outcome: {
+    summary: string;
+    summaryNp: string | null;
+    households: number | null;
+    people: number | null;
+    confirmed: boolean;
+  } | null;
 };
 
 type ProjectRow = {
   id: string;
   stage: string;
   coordinator: string | null;
+  lead: string | null;
+  title: string | null;
+  title_np: string | null;
+  summary: string | null;
+  summary_np: string | null;
   need_id: string;
-  submissions: {
-    org_or_name: string | null;
-    district: string | null;
-    skills: string[] | null;
-    people_needed: number | null;
-    kind: string | null;
-    status: string | null;
-  } | null;
+  tasks_total: number | string | null;
+  tasks_done: number | string | null;
+  milestones_total: number | string | null;
+  milestones_done: number | string | null;
+  latest_update: string | null;
+  latest_update_np: string | null;
+  latest_update_at: string | null;
+  outcome_summary: string | null;
+  outcome_summary_np: string | null;
+  outcome_households: number | null;
+  outcome_people: number | null;
+  outcome_confirmed: boolean | null;
+  need_org_or_name: string | null;
+  need_district: string | null;
+  need_skills: string[] | null;
+  need_people_needed: number | null;
+  need_kind: string | null;
+  need_status: string | null;
 };
 
 /**
@@ -83,15 +116,19 @@ type ProjectRow = {
  * need rejected or withdrawn after promotion kept its project on the public
  * page. `isPublicProject` applies the same rule the board applies, so the two
  * cannot drift apart again.
+ *
+ * Since migration 019 the source is `project_public_progress`, which applies
+ * that same rule in SQL and — the reason it exists — has no `assignee` and no
+ * update `author` column in it at all. `isPublicProject` still runs over the
+ * result, so the two statements of the rule check each other rather than one
+ * quietly replacing the other.
  */
 export async function listProjects(): Promise<ReadResult<PublicProject[]>> {
   const client = supabaseAdmin();
 
   const { data, error } = await client
-    .from("projects")
-    .select(
-      "id, stage, coordinator, need_id, submissions:need_id(org_or_name, district, skills, people_needed, kind, status)"
-    )
+    .from("project_public_progress")
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -99,15 +136,17 @@ export async function listProjects(): Promise<ReadResult<PublicProject[]>> {
     return unavailable(error.code ?? "read_failed");
   }
 
-  const rows = (data ?? []).map((row) => ({
-    ...row,
-    // Supabase types a to-one embed as an array; need_id -> submissions.id is
-    // a single FK, same as the matches embed in the admin need detail page.
-    submissions: Array.isArray(row.submissions) ? row.submissions[0] : row.submissions,
-  })) as ProjectRow[];
+  const rows = (data ?? []) as ProjectRow[];
 
+  // The view already applies this rule. Running it again over the result is
+  // deliberate belt and braces: the two statements of "a project is as public
+  // as its need" check each other, which is what was missing when a rejected
+  // need kept a live project page.
   const withNeed = rows.filter((row) =>
-    isPublicProject({ stage: row.stage, need: row.submissions })
+    isPublicProject({
+      stage: row.stage,
+      need: { kind: row.need_kind, status: row.need_status },
+    })
   );
   if (withNeed.length === 0) return ok([]);
 
@@ -121,19 +160,39 @@ export async function listProjects(): Promise<ReadResult<PublicProject[]>> {
     committed.set(match.need_id, (committed.get(match.need_id) ?? 0) + 1);
   }
 
+  const count = (value: number | string | null): number => Number(value ?? 0) || 0;
+
   return ok(
-    withNeed.map((row) => {
-      const need = row.submissions!;
-      const skills = need.skills ?? [];
-      return {
-        id: row.id,
-        stage: row.stage,
-        coordinator: row.coordinator,
-        title: need.org_or_name ?? (skills[0] ?? "Project"),
-        district: need.district,
-        committed: committed.get(row.need_id) ?? 0,
-        peopleNeeded: need.people_needed,
-      };
-    })
+    withNeed.map((row) => ({
+      id: row.id,
+      stage: row.stage,
+      coordinator: row.coordinator,
+      lead: row.lead,
+      // A title a coordinator wrote beats the requesting organisation's name,
+      // which is what the card fell back to when a project had no name of its
+      // own — and still does.
+      title: row.title ?? row.need_org_or_name ?? (row.need_skills?.[0] ?? "Project"),
+      district: row.need_district,
+      committed: committed.get(row.need_id) ?? 0,
+      peopleNeeded: row.need_people_needed,
+      summary: row.summary,
+      summaryNp: row.summary_np,
+      tasksDone: count(row.tasks_done),
+      tasksTotal: count(row.tasks_total),
+      milestonesDone: count(row.milestones_done),
+      milestonesTotal: count(row.milestones_total),
+      latestUpdate: row.latest_update,
+      latestUpdateNp: row.latest_update_np,
+      latestUpdateAt: row.latest_update_at,
+      outcome: row.outcome_summary
+        ? {
+            summary: row.outcome_summary,
+            summaryNp: row.outcome_summary_np,
+            households: row.outcome_households,
+            people: row.outcome_people,
+            confirmed: row.outcome_confirmed === true,
+          }
+        : null,
+    }))
   );
 }

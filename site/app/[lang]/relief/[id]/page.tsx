@@ -13,6 +13,7 @@ import {
   formatQuantity,
   unitLabel,
 } from "@/lib/relief";
+import { committedPercent, receivedPercent, remainingDemand } from "@/lib/relief-delivery";
 import { getItemNeed } from "@/lib/relief-data";
 import { screenPath } from "@/lib/routes";
 
@@ -49,8 +50,13 @@ export default async function ReliefDetailPage({
   const base = dict(lang);
   const tr = translator(lang);
 
-  const remaining = Math.max(0, need.quantity - need.pledged);
-  const percent = need.quantity > 0 ? Math.round((need.pledged / need.quantity) * 100) : 0;
+  // Three numbers, not one. A bar filled to 100% by offers against a request
+  // where nothing has shipped is the "second disaster" drawn as a progress bar:
+  // it tells the next coordinator to stop looking for tarpaulins.
+  const remaining = remainingDemand(need);
+  const arrived = receivedPercent(need);
+  const arranged = committedPercent(need);
+  const closed = need.status !== "requested";
   const deadline = new Date(need.neededBy).toLocaleDateString(lang === "np" ? "ne-NP" : "en-GB", {
     year: "numeric",
     month: "long",
@@ -68,6 +74,8 @@ export default async function ReliefDetailPage({
         .join(" · "),
     },
     { k: t.reliefRequester, v: need.requester },
+    ...(need.deliveryWindow ? [{ k: t.reliefDeliveryWindow, v: need.deliveryWindow }] : []),
+    ...(need.deliveryAddress ? [{ k: t.reliefDeliveryAddress, v: need.deliveryAddress }] : []),
   ];
 
   return (
@@ -121,29 +129,60 @@ export default async function ReliefDetailPage({
             <h2 className="eyebrow--label" style={{ marginBottom: 14 }}>
               {t.reliefQuantity}
             </h2>
+            {/* The headline number is what arrived, because that is the only
+                one that means anything is there. */}
             <p className="detail__count">
-              {need.pledged.toLocaleString()}
+              {need.received.toLocaleString()}
               <span>/{need.quantity.toLocaleString()}</span>
             </p>
             <p style={{ fontSize: 13.5, color: "var(--muted)", margin: "6px 0 14px" }}>
-              {t.reliefPledged} · {remaining.toLocaleString()} {unitLabel(category, lang)}{" "}
-              {lang === "np" ? "बाँकी" : "still needed"}
+              {need.received === 0
+                ? t.reliefNothingArrived
+                : `${t.reliefReceived} · ${need.received.toLocaleString()} ${unitLabel(category, lang)}`}
             </p>
             <div
-              className="meter"
-              style={{ marginBottom: 24 }}
+              className="meter meter--stacked"
+              style={{ marginBottom: 14 }}
               role="progressbar"
-              aria-valuenow={percent}
+              aria-valuenow={arrived}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={t.reliefPledged}
+              aria-label={t.reliefReceived}
             >
-              <div className="meter__fill" style={{ width: `${percent}%` }} />
+              <div className="meter__fill" style={{ width: `${arrived}%` }} />
+              {/* Arranged but not yet arrived, drawn behind — visibly not the
+                  same thing as delivered. */}
+              <div className="meter__fill meter__fill--pending" style={{ width: `${arranged}%` }} />
+            </div>
+
+            <div className="factlist factlist--tight" style={{ marginBottom: 20 }}>
+              <div className="fact">
+                <span className="fact__k">{t.reliefPledged}</span>
+                <span className="fact__v">{need.pledged.toLocaleString()}</span>
+              </div>
+              <div className="fact">
+                <span className="fact__k">{t.reliefArranged}</span>
+                <span className="fact__v">{need.committed.toLocaleString()}</span>
+              </div>
+              <div className="fact">
+                <span className="fact__k">{t.reliefStillNeeded}</span>
+                <span className="fact__v">
+                  {remaining.toLocaleString()} {unitLabel(category, lang)}
+                </span>
+              </div>
             </div>
 
             {/* The example has no row to pledge against, so it stays a toast.
                 A real request sends you to the offer form pre-targeted at it. */}
-            {isExample ? (
+            {/* A closed request stays readable — that is the record of what
+                happened — but offering against it would leave the donor waiting
+                for a collection nobody is going to arrange. */}
+            {closed ? (
+              <div className="notice notice--warn" role="status">
+                <strong style={{ display: "block", marginBottom: 4 }}>{t.reliefClosed}</strong>
+                {t.reliefClosedBody}
+              </div>
+            ) : isExample ? (
               <ToastButton label={t.reliefPledgeCta} message={t.reliefToastPledge} />
             ) : (
               <Link
@@ -153,9 +192,11 @@ export default async function ReliefDetailPage({
                 {t.reliefPledgeCta}
               </Link>
             )}
-            <p className="hint" style={{ marginTop: 10 }}>
-              {base.interestNote}
-            </p>
+            {closed ? null : (
+              <p className="hint" style={{ marginTop: 10 }}>
+                {base.interestNote}
+              </p>
+            )}
 
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--line-2)" }}>
               <h3 className="eyebrow--label" style={{ marginBottom: 12 }}>

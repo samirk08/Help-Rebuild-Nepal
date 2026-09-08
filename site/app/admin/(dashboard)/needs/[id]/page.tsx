@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { promoteToProject, updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
 import MatchingPanel from "@/components/MatchingPanel";
+import ProjectWorkspace from "@/components/ProjectWorkspace";
 import { documentsFor } from "@/lib/admin-documents";
 import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
 import { NEED_SECTIONS } from "@/lib/form-schema";
@@ -36,7 +37,7 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
         .from("matches")
         .select("id, status, volunteer_id, submissions:volunteer_id(org_or_name)")
         .eq("need_id", id),
-      client.from("projects").select("id, stage, coordinator").eq("need_id", id).maybeSingle(),
+      client.from("projects").select("*").eq("need_id", id).maybeSingle(),
       client
         .from("interests")
         .select("id, name, contact, message, created_at")
@@ -191,34 +192,25 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
         )}
       </div>
 
-      <h2 className="admin-section-title">Project</h2>
-      <div className="admin-detail">
-        {project ? (
-          <>
-            <div className="admin-detail__row">
-              <span className="admin-detail__k">Stage</span>
-              <span className="admin-detail__v">{project.stage}</span>
-            </div>
-            <div className="admin-detail__row">
-              <span className="admin-detail__k">Coordinator</span>
-              <span className="admin-detail__v">{project.coordinator ?? "—"}</span>
-            </div>
-          </>
-        ) : (
-          <p className="admin-empty admin-empty--inline">
-            Not yet promoted to a standing project.
-          </p>
-        )}
-      </div>
-      {!project ? (
-        <form action={promoteToProject} className="admin-form-row" style={{ marginBottom: 24 }}>
-          <input type="hidden" name="needId" value={id} />
-          <input type="text" name="coordinator" placeholder="Coordinator (optional)" />
-          <button type="submit" className="btn btn--outline btn--sm">
-            Promote to project
-          </button>
-        </form>
-      ) : null}
+      {project ? (
+        <ProjectWorkspace project={project} />
+      ) : (
+        <>
+          <h2 className="admin-section-title">Project</h2>
+          <div className="admin-detail">
+            <p className="admin-empty admin-empty--inline">
+              Not yet promoted to a standing project.
+            </p>
+          </div>
+          <form action={promoteToProject} className="admin-form-row" style={{ marginBottom: 24 }}>
+            <input type="hidden" name="needId" value={id} />
+            <input type="text" name="coordinator" placeholder="Coordinator (optional)" />
+            <button type="submit" className="btn btn--outline btn--sm">
+              Promote to project
+            </button>
+          </form>
+        </>
+      )}
 
       <h2 className="admin-section-title">Internal notes</h2>
       <form action={updateSubmissionNotes}>

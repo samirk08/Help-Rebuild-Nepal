@@ -69,7 +69,18 @@ export type ItemNeed = {
   id: string;
   category: string;
   quantity: number;
+  /**
+   * Four separate numbers, because conflating them is how a request that has
+   * received nothing comes to look answered. `pledged` is what has been
+   * offered, `committed` is what a coordinator has arranged, `received` is what
+   * turned up, and `remaining` is what someone still has to find.
+   */
   pledged: number;
+  committed: number;
+  received: number;
+  remaining: number;
+  /** `requested` while it is still live; `closed` once met or stood down. */
+  status: string;
   district: string;
   municipality: string;
   ward?: string;
@@ -79,6 +90,9 @@ export type ItemNeed = {
   verified: boolean;
   detail: string;
   detailNp: string;
+  /** Publishable delivery arrangements. The contact behind them is not. */
+  deliveryWindow?: string;
+  deliveryAddress?: string;
 };
 
 /**
@@ -93,6 +107,10 @@ export const EXAMPLE_ITEM_NEED: ItemNeed = {
   category: "tarpaulin",
   quantity: 200,
   pledged: 0,
+  committed: 0,
+  received: 0,
+  remaining: 200,
+  status: "requested",
   district: "Sindhupalchok",
   municipality: "Melamchi Municipality",
   ward: "7",
@@ -103,6 +121,8 @@ export const EXAMPLE_ITEM_NEED: ItemNeed = {
     "Ward 7 has 96 households without intact roofing before the next rains. Tarpaulins of 4×6m or larger are usable; smaller sheets are not. The ward office will store and distribute, and can receive deliveries on any weekday morning.",
   detailNp:
     "वडा ७ का ९६ घरधुरीको छाना अर्को वर्षा अघि मर्मत हुनुपर्नेछ। ४×६ मिटर वा सोभन्दा ठूलो त्रिपाल उपयोगी हुन्छ; सानो पाल हुँदैन। वडा कार्यालयले भण्डारण र वितरण गर्नेछ, र कुनै पनि कार्यदिनको बिहान डेलिभरी लिन सक्छ।",
+  deliveryWindow: "Weekday mornings, 8am–12pm",
+  deliveryAddress: "Ward 7 office, Melamchi Municipality",
 };
 
 export function itemNeedById(id: string): ItemNeed | undefined {
