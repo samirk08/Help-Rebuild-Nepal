@@ -20,6 +20,7 @@ export default function Combobox({
   emptyLabel,
   describedBy,
   id,
+  defaultValue,
 }: {
   name: string;
   options: Option[];
@@ -37,12 +38,21 @@ export default function Combobox({
    * intake form on the site.
    */
   id?: string;
+  /**
+   * A value to start from — a restored draft, or an answer the person already
+   * gave. Without it, restoring a draft set the hidden input and left the
+   * visible box empty, which reads as the restore having lost the answer.
+   */
+  defaultValue?: string;
 }) {
   const controlId = id ?? name;
   const [enhanced, setEnhanced] = useState(false);
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [value, setValue] = useState("");
+  const initial = defaultValue
+    ? options.find((o) => o.value === defaultValue)
+    : undefined;
+  const [query, setQuery] = useState(initial?.label ?? "");
+  const [value, setValue] = useState(initial?.value ?? "");
   const [active, setActive] = useState(0);
 
   const listId = useId();
@@ -79,7 +89,7 @@ export default function Combobox({
         className="select"
         id={controlId}
         name={name}
-        defaultValue=""
+        defaultValue={initial?.value ?? ""}
         aria-describedby={describedBy}
       >
         <option value="">{placeholder}</option>

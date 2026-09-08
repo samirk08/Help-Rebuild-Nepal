@@ -1,3 +1,4 @@
+import { compressImage } from "./image-compress";
 import { DOCUMENTS_BUCKET } from "./storage-constants";
 import { supabaseBrowserClient } from "./supabase-browser";
 import { logError, thrownFields } from "./log";
@@ -141,7 +142,15 @@ export async function uploadDocuments(
   // is already recorded, so parallel signing could each see the same
   // pre-upload state and collectively exceed it.
   for (const file of files) {
-    results.push(await uploadOne(submissionId, ticket, file));
+    // Shrunk first. A phone photo is 4-8MB and eight of them is 64MB sent from
+    // a congested district connection by someone whose roof has just come off;
+    // nobody assessing damage needs 4000 pixels across. Returns the original
+    // untouched on any failure, so this can only ever help.
+    const prepared = await compressImage(file);
+    const outcome = await uploadOne(submissionId, ticket, prepared);
+    // Reported against the file the person picked, not the one we made, so the
+    // name in the retry list is the name they recognise.
+    results.push({ ...outcome, file });
   }
 
   return {

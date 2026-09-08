@@ -124,6 +124,21 @@ columns in it. `project_public_progress` is the same idea for projects: it
 carries milestone counts and the latest non-internal update, and no task
 assignees.
 
+**Photos are shrunk before they are sent.** A phone camera produces a 4-8MB
+image and eight of those is 64MB, uploaded from a congested district connection
+by someone whose roof has just come off. `lib/image-compress.ts` caps the
+longest edge at 1920px and re-encodes, and returns the original untouched on
+any failure — losing a photo is worse than sending a big one. A file that fails
+can be retried against the submission that already exists, on both forms.
+
+**Both forms keep a draft on the device**, never sent, offered on return rather
+than applied. Cleared once the submission is recorded.
+
+**`npm run smoke`** loads every public page against a running build. `next
+build` proves the bundle exists and a unit test proves a function is right;
+neither one renders a page, so a server component that throws on a null read is
+invisible to both. It runs in CI after the build.
+
 **Staging cannot email real volunteers.** A pilot has to send real mail to be a
 real test, so `MATCHING_EMAIL_ENABLED` gets set on staging — and at that moment
 a deployment pointed at a copy of production data can invite an actual person

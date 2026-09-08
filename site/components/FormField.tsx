@@ -13,6 +13,7 @@ export default function FormFieldView({
   tr,
   onFilesChange,
   error,
+  defaultValue,
 }: {
   field: EnhancedField;
   sectionN: string;
@@ -22,8 +23,17 @@ export default function FormFieldView({
   onFilesChange?: (fieldName: string, files: File[]) => void;
   /** What is wrong with this answer, already translated. */
   error?: string;
+  /**
+   * A restored draft answer. A list, because a chip group holds several — and
+   * storing one value per field would silently drop every skill but the last.
+   * Uncontrolled: this seeds the control and nothing more.
+   */
+  defaultValue?: string[];
 }) {
   const key = fieldKey(sectionN, field.label);
+  /** Single-value controls take the first; a chip group checks against the set. */
+  const seeded = defaultValue?.[0];
+  const seededSet = new Set(defaultValue ?? []);
   const label = tr(field.label);
   const placeholder = field.ph ? tr(field.ph) : undefined;
   const extra = added(lang);
@@ -56,6 +66,7 @@ export default function FormFieldView({
           placeholder={extra.districtPlaceholder}
           emptyLabel={extra.districtEmpty}
           describedBy={describedBy}
+          defaultValue={seeded}
         />
       ) : field.widget === "location" ? (
         <LocationField
@@ -93,6 +104,7 @@ export default function FormFieldView({
           type={inputType}
           autoComplete={autoComplete}
           placeholder={placeholder}
+          defaultValue={defaultValue}
           aria-describedby={describedBy}
           aria-invalid={invalid}
         />
@@ -104,7 +116,7 @@ export default function FormFieldView({
           className="select"
           id={key}
           name={key}
-          defaultValue=""
+          defaultValue={seeded ?? ""}
           aria-describedby={describedBy}
           aria-invalid={invalid}
         >
@@ -124,6 +136,7 @@ export default function FormFieldView({
           name={key}
           rows={4}
           placeholder={placeholder}
+          defaultValue={seeded}
           aria-describedby={describedBy}
           aria-invalid={invalid}
         />
@@ -133,7 +146,7 @@ export default function FormFieldView({
         <div className="checkgrid">
           {(field.options ?? []).map((option) => (
             <label className="checkchip" key={option}>
-              <input type="checkbox" name={key} value={option} />
+              <input type="checkbox" name={key} value={option} defaultChecked={seededSet.has(option)} />
               <span>{tr(option)}</span>
             </label>
           ))}
@@ -144,7 +157,7 @@ export default function FormFieldView({
         <div className="radiolist">
           {(field.rows ?? []).map((row) => (
             <label className="radiorow" key={row.label}>
-              <input type="radio" name={key} value={row.label} />
+              <input type="radio" name={key} value={row.label} defaultChecked={seededSet.has(row.label)} />
               <span className="dot" style={{ ["--dot-color" as string]: row.color }} aria-hidden="true" />
               <span className="radiorow__label">{tr(row.label)}</span>
               <span className="radiorow__note">{tr(row.note)}</span>
