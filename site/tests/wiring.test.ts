@@ -154,3 +154,23 @@ test("the public relief and project pages read the redacted views", () => {
   assert.match(community, /project_public_progress/, "public projects must come from the redacted view");
   assert.ok(!/from\("projects"\)/.test(community), "the base projects table is not the public shape");
 });
+
+test("a coordinator can delete a need, and the button says what goes with it", () => {
+  const page = readFileSync(join(APP, "admin", "(dashboard)", "needs", "[id]", "page.tsx"), "utf8");
+  const button = readFileSync(join(COMPONENTS, "DeleteSubmissionButton.tsx"), "utf8");
+  const actions = readFileSync(join("lib", "admin-actions.ts"), "utf8");
+
+  assert.match(page, /DeleteSubmissionButton/, "the need page must offer a delete");
+  assert.match(page, /kind="need"/, "and it must delete a need, not a volunteer");
+  assert.match(button, /deleteNeed/);
+
+  const fn = actions.slice(actions.indexOf("export async function deleteNeed"));
+  // Order matters: deleting the row cascades the documents records away, which
+  // would strand the actual files in the bucket forever.
+  assert.ok(
+    fn.indexOf("storage") < fn.indexOf('from("submissions").delete()'),
+    "uploaded files must be erased before the row that points at them"
+  );
+  assert.match(fn, /eq\("kind", "need"\)/, "this path must never remove a volunteer");
+  assert.match(fn, /projects/, "a need promoted to a project must not be silently cascaded");
+});

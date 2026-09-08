@@ -9,6 +9,10 @@ function volunteerPayload(overrides: Record<string, unknown> = {}) {
     "s01-full-name": "Asha Rai",
     "s01-email": "asha@example.org",
     "s01-phone-whatsapp": "+977 9800000000",
+    // Required since a volunteer with neither cannot be matched to anything:
+    // the engine filters on skill and the travel checks need a location.
+    "s01-where-you-are-based": "Sindhupalchok",
+    "s03-primary-skill": "Engineering (structural / civil)",
     consent: "on",
     ...overrides,
   };
@@ -44,7 +48,49 @@ test("every missing required answer is reported at once, not one per round trip"
     "s01-full-name:required",
     "s01-email:required",
     "s01-phone-whatsapp:required",
+    "s01-where-you-are-based:required",
+    "s03-primary-skill:required",
   ]);
+});
+
+test("a registration we could never act on is refused", () => {
+  // Both of these were optional, and a volunteer missing either cannot be
+  // matched to anything: the engine filters on skill and the travel checks need
+  // a location. Someone who never hears from us because we could not place them
+  // is worse served than someone asked two more questions.
+  assert.deepEqual(
+    codes(validateIntake("volunteer", volunteerPayload({ "s01-where-you-are-based": undefined }))),
+    ["s01-where-you-are-based:required"]
+  );
+  assert.deepEqual(
+    codes(validateIntake("volunteer", volunteerPayload({ "s03-primary-skill": undefined }))),
+    ["s03-primary-skill:required"]
+  );
+});
+
+test("a name has to be a name, not four of the same letter", () => {
+  // A length floor alone admits "aaaa", "...." and "asdf". The name box is the
+  // first thing on the page and the first place junk lands.
+  for (const junk of ["aaaa", "....", "1234", "aa", "-", "??????"]) {
+    assert.deepEqual(
+      codes(validateIntake("volunteer", volunteerPayload({ "s01-full-name": junk }))),
+      [`s01-full-name:${junk.length < 2 ? "too_short" : "not_meaningful"}`],
+      `"${junk}" should not pass as a name`
+    );
+  }
+});
+
+test("short and non-Latin names are still accepted", () => {
+  // The bar is two distinct letters, deliberately low: refusing a real
+  // person's name is a far worse failure than admitting one determined
+  // spammer. A check written with [a-z] would reject most Nepali names.
+  for (const name of ["Om", "ओम", "Asha Rai", "सीता तामाङ", "Ng"]) {
+    assert.equal(
+      validateIntake("volunteer", volunteerPayload({ "s01-full-name": name })).ok,
+      true,
+      `"${name}" is a real name and must be accepted`
+    );
+  }
 });
 
 test("consent is required on the server, not only by the checkbox", () => {

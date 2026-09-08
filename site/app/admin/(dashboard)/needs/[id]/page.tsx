@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { promoteToProject, updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
 import MatchingPanel from "@/components/MatchingPanel";
+import DeleteSubmissionButton from "@/components/DeleteSubmissionButton";
 import ProjectWorkspace from "@/components/ProjectWorkspace";
 import { documentsFor } from "@/lib/admin-documents";
 import { SUBMISSION_STATUSES, renderSubmissionFields, statusLabel } from "@/lib/admin-render";
@@ -223,6 +224,15 @@ export default async function NeedDetailPage({ params }: { params: Promise<{ id:
           </button>
         </div>
       </form>
+
+      {/* Last on the page on purpose — reviewing comes before removing. */}
+      <h2 className="admin-section-title">Danger zone</h2>
+      <DeleteSubmissionButton
+        kind="need"
+        id={id}
+        name={row.org_or_name ?? "this need"}
+        documentCount={documents.length}
+      />
     </div>
   );
 }

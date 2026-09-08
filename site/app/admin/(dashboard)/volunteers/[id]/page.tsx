@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import DeleteVolunteerButton from "@/components/DeleteVolunteerButton";
+import DeleteSubmissionButton from "@/components/DeleteSubmissionButton";
 import MatchingProfileEditor from "@/components/MatchingProfileEditor";
 import { getMatchingProfile } from "@/lib/matching/data";
 import { updateSubmissionNotes, updateSubmissionStatus } from "@/lib/admin-actions";
@@ -145,7 +145,7 @@ export default async function VolunteerDetailPage({ params }: { params: Promise<
 
       {/* Last on the page on purpose — reviewing comes before removing. */}
       <h2 className="admin-section-title">Danger zone</h2>
-      <DeleteVolunteerButton
+      <DeleteSubmissionButton
         id={id}
         name={row.org_or_name ?? "this volunteer"}
         documentCount={documents.length}

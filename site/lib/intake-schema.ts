@@ -34,6 +34,7 @@ export type FieldError = {
     | "invalid_option"
     | "invalid_number"
     | "consent_required"
+    | "not_meaningful"
     // Answers about the request rather than about what was typed: the offer is
     // well-formed, and the request cannot take it. Separate codes because
     // "check back if the arranged deliveries fall through" and "this is closed"
@@ -77,19 +78,57 @@ const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
  * needs updating, and a missed rename shows up as a failing test rather than as
  * silently unvalidated data.
  */
-type Rule = { key: string; as: "text" | "email" | "phone" | "date"; max: number; min?: number };
+type Rule = {
+  key: string;
+  as: "text" | "email" | "phone" | "date";
+  max: number;
+  min?: number;
+  /** Refuse keyboard mashing — see `hasSubstance`. */
+  meaningful?: boolean;
+};
+
+/**
+ * Whether a value is writing rather than something typed to get past a form.
+ *
+ * A minimum length alone does not stop "aaaa", "...." or "asdfasdf" — and a
+ * name field is where junk submissions land first, because it is the first box
+ * on the page. Two distinct letters is a low bar deliberately: real names get
+ * short ("Om", "ओम"), and refusing a real person's name is a far worse failure
+ * than admitting one determined spammer.
+ *
+ * Unicode-aware, so Devanagari counts as letters. A check written with [a-z]
+ * would reject every name written in Nepali, which is most of them.
+ */
+export function hasSubstance(value: string): boolean {
+  const letters = value.match(/\p{L}/gu) ?? [];
+  if (letters.length < 2) return false;
+  return new Set(letters.map((c) => c.toLowerCase())).size >= 2;
+}
 
 const REQUIRED: Record<IntakeKind, Rule[]> = {
   volunteer: [
-    { key: "s01-full-name", as: "text", max: TEXT_LIMITS.short, min: 2 },
+    { key: "s01-full-name", as: "text", max: TEXT_LIMITS.short, min: 2, meaningful: true },
     { key: "s01-email", as: "email", max: 254 },
     { key: "s01-phone-whatsapp", as: "phone", max: 32 },
+    // Where they are, and what they can do. Both were optional, and a
+    // registration missing either cannot be matched to anything: the engine
+    // filters on skill and the travel checks need a location. A volunteer who
+    // never hears from us because we could not place them is worse served than
+    // one asked two more questions.
+    { key: "s01-where-you-are-based", as: "text", max: TEXT_LIMITS.short },
+    { key: "s03-primary-skill", as: "text", max: TEXT_LIMITS.short },
   ],
   need: [
-    { key: "s01-organization-name", as: "text", max: TEXT_LIMITS.short, min: 2 },
+    { key: "s01-organization-name", as: "text", max: TEXT_LIMITS.short, min: 2, meaningful: true },
     { key: "s01-phone-email", as: "text", max: TEXT_LIMITS.short, min: 5 },
     { key: "s02-district", as: "text", max: TEXT_LIMITS.short },
-    { key: "s04-exactly-what-needs-to-be-done", as: "text", max: TEXT_LIMITS.long, min: 10 },
+    {
+      key: "s04-exactly-what-needs-to-be-done",
+      as: "text",
+      max: TEXT_LIMITS.long,
+      min: 10,
+      meaningful: true,
+    },
   ],
 };
 
@@ -189,6 +228,14 @@ function checkRule(rule: Rule, raw: unknown, errors: FieldError[]): void {
     });
     return;
   }
+  if (rule.meaningful && !hasSubstance(value)) {
+    errors.push({
+      field: rule.key,
+      code: "not_meaningful",
+      message: "Please write a real answer here.",
+    });
+    return;
+  }
   if (rule.as === "email" && !EMAIL_PATTERN.test(value)) {
     errors.push({ field: rule.key, code: "invalid_email", message: "Enter a valid email address." });
   }
@@ -257,13 +304,13 @@ const N3_OPTIONS: Record<string, readonly string[]> = {
   [N3.urgency]: NEED_URGENCY,
 };
 
-const N3_TEXT: Record<string, { max: number; min?: number }> = {
-  [N3.title]: { max: TEXT_LIMITS.short, min: 6 },
-  [N3.detail]: { max: TEXT_LIMITS.long, min: 20 },
+const N3_TEXT: Record<string, { max: number; min?: number; meaningful?: boolean }> = {
+  [N3.title]: { max: TEXT_LIMITS.short, min: 6, meaningful: true },
+  [N3.detail]: { max: TEXT_LIMITS.long, min: 20, meaningful: true },
   [N3.district]: { max: TEXT_LIMITS.short },
   [N3.municipality]: { max: TEXT_LIMITS.short },
-  [N3.organization]: { max: TEXT_LIMITS.short, min: 2 },
-  [N3.person]: { max: TEXT_LIMITS.short, min: 2 },
+  [N3.organization]: { max: TEXT_LIMITS.short, min: 2, meaningful: true },
+  [N3.person]: { max: TEXT_LIMITS.short, min: 2, meaningful: true },
 };
 
 /** Whether this payload came from the three-step form. */
@@ -317,6 +364,17 @@ export function validateNeedV3(raw: unknown): IntakeResult {
         field: key,
         code: "too_short",
         message: `Please give at least ${rule.min} characters.`,
+      });
+      return;
+    }
+    // A length floor alone admits "aaaaaaaaaaaaaaaaaaaa". Only applied to the
+    // fields that are meant to be prose or a name; a municipality can legitimately
+    // be short and unusual.
+    if (rule.meaningful && !hasSubstance(value)) {
+      errors.push({
+        field: key,
+        code: "not_meaningful",
+        message: "Please write a real answer here.",
       });
       return;
     }

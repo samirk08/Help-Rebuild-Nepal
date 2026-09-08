@@ -38,6 +38,8 @@ export function messageFor(problem: FieldError, t: Strings): string {
       return t.errInvalidNumber;
     case "consent_required":
       return t.errConsent;
+    case "not_meaningful":
+      return t.errNotMeaningful;
 
     // Relief-specific refusals. These are answers about the request, not
     // complaints about what was typed, and collapsing them into "that is not a
@@ -75,6 +77,7 @@ export const TRANSLATED_CODES = [
   "invalid_option",
   "invalid_number",
   "consent_required",
+  "not_meaningful",
   "need_unavailable",
   "need_closed",
   "need_allocated",

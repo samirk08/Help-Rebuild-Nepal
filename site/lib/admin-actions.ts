@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { isAdmin } from "./admin-auth";
+import { logInfo } from "./log";
 import { DOCUMENTS_BUCKET } from "./storage-constants";
 import { supabaseAdmin } from "./supabase";
 import { supabaseServerClient } from "./supabase-server";
@@ -136,6 +137,81 @@ export async function deleteVolunteer(formData: FormData) {
   revalidatePath("/admin/volunteers");
   revalidatePath("/admin");
   redirect("/admin/volunteers");
+}
+
+/**
+ * Permanently remove a posted need.
+ *
+ * The mirror of `deleteVolunteer`, and the order matters for the same reason:
+ * uploaded damage photos are erased from Storage first, because deleting the
+ * row cascades the `documents` records away and would strand the actual files
+ * in the bucket with nothing left recording that they exist.
+ *
+ * `matches` is removed explicitly — that foreign key has no cascade — which in
+ * turn cascades `matching_commitments`. Everything else hanging off a need
+ * (interests, request events, roles, invitations, clarification questions)
+ * already cascades and goes with the row.
+ *
+ * A need that was promoted to a project is refused rather than cascaded. A
+ * project has a task list, updates and an outcome behind it: that is the record
+ * of work people actually did, and it should not disappear as a side effect of
+ * tidying up the request that started it. The coordinator decides about the
+ * project first.
+ *
+ * Scoped to `kind = 'need'`, so this path can never remove a volunteer.
+ */
+export async function deleteNeed(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const client = supabaseAdmin();
+
+  const { data: row } = await client
+    .from("submissions")
+    .select("id")
+    .eq("id", id)
+    .eq("kind", "need")
+    .maybeSingle();
+
+  if (!row) redirect("/admin/needs");
+
+  const { data: project } = await client
+    .from("projects")
+    .select("id")
+    .eq("need_id", id)
+    .maybeSingle();
+
+  if (project) {
+    throw new Error(
+      "This need was promoted to a project. Delete the project first if the work " +
+        "really should not be on record — otherwise leave the need in place, since " +
+        "the project is what documents what happened."
+    );
+  }
+
+  const { data: documents } = await client
+    .from("documents")
+    .select("storage_path")
+    .eq("submission_id", id);
+
+  const paths = (documents ?? []).map((d) => d.storage_path as string);
+  if (paths.length > 0) {
+    const { error: storageError } = await client.storage.from(DOCUMENTS_BUCKET).remove(paths);
+    // Stop rather than continue: deleting the row now would leave these files
+    // in the bucket with nothing left pointing at them.
+    if (storageError) throw new Error(`Could not remove uploaded files: ${storageError.message}`);
+  }
+
+  const { error: matchError } = await client.from("matches").delete().eq("need_id", id);
+  if (matchError) throw new Error(matchError.message);
+
+  const { error } = await client.from("submissions").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  logInfo("need_deleted", { documents: paths.length });
+
+  revalidatePath("/admin/needs");
+  revalidatePath("/admin");
+  redirect("/admin/needs");
 }
 
 /** Manual match: an admin decided this volunteer fits this need. No suggestion engine involved. */
