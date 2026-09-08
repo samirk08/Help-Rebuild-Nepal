@@ -121,29 +121,21 @@ export function isItemNeedStatus(value: unknown): value is ItemNeedStatus {
  * Mirrors `pledges_guard_demand` in migration 018. The database is the
  * authority — this exists so the offer form can say why rather than surfacing
  * a raised exception.
+ *
+ * Returns a code rather than a sentence. The server does not know which
+ * language the donor is reading in; lib/form-errors.ts turns the code into
+ * words on the client, where `lang` is known.
  */
+export type PledgeRefusal = "need_closed" | "need_allocated" | "need_fully_offered";
+
 export function canAcceptPledge(
   need: ItemNeedProgress & { status: string }
-): { ok: true } | { ok: false; reason: string } {
-  if (need.status !== "requested") {
-    return { ok: false, reason: "That item need is closed and is not taking new offers." };
-  }
-  if (remainingDemand(need) <= 0) {
-    return {
-      ok: false,
-      reason: "That item need is already fully allocated and is not taking new offers.",
-    };
-  }
+): { ok: true } | { ok: false; code: PledgeRefusal } {
+  if (need.status !== "requested") return { ok: false, code: "need_closed" };
+  if (remainingDemand(need) <= 0) return { ok: false, code: "need_allocated" };
   // Not a database rule, and deliberately so: excess offers are refused here
   // as a courtesy to the donor, but a request that is over-offered and
   // under-delivered must never be treated by the schema as met.
-  if (need.pledged >= need.quantity) {
-    return {
-      ok: false,
-      reason:
-        "That item need already has offers covering the full quantity. " +
-        "A coordinator is arranging them — please check back if they fall through.",
-    };
-  }
+  if (need.pledged >= need.quantity) return { ok: false, code: "need_fully_offered" };
   return { ok: true };
 }

@@ -208,6 +208,10 @@ export type AddedStrings = {
   errInvalidOption: string;
   errInvalidNumber: string;
   errConsent: string;
+  errNeedUnavailable: string;
+  errNeedClosed: string;
+  errNeedAllocated: string;
+  errNeedFullyOffered: string;
 
   /** The panel shown when a submission saved but an attachment did not. */
   attachTitle: string;
@@ -630,6 +634,12 @@ const ADDED: Record<Lang, AddedStrings> = {
     errInvalidOption: "Choose one of the offered answers.",
     errInvalidNumber: "Enter a number above zero.",
     errConsent: "Please tick the consent box to continue.",
+    errNeedUnavailable: "That request is no longer listed.",
+    errNeedClosed: "That request is closed and is not taking new offers.",
+    errNeedAllocated:
+      "That request is already fully arranged. Nothing more is needed for it right now.",
+    errNeedFullyOffered:
+      "That request already has offers covering the full quantity. A coordinator is arranging them — please check back if they fall through.",
 
     attachTitle: "Your request was saved. Some files were not attached.",
     attachIntro:
@@ -1052,6 +1062,12 @@ const ADDED: Record<Lang, AddedStrings> = {
     errInvalidOption: "दिइएका विकल्पमध्ये एउटा छान्नुहोस्।",
     errInvalidNumber: "शून्यभन्दा माथिको संख्या लेख्नुहोस्।",
     errConsent: "अगाडि बढ्न सहमति बाकसमा चिन्ह लगाउनुहोस्।",
+    errNeedUnavailable: "त्यो अनुरोध अब सूचीमा छैन।",
+    errNeedClosed: "त्यो अनुरोध बन्द भइसकेको छ र नयाँ प्रस्ताव लिँदैन।",
+    errNeedAllocated:
+      "त्यो अनुरोधको व्यवस्था मिलिसकेको छ। अहिले थप केही आवश्यक छैन।",
+    errNeedFullyOffered:
+      "त्यो अनुरोधका लागि पूरा परिमाण बराबरका प्रस्तावहरू आइसकेका छन्। संयोजकले तिनको व्यवस्था मिलाउँदै हुनुहुन्छ — ती नमिलेमा फेरि हेर्नुहोला।",
 
     attachTitle: "तपाईंको अनुरोध सुरक्षित भयो। केही फाइल संलग्न हुन सकेनन्।",
     attachIntro:

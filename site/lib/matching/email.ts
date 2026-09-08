@@ -1,18 +1,42 @@
 import { validEmail } from "./catalog";
+import type { Lang } from "../content";
+import { invitationMail } from "../mail-copy";
 import type { Role, Recommendation } from "./types";
 
 export type EmailPayload = { to: string; subject: string; text: string };
 export function emailConfigured(env: Record<string, string | undefined> = process.env): boolean {
   return env.MATCHING_EMAIL_ENABLED === "1" && !!env.RESEND_API_KEY && !!env.MATCHING_FROM_EMAIL && !!env.MATCHING_SITE_URL && !!env.MATCHING_WORKER_SECRET;
 }
-export function invitationEmail(role: Role, recommendation: Recommendation, recipient: string, requesterEmail: string, responseUrl: string): EmailPayload {
+/**
+ * The invitation, in the language the volunteer registered in.
+ *
+ * The wording lives in lib/mail-copy.ts with every other message, so that the
+ * whole of what this platform says to people is reviewable in one file by
+ * someone who reads Nepali. This function keeps the guard that matters — an
+ * invitation with an unusable address on either side is never composed — and
+ * assembles the engine's own reasons into the body.
+ */
+export function invitationEmail(role: Role, recommendation: Recommendation, recipient: string, requesterEmail: string, responseUrl: string, lang: Lang = "en"): EmailPayload {
   if (!validEmail(recipient) || !validEmail(requesterEmail)) throw new Error("Valid contact emails are required.");
   const c = role.config;
-  return {
-    to:recipient,
-    subject:`Help Rebuild Nepal: ${role.title}`,
-    text:`Hello ${recommendation.name},\n\nWe would like to invite you to consider: ${role.title}.\n\n${c.startDate} to ${c.endDate}\n${c.hoursPerWeek} hours per week · ${c.workMode}${c.district ? ` · ${c.district}` : ""}\n\nWhy we contacted you:\n${recommendation.checks.filter(x => x.result === "pass").map(x => `• ${x.reason}`).join("\n")}\n${recommendation.reasons.join("\n")}\n\nRequester contact: ${requesterEmail}\n\nReview the full need, support arrangements, and choose Proceed or Decline:\n${responseUrl}\n\nProceed confirms your interest and availability; the coordination team confirms the place with both parties. For on-site work, confirm that you can reach the location by the start date. You can also pause future invitations on this page.\n\nHelp Rebuild Nepal`,
-  };
+  const payload = invitationMail(lang, {
+    name: recommendation.name,
+    roleTitle: role.title,
+    startDate: c.startDate,
+    endDate: c.endDate,
+    hoursPerWeek: c.hoursPerWeek,
+    workMode: c.workMode,
+    district: c.district,
+    // The passing checks explain the choice in the engine's own words; the
+    // reasons are the tie-breakers on top of them.
+    reasons: [
+      ...recommendation.checks.filter(x => x.result === "pass").map(x => `• ${x.reason}`),
+      ...recommendation.reasons,
+    ],
+    requesterEmail,
+    responseUrl,
+  });
+  return { ...payload, to: recipient };
 }
 
 /** The caller persists results. A stable outbox UUID is the idempotency key. */
