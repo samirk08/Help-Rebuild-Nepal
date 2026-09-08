@@ -101,11 +101,11 @@ export async function queueMatchingInvitation(_state: ActionState, form: FormDat
     const token = randomBytes(32).toString("hex");
     const site = new URL(process.env.MATCHING_SITE_URL!);
     if (site.protocol !== "https:" && site.hostname !== "localhost") throw new Error("The invitation site must use HTTPS.");
-    // The link goes to the language they registered in, so the page they land
-    // on is written the same way as the email that sent them there.
-    const lang = langOf(v);
-    const url = new URL(mailPath(lang, `/opportunities/${token}`),site).href;
-    const payload = invitationEmail(entry.role,candidate,v.contact_email!,need.contact_email!,url,lang);
+    // The message is English; the link lands on the page in the language they
+    // registered in, because that page exists in both and sending them to the
+    // English one would discard a translation that is already there.
+    const url = new URL(mailPath(langOf(v), `/opportunities/${token}`),site).href;
+    const payload = invitationEmail(entry.role,candidate,v.contact_email!,need.contact_email!,url);
     const { error } = await supabaseAdmin().rpc("matching_queue_invitation", {
       p_role:roleId,p_volunteer:volunteerId,p_role_revision:entry.role.revision,p_profile_revision:candidate.profileRevision,
       p_token_hash:createHash("sha256").update(token).digest("hex"),p_snapshot:candidate,p_email:payload,p_actor:who.id,
@@ -150,19 +150,19 @@ export async function confirmMatchingConnection(_state: ActionState, form: FormD
     const result = await db.rpc("matching_confirm", {
       p_invitation:invite.id,p_profile_revision:candidate.profileRevision,p_actor:who.id,
       p_volunteer_email:{
-        ...introductionMail(vLang, {
+        ...introductionMail({
           ...shared,
-          otherPartyLabel:otherPartyLabel(vLang,"requester"),
-          otherPartyName:need.org_or_name ?? anonymousParty(vLang,"requester"),
+          otherPartyLabel:otherPartyLabel("requester"),
+          otherPartyName:need.org_or_name ?? anonymousParty("requester"),
           otherPartyEmail:need.contact_email,
         }),
         to:v.contact_email,
       },
       p_requester_email:{
-        ...introductionMail(rLang, {
+        ...introductionMail({
           ...shared,
-          otherPartyLabel:otherPartyLabel(rLang,"volunteer"),
-          otherPartyName:v.org_or_name ?? anonymousParty(rLang,"volunteer"),
+          otherPartyLabel:otherPartyLabel("volunteer"),
+          otherPartyName:v.org_or_name ?? anonymousParty("volunteer"),
           otherPartyEmail:v.contact_email,
         }),
         to:need.contact_email,

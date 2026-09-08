@@ -129,9 +129,9 @@ is knowing how long a restore takes before the day you need it.
 Everything above, plus:
 
 - [ ] **A Nepali speaker has read every translated string.** The Nepali in
-      `lib/mail-copy.ts` and `lib/added-strings.ts` is machine-supplied and
-      marked as such. This is the single largest untested assumption in the
-      product.
+      `lib/added-strings.ts` is machine-supplied and marked as such. This is the
+      single largest untested assumption in the product. Outbound mail is
+      English only and needs no review pass.
 - [ ] **Test data is gone from production.** Any registration or need created
       while walking the flows.
 - [ ] **Supabase auth email rate limit raised** above the default 30/hour, or

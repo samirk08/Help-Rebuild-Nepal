@@ -103,13 +103,12 @@ export async function askClarification(_state: ActionState, form: FormData): Pro
       throw new Error("Could not record the question. Please try again.");
     }
 
-    // Written in the language they registered in, and pointing at the answer
-    // page in that language — asking someone a question in a language they did
-    // not choose is a good way to get no answer.
+    // English, like every message this platform sends. The link lands on the
+    // answer page in the language they registered in, which is a real page in
+    // both.
     const site = process.env.MATCHING_SITE_URL ?? "";
-    const lang = langOf(volunteer);
     const payload = {
-      ...clarificationMail(lang, question.trim(), `${site}${mailPath(lang, `/questions/${token}`)}`),
+      ...clarificationMail(question.trim(), `${site}${mailPath(langOf(volunteer), `/questions/${token}`)}`),
       to: volunteer.contact_email,
     };
 

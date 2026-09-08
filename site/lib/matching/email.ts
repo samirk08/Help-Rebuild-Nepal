@@ -1,7 +1,6 @@
 import { validEmail } from "./catalog";
 import { canDeliverTo, redact } from "../env";
 import { logWarn } from "../log";
-import type { Lang } from "../content";
 import { invitationMail } from "../mail-copy";
 import type { Role, Recommendation } from "./types";
 
@@ -10,18 +9,18 @@ export function emailConfigured(env: Record<string, string | undefined> = proces
   return env.MATCHING_EMAIL_ENABLED === "1" && !!env.RESEND_API_KEY && !!env.MATCHING_FROM_EMAIL && !!env.MATCHING_SITE_URL && !!env.MATCHING_WORKER_SECRET;
 }
 /**
- * The invitation, in the language the volunteer registered in.
+ * The invitation.
  *
- * The wording lives in lib/mail-copy.ts with every other message, so that the
- * whole of what this platform says to people is reviewable in one file by
- * someone who reads Nepali. This function keeps the guard that matters — an
- * invitation with an unusable address on either side is never composed — and
- * assembles the engine's own reasons into the body.
+ * The wording lives in lib/mail-copy.ts with every other message, so the whole
+ * of what this platform says to people is reviewable in one file. This function
+ * keeps the guard that matters — an invitation with an unusable address on
+ * either side is never composed — and assembles the engine's own reasons into
+ * the body.
  */
-export function invitationEmail(role: Role, recommendation: Recommendation, recipient: string, requesterEmail: string, responseUrl: string, lang: Lang = "en"): EmailPayload {
+export function invitationEmail(role: Role, recommendation: Recommendation, recipient: string, requesterEmail: string, responseUrl: string): EmailPayload {
   if (!validEmail(recipient) || !validEmail(requesterEmail)) throw new Error("Valid contact emails are required.");
   const c = role.config;
-  const payload = invitationMail(lang, {
+  const payload = invitationMail({
     name: recommendation.name,
     roleTitle: role.title,
     startDate: c.startDate,
