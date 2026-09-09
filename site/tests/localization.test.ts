@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 import { added } from "../lib/added-strings";
+import { NEED_TYPES, NEED_URGENCY, NEED_WORK_MODES } from "../lib/intake-schema";
+import { translator } from "../lib/i18n";
 import { TRANSLATED_CODES, messageFor } from "../lib/form-errors";
 import {
   anonymousParty,
@@ -166,5 +168,46 @@ test("all three intake forms translate their errors rather than showing the serv
       /focusFirstError|goToFirstError/,
       `${file} must move focus to the refused field`
     );
+  }
+});
+
+test("every answer the need form offers exists in Nepali", () => {
+  // These are the options on the first question of the three-step form. None of
+  // them had Nepali, so a Nepali reader chose between "Skilled volunteers",
+  // "Relief items" and "Assessment or survey", then saw the same English back
+  // on the review step. NP_MAP is generated from the design file and these were
+  // written after it was frozen, which is why they live in np-additions.ts.
+  const translate = translator("np");
+  for (const option of [...NEED_TYPES, ...NEED_WORK_MODES, ...NEED_URGENCY]) {
+    const np = translate(option);
+    assert.notEqual(np, option, `"${option}" falls back to English`);
+    assert.ok(DEVANAGARI.test(np), `"${option}" is not translated: ${np}`);
+  }
+});
+
+test("the consent sentences are translated", () => {
+  // The moment someone agrees to their details being shared is the last place
+  // an untranslated string belongs.
+  const translate = translator("np");
+  const source = readFileSync("components/RequestForm.tsx", "utf8");
+  const sentences = [...source.matchAll(/"(I (?:agree|confirm) [^"]{40,})"/g)].map((m) => m[1]);
+
+  assert.ok(sentences.length >= 2, "expected both consent sentences");
+  for (const sentence of sentences) {
+    assert.ok(DEVANAGARI.test(translate(sentence)), `consent is English: ${sentence.slice(0, 50)}`);
+  }
+});
+
+test("no intake form leaves validation to the browser", () => {
+  // The browser validates before any JavaScript runs, so a form without
+  // noValidate never reaches its own inline messages — and the bubble it shows
+  // instead is in the browser's language, not the page's.
+  for (const file of ["RequestForm", "NeedIntakeForm", "ReliefOfferForm"]) {
+    const source = readFileSync(`components/${file}.tsx`, "utf8");
+    // Comments stripped first: "required experience level" appears in prose in
+    // one of these files and is not an attribute.
+    const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, "");
+    if (!/\brequired\s*(\/?>|\n|=)/.test(code)) continue;
+    assert.match(code, /<form[^>]*noValidate/, `${file} must not use native validation`);
   }
 });

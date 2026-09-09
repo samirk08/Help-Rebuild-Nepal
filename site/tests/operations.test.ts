@@ -154,3 +154,42 @@ test("the health endpoint answers a monitor, not a person", () => {
     );
   }
 });
+
+test("every column the health read asks for actually exists", () => {
+  // `matching_email_events.type` does not exist — the column is `event_type`.
+  // So workerHealth() errored on every call, reported the outbox as unreadable,
+  // and /api/health returned 503 from the moment it shipped. An alerting
+  // endpoint that is always red is worse than none: it is the crying-wolf
+  // failure the Diagnostics page was carefully written to avoid, reintroduced
+  // one file away.
+  //
+  // Nothing caught it because the tests around this module check the log shape
+  // and the route source, and never put a column name next to the schema.
+  const health = readFileSync(join("lib", "matching", "health.ts"), "utf8");
+  const schema = readdirSync("supabase")
+    .filter((f) => f.endsWith(".sql"))
+    .map((f) => readFileSync(join("supabase", f), "utf8"))
+    .join("\n");
+
+  const reads = [...health.matchAll(/\.from\("(\w+)"\)\s*\n?\s*\.select\("([^"]+)"\)/g)];
+  assert.ok(reads.length >= 2, "expected the outbox and events reads");
+
+  for (const [, table, columns] of reads) {
+    // The table's own CREATE, so a column of the same name on a different
+    // table cannot vouch for this one.
+    const start = schema.indexOf(`create table if not exists ${table} (`);
+    assert.notEqual(start, -1, `${table} is not created by any migration`);
+    const body = schema.slice(start, schema.indexOf(");", start));
+    // Columns added later by ALTER also count.
+    const altered = [...schema.matchAll(
+      new RegExp(`alter table ${table} add column if not exists (\\w+)`, "g")
+    )].map((m) => m[1]);
+
+    for (const column of columns.split(",").map((c) => c.trim())) {
+      assert.ok(
+        new RegExp(`^\\s*${column}\\s`, "m").test(body) || altered.includes(column),
+        `${table}.${column} is selected but does not exist`
+      );
+    }
+  }
+});
