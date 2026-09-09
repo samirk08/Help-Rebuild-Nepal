@@ -214,8 +214,17 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
     const first = list[0];
     if (!first?.field) return;
 
-    const sectionN = /^s(\d+)-/.exec(first.field)?.[1];
-    if (sectionN) setOpen((prev) => ({ ...prev, [sectionN]: true }));
+    // Every section with a problem in it, not only the first. The summary names
+    // all of them, and naming a field that sits inside a panel we left closed is
+    // how someone ends up staring at a message about a control they cannot see.
+    setOpen((prev) => {
+      const next = { ...prev };
+      for (const problem of list) {
+        const n = /^s(\d+)-/.exec(problem.field)?.[1];
+        if (n) next[n] = true;
+      }
+      return next;
+    });
 
     // After the section's panel has been un-`inert`ed by the render above;
     // focusing an inert subtree silently does nothing.

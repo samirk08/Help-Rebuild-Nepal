@@ -46,11 +46,19 @@ type Values = Record<string, string>;
 
 const DRAFT_KEY = "hrn:need-draft:v3";
 
-/** Which fields belong to which step, so an error can send you to the right one. */
+/**
+ * Which fields belong to which step, so an error can send you to the right one.
+ *
+ * This has to match where each control is actually rendered. `consent` was
+ * listed under step two and rendered on step three, which deadlocked the form
+ * completely: advancing from step two refused to continue until consent was
+ * ticked, and the only checkbox was on the step you could not reach. Nobody
+ * could post a need at all.
+ */
 const STEP_FIELDS: string[][] = [
   [N3.type, N3.title, N3.detail, N3.district, N3.municipality, N3.workMode, N3.urgency],
-  [N3.organization, N3.person, N3.email, N3.phone, "consent"],
-  [],
+  [N3.organization, N3.person, N3.email, N3.phone],
+  ["consent"],
 ];
 
 export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
@@ -165,9 +173,17 @@ export default function NeedIntakeForm({ lang, t }: { lang: Lang; t: Dict }) {
     const merged = payload();
     setValues(merged);
     const result = validateNeedV3(merged);
+    // Owned by this step *and* actually on screen. The second half is what
+    // makes the deadlock above impossible rather than merely fixed: a step can
+    // never again refuse to continue over a control it is not showing, whatever
+    // the table above says.
     const mine = result.ok
       ? []
-      : result.errors.filter((problem) => STEP_FIELDS[step].includes(problem.field));
+      : result.errors.filter(
+          (problem) =>
+            STEP_FIELDS[step].includes(problem.field) &&
+            formRef.current?.querySelector(`[name="${CSS.escape(problem.field)}"]`)
+        );
 
     if (mine.length > 0) {
       setErrors(mine);
