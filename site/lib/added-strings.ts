@@ -209,6 +209,7 @@ export type AddedStrings = {
   errInvalidNumber: string;
   errConsent: string;
   errNotMeaningful: string;
+  reliefExampleTag: string;
   errNeedUnavailable: string;
   errNeedClosed: string;
   errNeedAllocated: string;
@@ -639,6 +640,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     errInvalidNumber: "Enter a number above zero.",
     errConsent: "Please tick the consent box to continue.",
     errNotMeaningful: "Please write a real answer here.",
+    reliefExampleTag: "worked example, not a real request",
     errNeedUnavailable: "That request is no longer listed.",
     errNeedClosed: "That request is closed and is not taking new offers.",
     errNeedAllocated:
@@ -1070,6 +1072,7 @@ const ADDED: Record<Lang, AddedStrings> = {
     errInvalidNumber: "शून्यभन्दा माथिको संख्या लेख्नुहोस्।",
     errConsent: "अगाडि बढ्न सहमति बाकसमा चिन्ह लगाउनुहोस्।",
     errNotMeaningful: "कृपया यहाँ वास्तविक जवाफ लेख्नुहोस्।",
+    reliefExampleTag: "नमुना उदाहरण, वास्तविक अनुरोध होइन",
     errNeedUnavailable: "त्यो अनुरोध अब सूचीमा छैन।",
     errNeedClosed: "त्यो अनुरोध बन्द भइसकेको छ र नयाँ प्रस्ताव लिँदैन।",
     errNeedAllocated:

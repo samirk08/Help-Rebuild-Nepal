@@ -173,6 +173,12 @@ export default function ReliefOfferForm({
                       <option key={need.id} value={need.id}>
                         {c ? categoryLabel(c, lang) : need.category} · {formatQuantity(need, lang)} ·{" "}
                         {need.municipality}
+                        {/* The worked example sits in this list so the flow can
+                            be walked before anything real is published. Unlabelled
+                            it reads as a live request from a real municipality,
+                            and someone could offer 200 tarpaulins against a need
+                            that does not exist. */}
+                        {need.id === EXAMPLE_ITEM_NEED.id ? ` — ${extra.reliefExampleTag}` : ""}
                       </option>
                     );
                   })}
@@ -258,8 +264,11 @@ export default function ReliefOfferForm({
                   id="relief-available"
                   {...errorProps("relief-available")}
                   name="relief-available"
-                  type="text"
-                  placeholder="DD / MM / YYYY"
+                  // A real date input: it submits YYYY-MM-DD, which is what the
+                  // validator asks for. As a text box with a "DD / MM / YYYY"
+                  // placeholder it told people to type the one format that is
+                  // refused.
+                  type="date"
                 />
                   {fieldError("relief-available")}
                 </div>
@@ -307,9 +316,10 @@ export default function ReliefOfferForm({
 
           <section className="submitbar">
             <label className="consent">
-              <input type="checkbox" name="consent" required />
+              <input type="checkbox" name="consent" {...errorProps("consent")} />
               <span>{extra.reliefConsent}</span>
             </label>
+            {fieldError("consent")}
             <button type="submit" className="btn btn--dark" disabled={submitting}>
               {extra.reliefSubmitOffer} <span aria-hidden="true">→</span>
             </button>
