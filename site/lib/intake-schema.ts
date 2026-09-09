@@ -632,6 +632,31 @@ export function validateReliefOffer(raw: unknown): ReliefResult {
       code: "required",
       message: "A contact detail is required so the delivery can be arranged.",
     });
+  } else if (!hasSubstance(contact)) {
+    // A phone number is digits, so `hasSubstance` alone would refuse one. Any
+    // answer with enough digits to dial, or enough letters to read, is real;
+    // "aaaa" is neither.
+    const digits = (contact.match(/\d/g) ?? []).length;
+    if (digits < 6) {
+      errors.push({
+        field: "relief-contact",
+        code: "not_meaningful",
+        message: "Give a phone number or an email address we can actually reach you on.",
+      });
+    }
+  }
+
+  // Consent, checked here because the server is the only place it can be
+  // enforced. The relief form relied on the browser's `required` attribute
+  // until `noValidate` was added to make its own inline errors work — which
+  // removed the only thing standing between a donor's contact details and
+  // being shared without them agreeing to it.
+  if (firstString(input.consent) !== "on") {
+    errors.push({
+      field: "consent",
+      code: "consent_required",
+      message: "Coordination consent is required.",
+    });
   }
 
   const availableFrom = text("relief-available", 32);

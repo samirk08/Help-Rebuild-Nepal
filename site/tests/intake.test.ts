@@ -190,6 +190,9 @@ test("a relief offer needs a positive quantity and a contact", () => {
     "relief-quantity": "20",
     "relief-contact": "office@example.org",
     "relief-where": "Dolakha",
+    // Required since the browser stopped enforcing it — see the consent test
+    // below.
+    consent: "on",
   });
   assert.ok(good.ok);
   assert.equal(good.pledge.quantity, 20);
@@ -245,4 +248,39 @@ test("the request budget refuses a caller past the limit and says when to retry"
     consume("intake:198.51.100.7", INTAKE_BUDGET, now + INTAKE_BUDGET.windowMs + 1).allowed,
     true
   );
+});
+
+test("a relief offer cannot be made without consent", () => {
+  // The form relied on the browser's `required` attribute until `noValidate`
+  // was added so its own inline errors could run — which removed the only thing
+  // standing between a donor's contact details and being shared without them
+  // agreeing to it. The server is the only place this can be enforced.
+  const offer = {
+    "relief-target": "__unmatched__",
+    "relief-category": "tarpaulin",
+    "relief-quantity": "50",
+    "relief-contact": "+977 9800000000",
+  };
+  const codesOf = (r: ReturnType<typeof validateReliefOffer>) =>
+    r.ok ? [] : r.errors.map((e) => `${e.field}:${e.code}`);
+
+  assert.deepEqual(codesOf(validateReliefOffer(offer)), ["consent:consent_required"]);
+  assert.equal(validateReliefOffer({ ...offer, consent: "on" }).ok, true);
+});
+
+test("a relief contact has to be reachable", () => {
+  const base = {
+    "relief-target": "__unmatched__",
+    "relief-category": "tarpaulin",
+    "relief-quantity": "50",
+    consent: "on",
+  };
+  const ok = (contact: string) => validateReliefOffer({ ...base, "relief-contact": contact }).ok;
+
+  // A phone number is digits, so a letters-only rule would refuse a real one.
+  assert.equal(ok("+977 9800000000"), true);
+  assert.equal(ok("9800000000"), true);
+  assert.equal(ok("ward7@example.np"), true);
+  assert.equal(ok("aaaa"), false);
+  assert.equal(ok("...."), false);
 });

@@ -49,7 +49,7 @@ export async function workerHealth(now: number = Date.now()): Promise<ReadResult
     client.from("matching_email_outbox").select("status, created_at, delivery_status"),
     client
       .from("matching_email_events")
-      .select("event_type, created_at")
+      .select("event_type, created_at, provider_id")
       .gte("created_at", new Date(now - WEEK_MS).toISOString()),
     client
       .from("worker_runs")
@@ -85,14 +85,21 @@ export async function workerHealth(now: number = Date.now()): Promise<ReadResult
         oldestPendingMs = age;
       }
     }
-    if (row.delivery_status === "email.bounced") bounced += 1;
   }
 
-  // Bounces are counted from delivery events too: a provider can report one
-  // for a message whose outbox row has since been swept.
-  for (const event of (events.data ?? []) as Array<{ event_type: string }>) {
-    if (event.event_type === "email.bounced") bounced += 1;
+  // Counted from the delivery events alone, and deduplicated by the provider's
+  // own id for the message.
+  //
+  // Counting the outbox as well double-counted every bounce, because the event
+  // is what sets `delivery_status` on the row in the first place. It also had
+  // no date filter, so bounces from any point in the project's history landed
+  // in a figure labelled "7 days". Two ways of being wrong that cancelled into
+  // a number nobody could act on.
+  const bouncedIds = new Set<string>();
+  for (const event of (events.data ?? []) as Array<{ event_type: string; provider_id: string }>) {
+    if (event.event_type === "email.bounced") bouncedIds.add(event.provider_id);
   }
+  bounced = bouncedIds.size;
 
   const lastRun = (runs.data ?? [])[0] as { finished_at: string } | undefined;
   const lastSuccessfulRunMs = lastRun ? now - Date.parse(lastRun.finished_at) : null;

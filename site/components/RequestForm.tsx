@@ -500,7 +500,7 @@ export default function RequestForm({ lang, mode, t }: { lang: Lang; mode: Mode;
                   <span className="fsection__n">{String(visibleSections.indexOf(section) + 1).padStart(2, "0")}</span>
                   <span className="fsection__title">{sectionTitle(section)}</span>
                   {/* Always rendered: its margin-left:auto is what pushes the chevron right. */}
-                  <span className="fsection__hint">{isVolunteer && section.n === "03" ? tr("Optional") : section.hint ? tr(section.hint) : ""}</span>
+                  <span className="fsection__hint">{section.hint ? tr(section.hint) : ""}</span>
                   <span className="fsection__chevron" aria-hidden="true">
                     ▾
                   </span>
