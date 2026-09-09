@@ -1,4 +1,5 @@
 import { NP_MAP, STR, type Dict, type Lang } from "./content";
+import { NP_ADDITIONS } from "./np-additions";
 
 export const LANGS: readonly Lang[] = ["en", "np"] as const;
 export const DEFAULT_LANG: Lang = "en";
@@ -26,7 +27,9 @@ export function dict(lang: Lang): Dict {
  */
 export function translator(lang: Lang): (value: string) => string {
   if (lang === "en") return (value) => value;
-  return (value) => NP_MAP[value] ?? value;
+  // Additions first: NP_MAP is regenerated from the design file, so strings
+  // written after it was frozen live in np-additions.ts to survive that.
+  return (value) => NP_ADDITIONS[value] ?? NP_MAP[value] ?? value;
 }
 
 /** Build a language-prefixed href. `path` is the route below the language. */

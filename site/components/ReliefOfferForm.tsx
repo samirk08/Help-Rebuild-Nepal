@@ -144,7 +144,12 @@ export default function ReliefOfferForm({
         {extra.reliefOfferIntro}
       </p>
 
-      <form onSubmit={handleSubmit}>
+      {/* noValidate, like the other two forms. Without it the browser's own
+          validation fires first and blocks submit, so the inline messages below
+          never render — and the browser's bubble is in the browser's language,
+          not the page's. A Nepali reader got "Please select an item in the
+          list." */}
+      <form noValidate onSubmit={handleSubmit}>
         <div className="form-sections">
           <section className="fsection">
             <div className="fsection__body" style={{ borderTop: 0, paddingTop: 22 }}>

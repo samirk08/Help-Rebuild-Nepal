@@ -49,7 +49,7 @@ export async function workerHealth(now: number = Date.now()): Promise<ReadResult
     client.from("matching_email_outbox").select("status, created_at, delivery_status"),
     client
       .from("matching_email_events")
-      .select("type, created_at")
+      .select("event_type, created_at")
       .gte("created_at", new Date(now - WEEK_MS).toISOString()),
     client
       .from("worker_runs")
@@ -90,8 +90,8 @@ export async function workerHealth(now: number = Date.now()): Promise<ReadResult
 
   // Bounces are counted from delivery events too: a provider can report one
   // for a message whose outbox row has since been swept.
-  for (const event of (events.data ?? []) as Array<{ type: string }>) {
-    if (event.type === "email.bounced") bounced += 1;
+  for (const event of (events.data ?? []) as Array<{ event_type: string }>) {
+    if (event.event_type === "email.bounced") bounced += 1;
   }
 
   const lastRun = (runs.data ?? [])[0] as { finished_at: string } | undefined;

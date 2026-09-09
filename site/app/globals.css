@@ -1401,6 +1401,16 @@ textarea:focus-visible {
   color: var(--green);
 }
 
+/* A link-styled <button> is still a tap target. "Start fresh" on the draft
+   prompt measured 65x21, under the 24px WCAG 2.5.8 minimum; the inline text
+   links this class is also used for are exempt as text in a sentence, so the
+   floor is set on the button case only. */
+button.linkish {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
 .linkish:hover {
   color: var(--green-dark);
   text-decoration: underline;
