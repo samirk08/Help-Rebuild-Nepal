@@ -18,6 +18,23 @@ export const PUBLISHED_STATUSES = ["verified", "recruiting", "filled", "complete
 /** Of those, the ones still looking for people. */
 export const OPEN_STATUSES = ["verified", "recruiting"] as const;
 
+/**
+ * The statuses a need does not come back from.
+ *
+ * Deliberately narrower than "not open". A need still under review is not open
+ * either, but roles can be prepared for it and it may yet be verified; `filled`
+ * can empty again when someone withdraws. These two are the end of the line, and
+ * supabase/020-completing-a-need-closes-it.sql deactivates the matching roles of
+ * a need that reaches either. Anything reading this to decide whether to offer
+ * recruitment must agree with that migration, or the dashboard offers an action
+ * the database has already taken away.
+ */
+export const CLOSED_STATUSES = ["completed", "rejected"] as const;
+
+export function isClosedNeed(status: unknown): boolean {
+  return typeof status === "string" && (CLOSED_STATUSES as readonly string[]).includes(status);
+}
+
 export type PublishedStatus = (typeof PUBLISHED_STATUSES)[number];
 
 export function isPublicStatus(status: unknown): status is PublishedStatus {

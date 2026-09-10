@@ -151,12 +151,21 @@ export default async function ProjectWorkspace({ project }: { project: Project }
           placeholder="Nepali summary (optional)"
           defaultValue={project.summary_np ?? ""}
         />
-        {/* The stage select offers `completed`, and the database refuses it
-            without an outcome below. Saying so here means the refusal is not a
-            surprise. */}
+        {/* Migration 019 refused `completed` without an outcome; 020 removed
+            that rule so completing the need could close the project without the
+            status update failing. A prompt is what is left in its place, so it
+            is worded hardest in the case the rule used to make impossible. */}
         {!recorded ? (
-          <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
-            Completing this project needs an outcome recorded first.
+          <p
+            style={{
+              fontSize: 12,
+              color: project.stage === "completed" ? "var(--amber-ink)" : "var(--muted)",
+              margin: 0,
+            }}
+          >
+            {project.stage === "completed"
+              ? "This project is completed with no outcome recorded. The public page shows nothing about what it achieved until you write one below."
+              : "Record an outcome below so completing this project says what it achieved."}
           </p>
         ) : null}
       </form>

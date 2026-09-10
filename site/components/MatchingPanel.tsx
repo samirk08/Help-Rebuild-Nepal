@@ -5,6 +5,7 @@ import { cancelMatchingInvitation, confirmMatchingConnection, finishMatchingConn
 import { loadMatching, missingMigration } from "@/lib/matching/data";
 import { emailConfigured } from "@/lib/matching/email";
 import type { Recommendation, Submission } from "@/lib/matching/types";
+import { isClosedNeed } from "@/lib/publication";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export default async function MatchingPanel({ need }: {need:Submission & {matching_contact_approved?:boolean}}) {
@@ -14,16 +15,28 @@ export default async function MatchingPanel({ need }: {need:Submission & {matchi
   const invitations = data.context.invitations.filter(i => i.need_id === need.id);
   const { data: emails } = invitations.length ? await supabaseAdmin().from("matching_email_outbox").select("invitation_id,kind,status,delivery_status,last_error").in("invitation_id",invitations.map(i => i.id)) : {data:[]};
   const { data: connections } = await supabaseAdmin().from("matches").select("volunteer_id,status").eq("need_id",need.id);
+  // A completed or rejected need recruits nobody. The database already refuses
+  // an invitation for one (matching_queue_invitation), and 020 deactivates its
+  // roles — but a refusal arrives as a raw error after the click, which is not
+  // the same thing as not asking. Candidate lists, the invite action and both
+  // role forms come off the page; the invitation history below stays, because
+  // that is the record of who actually did the work.
+  //
+  // Narrower than "not open" on purpose: a need still under review is not open
+  // either, and preparing its roles ahead of verification is the intended way to
+  // use this panel.
+  const closed = isClosedNeed(need.status);
   return <section className="matching-panel" id="matching">
     <h2>Matching recommendations</h2>
     <p>Rules check each role against the volunteer&apos;s skills, availability and preferences. Unknown answers stay visible. Mission preferences are optional and can be added later.</p>
-    {!emailConfigured() ? <p className="matching-notice">Email is not configured yet. You can prepare roles, review candidates and confirm their details now.</p> : null}
-    <p className="matching-meta">{data.volunteers.length} volunteer records checked · {data.roles.filter(r => r.active).reduce((n,r) => n+r.headcount,0)} places across active roles · Recomputed from current details when this page loads</p>
+    {closed ? <p className="matching-notice">This need is {need.status}, so it is no longer recruiting. Its roles have been deactivated and no further invitations can be sent. Change the status above to recruit again.</p> : null}
+    {!closed && !emailConfigured() ? <p className="matching-notice">Email is not configured yet. You can prepare roles, review candidates and confirm their details now.</p> : null}
+    {closed ? null : <p className="matching-meta">{data.volunteers.length} volunteer records checked · {data.roles.filter(r => r.active).reduce((n,r) => n+r.headcount,0)} places across active roles · Recomputed from current details when this page loads</p>}
     {data.recommendations.map(({role,result}) => <article className="matching-role" key={`${role.id}:${role.revision}`}>
-      <h3>{role.title} <span className="matching-meta">{role.headcount} needed{!role.active ? " · Paused" : ""}</span></h3>
+      <h3>{role.title} <span className="matching-meta">{role.headcount} needed{!role.active ? (closed ? " · Closed with the need" : " · Paused") : ""}</span></h3>
       <p>{role.config.startDate} – {role.config.endDate} · {role.config.hoursPerWeek} hours/week · {role.config.workMode}</p>
-      <MatchingRoleEditor need={need} role={role}/>
-      {(["ready","clarify","excluded"] as const).map(category => <details key={category} className="matching-group" open={category === "ready"}>
+      {closed ? null : <MatchingRoleEditor need={need} role={role}/>}
+      {closed ? null : (["ready","clarify","excluded"] as const).map(category => <details key={category} className="matching-group" open={category === "ready"}>
         <summary>{category === "ready" ? "Ready for invitation" : category === "clarify" ? "Needs confirmation" : "Not currently suitable"} ({result[category].length})</summary>
         {!result[category].length ? <p>No volunteers in this group.</p> : result[category].map((candidate:Recommendation) => <div className="matching-candidate" key={candidate.volunteerId}>
           <h4><Link href={`/admin/volunteers/${candidate.volunteerId}#matching-profile`}>{candidate.name}</Link></h4>
@@ -36,7 +49,7 @@ export default async function MatchingPanel({ need }: {need:Submission & {matchi
         </div>)}
       </details>)}
     </article>)}
-    <MatchingRoleEditor need={need}/>
+    {closed ? null : <MatchingRoleEditor need={need}/>}
     <h3>Invitations and connections</h3>
     {!invitations.length ? <p>No invitations yet. Recommendations are not counted as commitments.</p> : invitations.map(invite => <div className="matching-candidate" key={invite.id}>
       <h4>{data.volunteers.find(v => v.id === invite.volunteer_id)?.org_or_name ?? "Volunteer"} · {data.roles.find(r => r.id === invite.role_id)?.title}</h4>
