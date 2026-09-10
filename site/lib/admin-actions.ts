@@ -67,6 +67,12 @@ export async function updateSubmissionStatus(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath(returnTo);
+  // Completing a need completes the project behind it and deactivates its
+  // matching roles (supabase/020-completing-a-need-closes-it.sql). That happens
+  // in the database, so nothing above reports it — but the pages showing the
+  // project stage and the role list are stale the moment it does.
+  revalidatePath(`/admin/needs/${id}`);
+  revalidatePath("/projects", "layout");
 }
 
 export async function updateSubmissionNotes(formData: FormData) {

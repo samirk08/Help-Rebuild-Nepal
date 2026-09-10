@@ -7,16 +7,28 @@ import { PGlite } from "@electric-sql/pglite";
 import { isPublicProject } from "../lib/publication";
 
 /**
- * Projects that say what they did, against the database that enforces it.
+ * Projects that say what they did, against the database that carries it.
  *
  * `stage = 'completed'` used to be a value in a dropdown with nothing behind
- * it. These tests hold the three rules that give it meaning: completion needs
- * an outcome, one need makes one project, and the public view carries progress
- * without carrying the roster.
+ * it. 019 gave it a task list, updates, output links and an outcome; these
+ * tests hold what it means now: one need makes one project, and the public view
+ * carries progress without carrying the roster.
+ *
+ * 019 also refused completion outright until an outcome existed. 020 removed
+ * that rule — see tests/need-completion-db.test.ts for why — so it is applied
+ * here too. Testing 019 alone would assert a guard that no install actually
+ * runs, which is worse than not testing it.
  */
 
 const db = new PGlite();
 const migration = readFileSync("supabase/019-project-outcomes.sql", "utf8");
+const cascade = readFileSync("supabase/020-completing-a-need-closes-it.sql", "utf8");
+
+/** 019 recreates the guards 020 drops, so re-running it alone rolls them back. */
+async function applyMigrations() {
+  await db.exec(migration);
+  await db.exec(cascade);
+}
 
 before(async () => {
   await db.exec(
@@ -29,7 +41,7 @@ before(async () => {
   for (const file of ["002-public-board.sql", "003-service-role-grants.sql", "004-accounts.sql"]) {
     await db.exec(readFileSync(`supabase/${file}`, "utf8"));
   }
-  await db.exec(migration);
+  await applyMigrations();
 });
 
 after(async () => {
@@ -69,20 +81,13 @@ const outcome = (projectId: string, confirmed = false) =>
   );
 
 test("the migration is safely re-runnable and appears in the ledger", async () => {
-  await db.exec(migration);
-  await db.exec(migration);
+  await applyMigrations();
+  await applyMigrations();
   assert.equal(await scalar("select count(*) from migration_state where migration='019'"), 1);
 });
 
-test("a project cannot be completed without an outcome", async () => {
+test("the stage dates stamp themselves as a project moves", async () => {
   const p = await project();
-
-  // The acceptance criterion. Asking people for their time and then recording
-  // the result as a word in a select box does not close the loop.
-  await assert.rejects(
-    db.query("update projects set stage='completed' where id=$1", [p]),
-    /record what this project achieved/i
-  );
 
   await db.query("update projects set stage='in_progress' where id=$1", [p]);
   assert.ok(await scalar("select started_at from projects where id=$1", [p]));
@@ -92,21 +97,30 @@ test("a project cannot be completed without an outcome", async () => {
   assert.ok(await scalar("select completed_at from projects where id=$1", [p]));
 });
 
-test("the outcome cannot be removed from a completed project", async () => {
+test("an outcome can be corrected or removed at any stage", async () => {
   const p = await project();
   await outcome(p);
   await db.query("update projects set stage='completed' where id=$1", [p]);
 
-  // Otherwise the project ends up completed with nothing behind it — exactly
-  // the state the rule above exists to prevent, reached from the other side.
-  await assert.rejects(
-    db.query("delete from project_outcomes where project_id=$1", [p]),
-    /correct the outcome rather than removing it/i
-  );
-
-  await db.query("update projects set stage='paused' where id=$1", [p]);
+  // 019 refused this while the project was completed, to stop it being left
+  // "with nothing behind it". 020 made that a state the schema permits, so
+  // refusing the delete would now be refusing a correction on grounds nothing
+  // upholds. See tests/need-completion-db.test.ts.
   await db.query("delete from project_outcomes where project_id=$1", [p]);
   assert.equal(await scalar("select count(*) from project_outcomes where project_id=$1", [p]), 0);
+  assert.equal(await scalar("select stage from projects where id=$1", [p]), "completed");
+});
+
+test("closing a need works on an install that never applied the matching engine", async () => {
+  // 020 deactivates matching roles, and 010 is optional. plpgsql binds table
+  // names at execution, so an unguarded reference would create cleanly and then
+  // fail here — on the admin's status update, for a table they never installed.
+  assert.equal(await scalar("select to_regclass('public.matching_roles')"), null);
+
+  const n = await need();
+  const p = await project(n);
+  await db.query("update submissions set status='completed' where id=$1", [n]);
+  assert.equal(await scalar("select stage from projects where id=$1", [p]), "completed");
 });
 
 test("requester confirmation is dated, and undated when withdrawn", async () => {
@@ -140,7 +154,7 @@ test("re-running the migration collapses projects that were already duplicated",
   const first = await project(n);
   const second = await project(n);
 
-  await db.exec(migration);
+  await applyMigrations();
 
   assert.equal(await scalar("select count(*) from projects where need_id=$1", [n]), 1);
   const survivor = await scalar("select id from projects where need_id=$1", [n]);
